@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Prisma
+server/prisma/*.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Vite / cache
+.vite/
+client/dist/

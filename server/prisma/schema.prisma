@@ -1,0 +1,85 @@
+// Modèle de données SGC — CDC §5.2
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  OPERATEUR
+}
+
+enum RemiseType {
+  AUCUNE
+  POURCENTAGE
+  MONTANT
+}
+
+enum StatutCommande {
+  BROUILLON
+  VALIDEE
+  ANNULEE
+}
+
+model Utilisateur {
+  id           String     @id @default(cuid())
+  nom          String
+  email        String     @unique
+  passwordHash String
+  role         Role       @default(OPERATEUR)
+  commandes    Commande[]
+  createdAt    DateTime   @default(now())
+}
+
+model Client {
+  id        String     @id @default(cuid())
+  nom       String
+  telephone String
+  email     String?
+  adresse   String?
+  archived  Boolean    @default(false) // F-A04 : suppression logique
+  commandes Commande[]
+  createdAt DateTime   @default(now())
+
+  @@index([nom])
+  @@index([telephone])
+}
+
+model Commande {
+  id             String          @id @default(cuid())
+  numero         String          @unique // ex: CMD-2025-000123
+  clientId       String?
+  client         Client?         @relation(fields: [clientId], references: [id])
+  clientNomLibre String? // client occasionnel (F-B01)
+  utilisateurId  String
+  utilisateur    Utilisateur     @relation(fields: [utilisateurId], references: [id])
+  lignes         LigneCommande[]
+  remiseType     RemiseType      @default(AUCUNE)
+  remiseValeur   Decimal         @default(0) @db.Decimal(12, 2)
+  sousTotal      Decimal         @db.Decimal(12, 2)
+  montantRemise  Decimal         @db.Decimal(12, 2)
+  totalTTC       Decimal         @db.Decimal(12, 2)
+  statut         StatutCommande  @default(BROUILLON)
+  date           DateTime        @default(now())
+
+  @@index([clientId])
+  @@index([date])
+  @@index([statut])
+}
+
+model LigneCommande {
+  id           String   @id @default(cuid())
+  commandeId   String
+  commande     Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  nomProduit   String
+  quantite     Decimal  @db.Decimal(12, 3)
+  prixUnitaire Decimal  @db.Decimal(12, 2)
+  totalLigne   Decimal  @db.Decimal(12, 2)
+
+  @@index([commandeId])
+}

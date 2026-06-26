@@ -1,0 +1,20 @@
+{
+  "name": "gca-sgc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Système de Gestion Clients & Facturation (CDC-GC-2025-001)",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm run dev --workspace server",
+    "dev:client": "npm run dev --workspace client",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

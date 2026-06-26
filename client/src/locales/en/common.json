@@ -1,0 +1,24 @@
+{
+  "app": {
+    "name": "Client Management",
+    "tagline": "Real-time totals · Orders · Export & History"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "clients": "Clients",
+    "newOrder": "New order",
+    "orders": "Orders"
+  },
+  "health": {
+    "title": "System status",
+    "api": "API",
+    "database": "Database",
+    "up": "Online",
+    "down": "Offline",
+    "checking": "Checking…"
+  },
+  "common": {
+    "language": "Language",
+    "loading": "Loading…"
+  }
+}

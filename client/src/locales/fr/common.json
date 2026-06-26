@@ -1,0 +1,24 @@
+{
+  "app": {
+    "name": "Gestion Clients",
+    "tagline": "Calcul en temps réel · Commandes · Export & Historique"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "clients": "Clients",
+    "newOrder": "Nouvelle commande",
+    "orders": "Commandes"
+  },
+  "health": {
+    "title": "État du système",
+    "api": "API",
+    "database": "Base de données",
+    "up": "En ligne",
+    "down": "Hors ligne",
+    "checking": "Vérification…"
+  },
+  "common": {
+    "language": "Langue",
+    "loading": "Chargement…"
+  }
+}
