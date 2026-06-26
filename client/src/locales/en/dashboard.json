@@ -1,0 +1,17 @@
+{
+  "title": "Dashboard",
+  "kpi": {
+    "revenue": "Revenue",
+    "creditPaid": "Credits paid",
+    "creditDue": "Credits outstanding",
+    "orders": "Orders",
+    "today": "today"
+  },
+  "topClients": "Top paying clients",
+  "topClientsHint": "Ranked by credit already paid",
+  "topProducts": "Top products",
+  "salesPerformance": "Sales performance (30 days)",
+  "paid": "paid",
+  "due": "due",
+  "noData": "No data yet. Create orders to see your statistics."
+}

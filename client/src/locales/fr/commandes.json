@@ -1,0 +1,39 @@
+{
+  "title": "Commandes",
+  "new": "Nouvelle commande",
+  "newFor": "Nouvelle commande pour {{name}}",
+  "client": "Client",
+  "selectClient": "Sélectionner un client…",
+  "lines": "Lignes de produits",
+  "product": "Produit",
+  "qty": "Qté",
+  "unitPrice": "Prix unitaire",
+  "lineTotal": "Total ligne",
+  "addLine": "+ Ajouter un produit",
+  "subtotal": "Sous-total",
+  "discount": "Remise",
+  "discountNone": "Aucune",
+  "discountPct": "Pourcentage (%)",
+  "discountAmount": "Montant (FCFA)",
+  "total": "TOTAL TTC",
+  "paid": "Montant payé",
+  "credit": "Crédit restant",
+  "validate": "Valider la commande",
+  "saving": "Enregistrement…",
+  "empty": "Aucune commande.",
+  "noLines": "Ajoutez au moins un produit.",
+  "columns": {
+    "number": "N°",
+    "client": "Client",
+    "date": "Date",
+    "total": "Total",
+    "paid": "Payé",
+    "credit": "Crédit",
+    "status": "Statut"
+  },
+  "status": {
+    "BROUILLON": "Brouillon",
+    "VALIDEE": "Validée",
+    "ANNULEE": "Annulée"
+  }
+}

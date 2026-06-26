@@ -1,19 +1,22 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { LayoutDashboard, LogOut, Package, Receipt, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
+import { avatarColor, initials } from "../lib/avatar";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const navItems = [
-  { to: "/dashboard", key: "nav.dashboard", icon: "📊" },
-  { to: "/clients", key: "nav.clients", icon: "👥" },
-  { to: "/commandes/new", key: "nav.newOrder", icon: "🧾" },
-  { to: "/commandes", key: "nav.orders", icon: "📦" },
+  { to: "/dashboard", key: "nav.dashboard", Icon: LayoutDashboard },
+  { to: "/clients", key: "nav.clients", Icon: Users },
+  { to: "/commandes/new", key: "nav.newOrder", Icon: Receipt },
+  { to: "/commandes", key: "nav.orders", Icon: Package },
 ];
 
 export function Layout() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const name = user?.nom ?? "—";
 
   const handleLogout = () => {
     logout();
@@ -28,10 +31,11 @@ export function Layout() {
           <p className="text-xs text-slate-400">{t("app.tagline")}</p>
         </div>
         <nav className="flex-1 space-y-1 p-3">
-          {navItems.map((item) => (
+          {navItems.map(({ to, key, Icon }) => (
             <NavLink
-              key={item.to}
-              to={item.to}
+              key={to}
+              to={to}
+              end={to === "/commandes/new"}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
                   isActive
@@ -40,28 +44,34 @@ export function Layout() {
                 }`
               }
             >
-              <span>{item.icon}</span>
-              {t(item.key)}
+              <Icon size={18} />
+              {t(key)}
             </NavLink>
           ))}
         </nav>
-        <div className="border-t p-3">
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-          >
-            <span>🚪</span>
-            {t("nav.logout")}
-          </button>
-        </div>
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-between border-b bg-white px-6 py-3">
-          <div className="text-sm text-slate-500">
-            {user?.nom} · {user?.role}
-          </div>
+        <header className="flex items-center justify-end gap-4 border-b bg-white px-6 py-3">
           <LanguageSwitcher />
+          <div className="flex items-center gap-2">
+            <div
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${avatarColor(name)}`}
+            >
+              {initials(name)}
+            </div>
+            <div className="leading-tight">
+              <p className="text-sm font-semibold">{name}</p>
+              <p className="text-xs text-slate-400">{user?.role}</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            title={t("nav.logout")}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+          >
+            <LogOut size={18} />
+          </button>
         </header>
         <main className="flex-1 overflow-auto p-6">
           <Outlet />

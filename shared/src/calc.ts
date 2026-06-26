@@ -42,6 +42,11 @@ function clamp(n: number, min: number, max: number): number {
   return Math.min(Math.max(n, min), max);
 }
 
+/** Crédit restant dû sur une commande = total TTC − montant déjà payé (>= 0). */
+export function creditRestant(totalTTC: number, montantPaye: number): number {
+  return round2(Math.max((totalTTC || 0) - (montantPaye || 0), 0));
+}
+
 /** total_ligne = quantite × prix_unitaire (CDC §5.3). */
 export function lineTotal(quantite: number, prixUnitaire: number): number {
   const q = Number.isFinite(quantite) ? quantite : 0;

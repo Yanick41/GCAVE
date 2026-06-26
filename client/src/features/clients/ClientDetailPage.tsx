@@ -1,11 +1,13 @@
-import { formatDate, formatMoney, type Lang } from "@gca/shared";
+import { creditRestant, formatDate, formatMoney, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { avatarColor, initials } from "../../lib/avatar";
 import { archiveClient, fetchClient } from "./api";
 
 export function ClientDetailPage() {
-  const { t, i18n } = useTranslation(["clients", "common"]);
+  const { t, i18n } = useTranslation(["clients", "common", "commandes"]);
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
   const { id } = useParams();
   const navigate = useNavigate();
@@ -29,7 +31,7 @@ export function ClientDetailPage() {
   if (!client) return <p className="text-slate-400">{t("common:errors.NOT_FOUND")}</p>;
 
   return (
-    <div className="max-w-3xl">
+    <div className="mx-auto max-w-3xl">
       <button
         onClick={() => navigate("/clients")}
         className="mb-4 text-sm text-slate-500 hover:underline"
@@ -38,30 +40,45 @@ export function ClientDetailPage() {
       </button>
 
       <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{client.nom}</h1>
-          <p className="text-sm text-slate-500">{t("clients:detail.title")}</p>
+        <div className="flex items-center gap-3">
+          <span
+            className={`flex h-12 w-12 items-center justify-center rounded-full text-base font-semibold ${avatarColor(client.nom)}`}
+          >
+            {initials(client.nom)}
+          </span>
+          <div>
+            <h1 className="text-2xl font-bold">{client.nom}</h1>
+            <p className="text-sm text-slate-400">{t("clients:detail.title")}</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => navigate(`/clients/${client.id}/edit`)}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            onClick={() => navigate(`/clients/${client.id}/commandes/new`)}
+            className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
           >
-            {t("common:actions.edit")}
+            <Plus size={16} /> {t("commandes:new")}
+          </button>
+          <button
+            onClick={() => navigate(`/clients/${client.id}/edit`)}
+            title={t("common:actions.edit")}
+            className="rounded-lg border border-slate-300 p-2 text-slate-500 hover:bg-slate-50"
+          >
+            <Pencil size={16} />
           </button>
           <button
             onClick={() => {
               if (confirm(t("clients:detail.archiveConfirm"))) archive.mutate();
             }}
-            className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+            title={t("common:actions.delete")}
+            className="rounded-lg border border-red-200 p-2 text-red-500 hover:bg-red-50"
           >
-            {t("common:actions.delete")}
+            <Trash2 size={16} />
           </button>
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <section className="rounded-lg border bg-white p-5">
+        <section className="rounded-xl border bg-white p-5">
           <h2 className="mb-3 font-semibold">{t("clients:detail.info")}</h2>
           <dl className="space-y-2 text-sm">
             <Row label={t("clients:columns.phone")} value={client.telephone} />
@@ -70,7 +87,7 @@ export function ClientDetailPage() {
           </dl>
         </section>
 
-        <section className="rounded-lg border bg-white p-5">
+        <section className="rounded-xl border bg-white p-5">
           <h2 className="mb-3 font-semibold">{t("clients:detail.totalCumule")}</h2>
           <p className="text-3xl font-bold text-green-600">
             {formatMoney(client.totalCumule, lang)}
@@ -78,22 +95,48 @@ export function ClientDetailPage() {
         </section>
       </div>
 
-      <section className="mt-6 rounded-lg border bg-white p-5">
+      <section className="mt-6 rounded-xl border bg-white p-5">
         <h2 className="mb-3 font-semibold">{t("clients:detail.orders")}</h2>
         {client.commandes.length === 0 ? (
           <p className="text-sm text-slate-400">{t("clients:detail.noOrders")}</p>
         ) : (
-          <ul className="divide-y text-sm">
-            {client.commandes.map((c) => (
-              <li key={c.id} className="flex justify-between py-2">
-                <span className="font-medium">{c.numero}</span>
-                <span className="text-slate-500">{formatDate(c.date, lang)}</span>
-                <span className="font-semibold">
-                  {formatMoney(Number(c.totalTTC), lang)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <table className="w-full text-left text-sm">
+            <thead className="border-b text-xs uppercase text-slate-400">
+              <tr>
+                <th className="py-2">{t("commandes:columns.number")}</th>
+                <th className="py-2">{t("commandes:columns.date")}</th>
+                <th className="py-2 text-right">{t("commandes:columns.total")}</th>
+                <th className="py-2 text-right">{t("commandes:columns.paid")}</th>
+                <th className="py-2 text-right">{t("commandes:columns.credit")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {client.commandes.map((c) => {
+                const credit = creditRestant(Number(c.totalTTC), Number(c.montantPaye));
+                return (
+                  <tr
+                    key={c.id}
+                    className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
+                    onClick={() => navigate(`/commandes/${c.id}`)}
+                  >
+                    <td className="py-2 font-medium">{c.numero}</td>
+                    <td className="py-2 text-slate-500">{formatDate(c.date, lang)}</td>
+                    <td className="py-2 text-right tabular-nums">
+                      {formatMoney(Number(c.totalTTC), lang)}
+                    </td>
+                    <td className="py-2 text-right tabular-nums text-green-600">
+                      {formatMoney(Number(c.montantPaye), lang)}
+                    </td>
+                    <td
+                      className={`py-2 text-right tabular-nums ${credit > 0 ? "text-red-600" : "text-slate-400"}`}
+                    >
+                      {formatMoney(credit, lang)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         )}
       </section>
     </div>

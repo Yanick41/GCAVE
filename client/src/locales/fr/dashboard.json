@@ -1,0 +1,17 @@
+{
+  "title": "Tableau de bord",
+  "kpi": {
+    "revenue": "Chiffre d'affaires",
+    "creditPaid": "Crédits payés",
+    "creditDue": "Crédits restants",
+    "orders": "Commandes",
+    "today": "aujourd'hui"
+  },
+  "topClients": "Meilleurs clients payeurs",
+  "topClientsHint": "Classés par crédit déjà payé",
+  "topProducts": "Top produits",
+  "salesPerformance": "Performance de vente (30 jours)",
+  "paid": "payé",
+  "due": "restant",
+  "noData": "Pas encore de données. Créez des commandes pour voir vos statistiques."
+}

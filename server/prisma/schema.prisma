@@ -56,15 +56,16 @@ model Commande {
   clientId       String?
   client         Client?         @relation(fields: [clientId], references: [id])
   clientNomLibre String? // client occasionnel (F-B01)
-  utilisateurId  String
-  utilisateur    Utilisateur     @relation(fields: [utilisateurId], references: [id])
+  utilisateurId  String?
+  utilisateur    Utilisateur?    @relation(fields: [utilisateurId], references: [id])
   lignes         LigneCommande[]
   remiseType     RemiseType      @default(AUCUNE)
   remiseValeur   Decimal         @default(0) @db.Decimal(12, 2)
   sousTotal      Decimal         @db.Decimal(12, 2)
   montantRemise  Decimal         @db.Decimal(12, 2)
   totalTTC       Decimal         @db.Decimal(12, 2)
-  statut         StatutCommande  @default(BROUILLON)
+  montantPaye    Decimal         @default(0) @db.Decimal(12, 2) // crédit déjà payé
+  statut         StatutCommande  @default(VALIDEE)
   date           DateTime        @default(now())
 
   @@index([clientId])

@@ -43,6 +43,7 @@ async function main() {
       sousTotal: calc.sousTotal,
       montantRemise: calc.montantRemise,
       totalTTC: calc.totalTTC,
+      montantPaye: Math.round(calc.totalTTC / 2), // moitié payée (démo crédit)
       statut: "VALIDEE",
       lignes: {
         create: calc.lignes.map((l) => ({

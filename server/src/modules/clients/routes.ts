@@ -29,6 +29,7 @@ clientsRouter.get(
       },
       orderBy: { createdAt: "desc" },
       take: 100,
+      include: { _count: { select: { commandes: true } } },
     });
     res.json(clients);
   }),

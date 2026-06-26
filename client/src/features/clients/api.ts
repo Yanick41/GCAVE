@@ -9,6 +9,7 @@ export interface Client {
   adresse: string | null;
   archived: boolean;
   createdAt: string;
+  _count?: { commandes: number };
 }
 
 export interface CommandeResume {
@@ -16,6 +17,7 @@ export interface CommandeResume {
   numero: string;
   date: string;
   totalTTC: string;
+  montantPaye: string;
   statut: "BROUILLON" | "VALIDEE" | "ANNULEE";
 }
 

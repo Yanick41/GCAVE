@@ -1,0 +1,39 @@
+{
+  "title": "Orders",
+  "new": "New order",
+  "newFor": "New order for {{name}}",
+  "client": "Client",
+  "selectClient": "Select a client…",
+  "lines": "Product lines",
+  "product": "Product",
+  "qty": "Qty",
+  "unitPrice": "Unit price",
+  "lineTotal": "Line total",
+  "addLine": "+ Add a product",
+  "subtotal": "Subtotal",
+  "discount": "Discount",
+  "discountNone": "None",
+  "discountPct": "Percentage (%)",
+  "discountAmount": "Amount (FCFA)",
+  "total": "TOTAL",
+  "paid": "Amount paid",
+  "credit": "Credit due",
+  "validate": "Confirm order",
+  "saving": "Saving…",
+  "empty": "No orders.",
+  "noLines": "Add at least one product.",
+  "columns": {
+    "number": "No.",
+    "client": "Client",
+    "date": "Date",
+    "total": "Total",
+    "paid": "Paid",
+    "credit": "Credit",
+    "status": "Status"
+  },
+  "status": {
+    "BROUILLON": "Draft",
+    "VALIDEE": "Confirmed",
+    "ANNULEE": "Cancelled"
+  }
+}

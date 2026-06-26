@@ -5,6 +5,8 @@ import { env } from "./lib/env.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 import { authRouter } from "./modules/auth/routes.js";
 import { clientsRouter } from "./modules/clients/routes.js";
+import { commandesRouter } from "./modules/commandes/routes.js";
+import { dashboardRouter } from "./modules/dashboard/routes.js";
 import { healthRouter } from "./modules/health/routes.js";
 
 const app = express();
@@ -17,6 +19,8 @@ app.use(express.json({ limit: "1mb" }));
 app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/clients", clientsRouter);
+app.use("/api/commandes", commandesRouter);
+app.use("/api/dashboard", dashboardRouter);
 
 app.use(notFound);
 app.use(errorHandler);

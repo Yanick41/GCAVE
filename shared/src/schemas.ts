@@ -32,12 +32,17 @@ export const commandeSchema = z
     lignes: z.array(ligneSchema).min(1),
     remiseType: remiseTypeSchema.default("AUCUNE"),
     remiseValeur: z.number().nonnegative().default(0),
+    montantPaye: z.number().nonnegative().default(0),
     statut: statutCommandeSchema.optional(),
   })
   .refine((d) => Boolean(d.clientId) || Boolean(d.clientNomLibre), {
     message: "CLIENT_REQUIRED",
     path: ["clientId"],
   });
+
+export const paiementSchema = z.object({
+  montant: z.number().positive(),
+});
 
 export const commandeFiltersSchema = z.object({
   q: z.string().optional(),

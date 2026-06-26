@@ -321,6 +321,9 @@ npm run dev                                       # http://localhost:3000
 | 0 Setup | ✅ Fait | 2026-06-26 | Monorepo, moteur de calcul partagé, health check. Reste : brancher Neon. |
 | 1 Auth | ✅ Fait | 2026-06-26 | Auth simplifiée (compte admin .env), layout, routing protégé, EN/FR. T09 OK. |
 | 2 Clients | ✅ Fait | 2026-06-26 | CRUD complet (liste/recherche/fiche/form/archive). Tests T01/T08 à brancher sur Neon. |
+| 3 Commandes | ✅ Fait | 2026-06-26 | Saisie temps réel (lignes/remise/total), création depuis fiche client, détail, liste. |
+| + Crédit | ✅ Ajout | 2026-06-26 | **Hors CDC initial** : montant payé + crédit restant par commande + paiements. |
+| 5 Dashboard | ✅ Fait | 2026-06-26 | CA, crédits payés/restants, meilleurs clients payeurs, courbe 30j, top produits. |
 | 3 Commandes | ⬜ À faire | | |
 | 4 Historique/Export | ⬜ À faire | | |
 | 5 Dashboard | ⬜ À faire | | |

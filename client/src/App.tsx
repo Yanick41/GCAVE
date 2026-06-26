@@ -1,11 +1,13 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
-import { SoonPage } from "./components/SoonPage";
 import { LoginPage } from "./features/auth/LoginPage";
 import { ProtectedRoute } from "./features/auth/ProtectedRoute";
 import { ClientDetailPage } from "./features/clients/ClientDetailPage";
 import { ClientFormPage } from "./features/clients/ClientFormPage";
 import { ClientsListPage } from "./features/clients/ClientsListPage";
+import { OrderDetailPage } from "./features/commandes/OrderDetailPage";
+import { OrderFormPage } from "./features/commandes/OrderFormPage";
+import { OrdersListPage } from "./features/commandes/OrdersListPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 
 export default function App() {
@@ -16,24 +18,22 @@ export default function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
-            <Route index element={<Navigate to="/clients" replace />} />
+            <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
+
             <Route path="/clients" element={<ClientsListPage />} />
             <Route path="/clients/new" element={<ClientFormPage />} />
             <Route path="/clients/:id" element={<ClientDetailPage />} />
             <Route path="/clients/:id/edit" element={<ClientFormPage />} />
-            <Route
-              path="/commandes/new"
-              element={<SoonPage titleKey="nav.newOrder" />}
-            />
-            <Route
-              path="/commandes"
-              element={<SoonPage titleKey="nav.orders" />}
-            />
+            <Route path="/clients/:id/commandes/new" element={<OrderFormPage />} />
+
+            <Route path="/commandes" element={<OrdersListPage />} />
+            <Route path="/commandes/new" element={<OrderFormPage />} />
+            <Route path="/commandes/:id" element={<OrderDetailPage />} />
           </Route>
         </Route>
 
-        <Route path="*" element={<Navigate to="/clients" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );
