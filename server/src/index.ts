@@ -3,6 +3,8 @@ import express from "express";
 import helmet from "helmet";
 import { env } from "./lib/env.js";
 import { errorHandler, notFound } from "./middleware/error.js";
+import { authRouter } from "./modules/auth/routes.js";
+import { clientsRouter } from "./modules/clients/routes.js";
 import { healthRouter } from "./modules/health/routes.js";
 
 const app = express();
@@ -13,7 +15,8 @@ app.use(express.json({ limit: "1mb" }));
 
 // Routes
 app.use("/api/health", healthRouter);
-// Sprint 1+ : app.use("/api/auth", authRouter); etc.
+app.use("/api/auth", authRouter);
+app.use("/api/clients", clientsRouter);
 
 app.use(notFound);
 app.use(errorHandler);

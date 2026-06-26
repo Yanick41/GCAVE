@@ -7,7 +7,8 @@
     "dashboard": "Tableau de bord",
     "clients": "Clients",
     "newOrder": "Nouvelle commande",
-    "orders": "Commandes"
+    "orders": "Commandes",
+    "logout": "Déconnexion"
   },
   "health": {
     "title": "État du système",
@@ -17,8 +18,29 @@
     "down": "Hors ligne",
     "checking": "Vérification…"
   },
+  "actions": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Archiver",
+    "view": "Voir",
+    "search": "Rechercher",
+    "new": "Nouveau",
+    "back": "Retour",
+    "confirm": "Confirmer"
+  },
   "common": {
     "language": "Langue",
-    "loading": "Chargement…"
+    "loading": "Chargement…",
+    "soon": "Bientôt disponible"
+  },
+  "errors": {
+    "INVALID_CREDENTIALS": "Email ou mot de passe incorrect.",
+    "UNAUTHORIZED": "Session expirée, veuillez vous reconnecter.",
+    "VALIDATION_ERROR": "Certains champs sont invalides.",
+    "NOT_FOUND": "Élément introuvable.",
+    "INTERNAL_ERROR": "Erreur serveur. Réessayez plus tard.",
+    "NETWORK": "Serveur injoignable. Vérifiez que l'API est démarrée.",
+    "UNKNOWN": "Une erreur est survenue."
   }
 }

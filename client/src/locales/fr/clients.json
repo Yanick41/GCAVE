@@ -1,0 +1,33 @@
+{
+  "title": "Clients",
+  "searchPlaceholder": "Rechercher par nom ou téléphone…",
+  "new": "Nouveau client",
+  "empty": "Aucun client. Cliquez sur « Nouveau client » pour commencer.",
+  "noResults": "Aucun résultat pour cette recherche.",
+  "columns": {
+    "name": "Nom",
+    "phone": "Téléphone",
+    "email": "Email",
+    "actions": "Actions"
+  },
+  "form": {
+    "newTitle": "Enregistrer un client",
+    "editTitle": "Modifier le client",
+    "name": "Nom complet",
+    "phone": "Téléphone",
+    "email": "Email (optionnel)",
+    "address": "Adresse (optionnel)",
+    "required": "Ce champ est obligatoire",
+    "invalidEmail": "Email invalide",
+    "saved": "Client enregistré",
+    "saving": "Enregistrement…"
+  },
+  "detail": {
+    "title": "Fiche client",
+    "info": "Informations",
+    "orders": "Commandes",
+    "totalCumule": "Total cumulé",
+    "noOrders": "Aucune commande pour ce client.",
+    "archiveConfirm": "Archiver ce client ? Ses commandes seront conservées."
+  }
+}

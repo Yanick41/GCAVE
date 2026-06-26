@@ -7,7 +7,8 @@
     "dashboard": "Dashboard",
     "clients": "Clients",
     "newOrder": "New order",
-    "orders": "Orders"
+    "orders": "Orders",
+    "logout": "Log out"
   },
   "health": {
     "title": "System status",
@@ -17,8 +18,29 @@
     "down": "Offline",
     "checking": "Checking…"
   },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Archive",
+    "view": "View",
+    "search": "Search",
+    "new": "New",
+    "back": "Back",
+    "confirm": "Confirm"
+  },
   "common": {
     "language": "Language",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "soon": "Coming soon"
+  },
+  "errors": {
+    "INVALID_CREDENTIALS": "Invalid email or password.",
+    "UNAUTHORIZED": "Session expired, please log in again.",
+    "VALIDATION_ERROR": "Some fields are invalid.",
+    "NOT_FOUND": "Item not found.",
+    "INTERNAL_ERROR": "Server error. Please try again later.",
+    "NETWORK": "Cannot reach the server. Make sure the API is running.",
+    "UNKNOWN": "Something went wrong."
   }
 }

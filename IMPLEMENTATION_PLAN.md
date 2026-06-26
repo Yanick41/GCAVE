@@ -217,21 +217,26 @@ Exemple `fr/commandes.json` :
 - [ ] **DB (action utilisateur)** : créer projet Neon → coller `DATABASE_URL` dans `server/.env` → `npm run prisma:migrate -- --name init` → `npm run seed`.
 - **Livrable** : ✅ repo qui démarre client (`localhost:5173`) + API (`localhost:3000`). Reste : brancher Neon.
 
-### Sprint 1 — Auth & navigation (5 j)
-- [ ] Backend : `POST /api/auth/login` (bcrypt compare + JWT), middleware `requireAuth`.
-- [ ] Frontend : page **E01 Login**, stockage token (mémoire + `localStorage`), axios interceptor.
-- [ ] Routing protégé (React Router) : redirige vers /login si pas de token.
-- [ ] **Layout responsive** (≥768px) : menu latéral, header avec **sélecteur de langue EN/FR**.
-- [ ] i18next configuré + namespaces `common`/`auth`.
-- **Tests** : T09 (mauvais mot de passe → erreur traduite).
+### Sprint 1 — Auth & navigation (5 j) ✅ FAIT
+> **Choix produit** : authentification *simplifiée* à la demande — **un seul compte admin défini
+> dans `.env`** (`ADMIN_EMAIL`/`ADMIN_PASSWORD`), pas de table utilisateurs ni d'inscription.
+> Login fonctionne **sans la base de données**. Le modèle `Utilisateur` reste en base pour une
+> future montée en gamme (multi-utilisateurs avec bcrypt).
+- [x] Backend : `POST /api/auth/login` (vérif compte admin env + JWT 12h), `GET /api/auth/me`, middleware `requireAuth`, rate-limit login.
+- [x] Frontend : page **E01 Login** (pré-remplie démo), `AuthContext`, token + user en `localStorage`, axios interceptor (Bearer + redirection sur 401).
+- [x] Routing protégé (React Router v7) : `ProtectedRoute` → /login si pas de token.
+- [x] **Layout** : menu latéral (Dashboard/Clients/Commandes), header avec user + **sélecteur EN/FR** + déconnexion.
+- [x] i18next : namespaces `common` / `auth` / `clients`, FR par défaut.
+- **Tests** : ✅ T09 vérifié (mauvais mot de passe → `INVALID_CREDENTIALS` traduit). Login OK, route protégée → `UNAUTHORIZED`.
 
-### Sprint 2 — Module Clients CRUD (5 j) — *Modules A*
-- [ ] API clients (list+search, create, update, archive, detail).
-- [ ] **E03 Liste clients** : tableau paginé + recherche autocomplétée temps réel (debounce 250 ms).
-- [ ] Formulaire créer/modifier (RHF + Zod).
-- [ ] **E04 Fiche client** : infos + historique commandes + total cumulé.
-- [ ] Suppression logique avec confirmation.
-- **Tests** : T01, T08.
+### Sprint 2 — Module Clients CRUD (5 j) ✅ FAIT (test à brancher sur Neon)
+- [x] API clients (list+search insensible à la casse, create, update, archive logique, detail).
+- [x] **E03 Liste clients** : tableau + recherche temps réel (debounce 250 ms) + actions Voir/Modifier/Archiver.
+- [x] Formulaire créer/modifier (RHF + Zod via schéma partagé `clientSchema`).
+- [x] **E04 Fiche client** : infos + total cumulé (vert) + section commandes (vide pour l'instant — Sprint 3).
+- [x] Suppression logique avec confirmation.
+- [x] Build client OK (typecheck + vite build). Endpoints renvoient une erreur propre sans DB.
+- **Tests** : ⏳ T01 / T08 à valider une fois Neon branché (`prisma migrate` + `seed`).
 
 ### Sprint 3 — Module Commandes — CŒUR (7 j) — *Module B*
 - [ ] **E05 Saisie commande** : sélection client (autocomplete) ou client occasionnel.
@@ -314,8 +319,8 @@ npm run dev                                       # http://localhost:3000
 | Sprint | Statut | Date | Notes |
 |---|---|---|---|
 | 0 Setup | ✅ Fait | 2026-06-26 | Monorepo, moteur de calcul partagé, health check. Reste : brancher Neon. |
-| 1 Auth | ⬜ À faire | | |
-| 2 Clients | ⬜ À faire | | |
+| 1 Auth | ✅ Fait | 2026-06-26 | Auth simplifiée (compte admin .env), layout, routing protégé, EN/FR. T09 OK. |
+| 2 Clients | ✅ Fait | 2026-06-26 | CRUD complet (liste/recherche/fiche/form/archive). Tests T01/T08 à brancher sur Neon. |
 | 3 Commandes | ⬜ À faire | | |
 | 4 Historique/Export | ⬜ À faire | | |
 | 5 Dashboard | ⬜ À faire | | |

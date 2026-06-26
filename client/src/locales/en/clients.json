@@ -1,0 +1,33 @@
+{
+  "title": "Clients",
+  "searchPlaceholder": "Search by name or phone…",
+  "new": "New client",
+  "empty": "No clients yet. Click “New client” to get started.",
+  "noResults": "No results for this search.",
+  "columns": {
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "actions": "Actions"
+  },
+  "form": {
+    "newTitle": "Register a client",
+    "editTitle": "Edit client",
+    "name": "Full name",
+    "phone": "Phone",
+    "email": "Email (optional)",
+    "address": "Address (optional)",
+    "required": "This field is required",
+    "invalidEmail": "Invalid email",
+    "saved": "Client saved",
+    "saving": "Saving…"
+  },
+  "detail": {
+    "title": "Client profile",
+    "info": "Information",
+    "orders": "Orders",
+    "totalCumule": "Total spent",
+    "noOrders": "No orders for this client.",
+    "archiveConfirm": "Archive this client? Their orders will be kept."
+  }
+}
