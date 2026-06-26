@@ -5,45 +5,44 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Utilisateur admin de démo
+  // Repartir propre (données de démo uniquement)
+  await prisma.paiement.deleteMany();
+  await prisma.ligneCommande.deleteMany();
+  await prisma.commande.deleteMany();
+  await prisma.client.deleteMany();
+
   const passwordHash = await bcrypt.hash("admin1234", 10);
-  const admin = await prisma.utilisateur.upsert({
+  await prisma.utilisateur.upsert({
     where: { email: "admin@gca.local" },
     update: {},
-    create: {
-      nom: "Admin Démo",
-      email: "admin@gca.local",
-      passwordHash,
-      role: "ADMIN",
+    create: { nom: "Admin Démo", email: "admin@gca.local", passwordHash, role: "ADMIN" },
+  });
+
+  const clientA = await prisma.client.create({
+    data: {
+      nom: "Awa Traoré",
+      telephone: "+225 0700000001",
+      email: "awa@example.com",
+      adresse: "Cocody, Abidjan",
     },
   });
-
-  // Clients de démo
-  const clientA = await prisma.client.create({
-    data: { nom: "Awa Traoré", telephone: "+225 0700000001", email: "awa@example.com" },
-  });
   await prisma.client.create({
-    data: { nom: "Koffi N'Guessan", telephone: "+225 0700000002" },
+    data: { nom: "Koffi N'Guessan", telephone: "+225 0700000002", adresse: "Yopougon" },
   });
 
-  // Commande de démo (totaux calculés via le moteur partagé)
+  // Une commande (dette) pour Awa
   const lignes = [
-    { nomProduit: "Sac de riz 25kg", quantite: 2, prixUnitaire: 15000 },
-    { nomProduit: "Bidon d'huile 5L", quantite: 3, prixUnitaire: 6500 },
+    { nomProduit: "Casier de bière 65cl", quantite: 5, prixUnitaire: 9000 },
+    { nomProduit: "Pack d'eau 1.5L", quantite: 10, prixUnitaire: 2500 },
   ];
-  const calc = computeCommande({ lignes, remiseType: "POURCENTAGE", remiseValeur: 10 });
-
+  const calc = computeCommande({ lignes, remiseType: "AUCUNE", remiseValeur: 0 });
   await prisma.commande.create({
     data: {
       numero: "CMD-2025-000001",
       clientId: clientA.id,
-      utilisateurId: admin.id,
-      remiseType: "POURCENTAGE",
-      remiseValeur: 10,
       sousTotal: calc.sousTotal,
       montantRemise: calc.montantRemise,
       totalTTC: calc.totalTTC,
-      montantPaye: Math.round(calc.totalTTC / 2), // moitié payée (démo crédit)
       statut: "VALIDEE",
       lignes: {
         create: calc.lignes.map((l) => ({
@@ -53,6 +52,16 @@ async function main() {
           totalLigne: l.totalLigne,
         })),
       },
+    },
+  });
+
+  // Un paiement partiel d'Awa (le solde restant sera commandes − paiements)
+  await prisma.paiement.create({
+    data: {
+      clientId: clientA.id,
+      montant: 40000,
+      mode: "MOBILE_MONEY",
+      observation: "Acompte",
     },
   });
 

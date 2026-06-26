@@ -27,6 +27,12 @@ enum StatutCommande {
   ANNULEE
 }
 
+enum ModePaiement {
+  ESPECES
+  MOBILE_MONEY
+  VIREMENT
+}
+
 model Utilisateur {
   id           String     @id @default(cuid())
   nom          String
@@ -45,10 +51,25 @@ model Client {
   adresse   String?
   archived  Boolean    @default(false) // F-A04 : suppression logique
   commandes Commande[]
+  paiements Paiement[]
   createdAt DateTime   @default(now())
 
   @@index([nom])
   @@index([telephone])
+}
+
+model Paiement {
+  id          String       @id @default(cuid())
+  clientId    String
+  client      Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  montant     Decimal      @db.Decimal(12, 2)
+  mode        ModePaiement @default(ESPECES)
+  date        DateTime     @default(now())
+  observation String?
+  createdAt   DateTime     @default(now())
+
+  @@index([clientId])
+  @@index([date])
 }
 
 model Commande {

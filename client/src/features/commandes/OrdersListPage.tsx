@@ -1,4 +1,4 @@
-import { creditRestant, formatDate, formatMoney, type Lang } from "@gca/shared";
+import { formatDate, formatMoney, type Lang } from "@gca/shared";
 import { useQuery } from "@tanstack/react-query";
 import { Package } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -38,61 +38,42 @@ export function OrdersListPage() {
               <th className="px-5 py-3">{t("commandes:columns.client")}</th>
               <th className="px-5 py-3">{t("commandes:columns.date")}</th>
               <th className="px-5 py-3 text-right">{t("commandes:columns.total")}</th>
-              <th className="px-5 py-3 text-right">{t("commandes:columns.paid")}</th>
-              <th className="px-5 py-3 text-right">{t("commandes:columns.credit")}</th>
               <th className="px-5 py-3 text-center">{t("commandes:columns.status")}</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="px-5 py-10 text-center text-slate-400">
+                <td colSpan={5} className="px-5 py-10 text-center text-slate-400">
                   {t("common:common.loading")}
                 </td>
               </tr>
             ) : !commandes || commandes.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-5 py-10 text-center text-slate-400">
+                <td colSpan={5} className="px-5 py-10 text-center text-slate-400">
                   {t("commandes:empty")}
                 </td>
               </tr>
             ) : (
-              commandes.map((c) => {
-                const credit = creditRestant(Number(c.totalTTC), Number(c.montantPaye));
-                return (
-                  <tr
-                    key={c.id}
-                    onClick={() => navigate(`/commandes/${c.id}`)}
-                    className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
-                  >
-                    <td className="px-5 py-3 font-medium">{c.numero}</td>
-                    <td className="px-5 py-3">
-                      {c.client?.nom ?? c.clientNomLibre ?? "—"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {formatDate(c.date, lang)}
-                    </td>
-                    <td className="px-5 py-3 text-right tabular-nums">
-                      {formatMoney(Number(c.totalTTC), lang)}
-                    </td>
-                    <td className="px-5 py-3 text-right tabular-nums text-emerald-600">
-                      {formatMoney(Number(c.montantPaye), lang)}
-                    </td>
-                    <td
-                      className={`px-5 py-3 text-right tabular-nums ${credit > 0 ? "text-rose-600" : "text-slate-400"}`}
-                    >
-                      {formatMoney(credit, lang)}
-                    </td>
-                    <td className="px-5 py-3 text-center">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyle[c.statut]}`}
-                      >
-                        {t(`commandes:status.${c.statut}`)}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })
+              commandes.map((c) => (
+                <tr
+                  key={c.id}
+                  onClick={() => navigate(`/commandes/${c.id}`)}
+                  className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
+                >
+                  <td className="px-5 py-3 font-medium">{c.numero}</td>
+                  <td className="px-5 py-3">{c.client?.nom ?? c.clientNomLibre ?? "—"}</td>
+                  <td className="px-5 py-3 text-slate-500">{formatDate(c.date, lang)}</td>
+                  <td className="px-5 py-3 text-right tabular-nums">
+                    {formatMoney(Number(c.totalTTC), lang)}
+                  </td>
+                  <td className="px-5 py-3 text-center">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyle[c.statut]}`}>
+                      {t(`commandes:status.${c.statut}`)}
+                    </span>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>

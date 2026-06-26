@@ -4,10 +4,21 @@
   "new": "Nouveau client",
   "empty": "Aucun client. Cliquez sur « Nouveau client » pour commencer.",
   "noResults": "Aucun résultat pour cette recherche.",
+  "count": "{{count}} client",
+  "count_other": "{{count}} clients",
+  "orders": "commandes",
+  "solde": "Solde",
+  "sort": {
+    "label": "Trier",
+    "recent": "Récents",
+    "nom": "Nom",
+    "solde": "Solde"
+  },
   "columns": {
     "name": "Nom",
     "phone": "Téléphone",
     "email": "Email",
+    "address": "Adresse",
     "actions": "Actions"
   },
   "form": {
@@ -25,9 +36,25 @@
   "detail": {
     "title": "Fiche client",
     "info": "Informations",
+    "createdAt": "Client depuis",
+    "currentBalance": "Solde actuel",
+    "totalOrders": "Total commandes",
+    "totalPayments": "Total paiements",
     "orders": "Commandes",
-    "totalCumule": "Total cumulé",
+    "history": "Historique",
+    "newOrder": "Nouvelle commande",
+    "newPayment": "Nouveau paiement",
+    "printBalance": "Imprimer le bilan",
     "noOrders": "Aucune commande pour ce client.",
-    "archiveConfirm": "Archiver ce client ? Ses commandes seront conservées."
+    "noHistory": "Aucune opération pour l'instant.",
+    "archiveConfirm": "Archiver ce client ? Ses commandes et paiements seront conservés.",
+    "hist": {
+      "date": "Date",
+      "type": "Opération",
+      "amount": "Montant",
+      "balanceAfter": "Solde après",
+      "COMMANDE": "Commande",
+      "PAIEMENT": "Paiement"
+    }
   }
 }

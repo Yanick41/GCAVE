@@ -1,4 +1,13 @@
-import { LayoutDashboard, LogOut, Package, Receipt, Users } from "lucide-react";
+import {
+  BarChart3,
+  Boxes,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  Settings,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
@@ -7,9 +16,12 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const navItems = [
   { to: "/dashboard", key: "nav.dashboard", Icon: LayoutDashboard },
+  { to: "/produits", key: "nav.products", Icon: Boxes },
   { to: "/clients", key: "nav.clients", Icon: Users },
-  { to: "/commandes/new", key: "nav.newOrder", Icon: Receipt },
   { to: "/commandes", key: "nav.orders", Icon: Package },
+  { to: "/paiements", key: "nav.payments", Icon: Wallet },
+  { to: "/rapports", key: "nav.reports", Icon: BarChart3 },
+  { to: "/parametres", key: "nav.settings", Icon: Settings },
 ];
 
 export function Layout() {

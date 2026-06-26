@@ -4,10 +4,21 @@
   "new": "New client",
   "empty": "No clients yet. Click “New client” to get started.",
   "noResults": "No results for this search.",
+  "count": "{{count}} client",
+  "count_other": "{{count}} clients",
+  "orders": "orders",
+  "solde": "Balance",
+  "sort": {
+    "label": "Sort",
+    "recent": "Recent",
+    "nom": "Name",
+    "solde": "Balance"
+  },
   "columns": {
     "name": "Name",
     "phone": "Phone",
     "email": "Email",
+    "address": "Address",
     "actions": "Actions"
   },
   "form": {
@@ -25,9 +36,25 @@
   "detail": {
     "title": "Client profile",
     "info": "Information",
+    "createdAt": "Client since",
+    "currentBalance": "Current balance",
+    "totalOrders": "Total orders",
+    "totalPayments": "Total payments",
     "orders": "Orders",
-    "totalCumule": "Total spent",
+    "history": "History",
+    "newOrder": "New order",
+    "newPayment": "New payment",
+    "printBalance": "Print statement",
     "noOrders": "No orders for this client.",
-    "archiveConfirm": "Archive this client? Their orders will be kept."
+    "noHistory": "No operations yet.",
+    "archiveConfirm": "Archive this client? Their orders and payments will be kept.",
+    "hist": {
+      "date": "Date",
+      "type": "Operation",
+      "amount": "Amount",
+      "balanceAfter": "Balance after",
+      "COMMANDE": "Order",
+      "PAIEMENT": "Payment"
+    }
   }
 }

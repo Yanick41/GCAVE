@@ -20,7 +20,6 @@ export interface Commande {
   sousTotal: string;
   montantRemise: string;
   totalTTC: string;
-  montantPaye: string;
   statut: "BROUILLON" | "VALIDEE" | "ANNULEE";
   date: string;
   lignes: LigneCommande[];
@@ -40,12 +39,5 @@ export async function fetchCommande(id: string): Promise<Commande> {
 
 export async function createCommande(input: CommandeInput): Promise<Commande> {
   const { data } = await api.post<Commande>("/api/commandes", input);
-  return data;
-}
-
-export async function addPaiement(id: string, montant: number): Promise<Commande> {
-  const { data } = await api.post<Commande>(`/api/commandes/${id}/paiement`, {
-    montant,
-  });
   return data;
 }

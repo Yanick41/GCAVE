@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { SoonPage } from "./components/SoonPage";
 import { LoginPage } from "./features/auth/LoginPage";
 import { ProtectedRoute } from "./features/auth/ProtectedRoute";
 import { ClientDetailPage } from "./features/clients/ClientDetailPage";
@@ -9,6 +10,7 @@ import { OrderDetailPage } from "./features/commandes/OrderDetailPage";
 import { OrderFormPage } from "./features/commandes/OrderFormPage";
 import { OrdersListPage } from "./features/commandes/OrdersListPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
+import { PaiementsListPage } from "./features/paiements/PaiementsListPage";
 
 export default function App() {
   return (
@@ -21,6 +23,8 @@ export default function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
 
+            <Route path="/produits" element={<SoonPage titleKey="nav.products" />} />
+
             <Route path="/clients" element={<ClientsListPage />} />
             <Route path="/clients/new" element={<ClientFormPage />} />
             <Route path="/clients/:id" element={<ClientDetailPage />} />
@@ -30,6 +34,10 @@ export default function App() {
             <Route path="/commandes" element={<OrdersListPage />} />
             <Route path="/commandes/new" element={<OrderFormPage />} />
             <Route path="/commandes/:id" element={<OrderDetailPage />} />
+
+            <Route path="/paiements" element={<PaiementsListPage />} />
+            <Route path="/rapports" element={<SoonPage titleKey="nav.reports" />} />
+            <Route path="/parametres" element={<SoonPage titleKey="nav.settings" />} />
           </Route>
         </Route>
 

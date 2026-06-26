@@ -1,0 +1,25 @@
+{
+  "title": "Paiements",
+  "new": "Nouveau paiement",
+  "newFor": "Nouveau paiement — {{name}}",
+  "amount": "Montant",
+  "mode": "Mode de paiement",
+  "date": "Date",
+  "observation": "Observation",
+  "observationPlaceholder": "Note (optionnel)",
+  "save": "Enregistrer le paiement",
+  "saving": "Enregistrement…",
+  "empty": "Aucun paiement.",
+  "columns": {
+    "date": "Date",
+    "client": "Client",
+    "amount": "Montant",
+    "mode": "Mode",
+    "observation": "Observation"
+  },
+  "modes": {
+    "ESPECES": "Espèces",
+    "MOBILE_MONEY": "Mobile Money",
+    "VIREMENT": "Virement"
+  }
+}

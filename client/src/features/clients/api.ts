@@ -1,15 +1,19 @@
-import type { ClientInput } from "@gca/shared";
+import type { ClientInput, PaiementInput } from "@gca/shared";
 import { api } from "../../lib/api";
 
-export interface Client {
+export type ModePaiement = "ESPECES" | "MOBILE_MONEY" | "VIREMENT";
+
+export interface ClientListItem {
   id: string;
   nom: string;
   telephone: string;
   email: string | null;
   adresse: string | null;
-  archived: boolean;
   createdAt: string;
-  _count?: { commandes: number };
+  nbCommandes: number;
+  totalCommandes: number;
+  totalPaiements: number;
+  solde: number;
 }
 
 export interface CommandeResume {
@@ -17,17 +21,48 @@ export interface CommandeResume {
   numero: string;
   date: string;
   totalTTC: string;
-  montantPaye: string;
   statut: "BROUILLON" | "VALIDEE" | "ANNULEE";
 }
 
-export interface ClientDetail extends Client {
-  commandes: CommandeResume[];
-  totalCumule: number;
+export interface Paiement {
+  id: string;
+  montant: string;
+  mode: ModePaiement;
+  date: string;
+  observation: string | null;
 }
 
-export async function fetchClients(q: string): Promise<Client[]> {
-  const { data } = await api.get<Client[]>("/api/clients", { params: { q } });
+export interface HistoriqueOp {
+  id: string;
+  type: "COMMANDE" | "PAIEMENT";
+  date: string;
+  montant: number;
+  ref: string | null;
+  mode: ModePaiement | null;
+  observation: string | null;
+  soldeApres: number;
+}
+
+export interface ClientDetail {
+  id: string;
+  nom: string;
+  telephone: string;
+  email: string | null;
+  adresse: string | null;
+  createdAt: string;
+  nbCommandes: number;
+  totalCommandes: number;
+  totalPaiements: number;
+  solde: number;
+  commandes: CommandeResume[];
+  paiements: Paiement[];
+  historique: HistoriqueOp[];
+}
+
+export type SortKey = "recent" | "nom" | "solde";
+
+export async function fetchClients(q: string, sort: SortKey = "recent"): Promise<ClientListItem[]> {
+  const { data } = await api.get<ClientListItem[]>("/api/clients", { params: { q, sort } });
   return data;
 }
 
@@ -36,19 +71,21 @@ export async function fetchClient(id: string): Promise<ClientDetail> {
   return data;
 }
 
-export async function createClient(input: ClientInput): Promise<Client> {
-  const { data } = await api.post<Client>("/api/clients", input);
+export async function createClient(input: ClientInput): Promise<ClientListItem> {
+  const { data } = await api.post<ClientListItem>("/api/clients", input);
   return data;
 }
 
-export async function updateClient(
-  id: string,
-  input: ClientInput,
-): Promise<Client> {
-  const { data } = await api.patch<Client>(`/api/clients/${id}`, input);
+export async function updateClient(id: string, input: ClientInput): Promise<ClientListItem> {
+  const { data } = await api.patch<ClientListItem>(`/api/clients/${id}`, input);
   return data;
 }
 
 export async function archiveClient(id: string): Promise<void> {
   await api.delete(`/api/clients/${id}`);
+}
+
+export async function createPaiement(clientId: string, input: PaiementInput): Promise<Paiement> {
+  const { data } = await api.post<Paiement>(`/api/clients/${clientId}/paiements`, input);
+  return data;
 }

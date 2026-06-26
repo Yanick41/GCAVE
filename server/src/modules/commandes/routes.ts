@@ -1,4 +1,4 @@
-import { commandeSchema, computeCommande, paiementSchema } from "@gca/shared";
+import { commandeSchema, computeCommande } from "@gca/shared";
 import { Router } from "express";
 import { ah } from "../../lib/async.js";
 import { prisma } from "../../lib/prisma.js";
@@ -49,7 +49,6 @@ commandesRouter.post(
       lignes: { nomProduit: string; quantite: number; prixUnitaire: number }[];
       remiseType: "AUCUNE" | "POURCENTAGE" | "MONTANT";
       remiseValeur: number;
-      montantPaye: number;
       statut?: "BROUILLON" | "VALIDEE" | "ANNULEE";
     };
 
@@ -59,7 +58,6 @@ commandesRouter.post(
       remiseType: body.remiseType,
       remiseValeur: body.remiseValeur,
     });
-    const montantPaye = Math.min(Math.max(body.montantPaye ?? 0, 0), calc.totalTTC);
 
     const commande = await prisma.$transaction(async (tx) => {
       const year = new Date().getFullYear();
@@ -78,7 +76,6 @@ commandesRouter.post(
           sousTotal: calc.sousTotal,
           montantRemise: calc.montantRemise,
           totalTTC: calc.totalTTC,
-          montantPaye,
           statut: body.statut ?? "VALIDEE",
           lignes: {
             create: calc.lignes.map((l) => ({
@@ -94,28 +91,6 @@ commandesRouter.post(
     });
 
     res.status(201).json(commande);
-  }),
-);
-
-// Enregistrer un paiement (réduit le crédit restant)
-commandesRouter.post(
-  "/:id/paiement",
-  validate(paiementSchema),
-  ah(async (req, res) => {
-    const { montant } = req.body as { montant: number };
-    const commande = await prisma.commande.findUnique({ where: { id: req.params.id } });
-    if (!commande) throw new AppError("NOT_FOUND", 404);
-
-    const total = Number(commande.totalTTC);
-    const dejaPaye = Number(commande.montantPaye);
-    const nouveauPaye = Math.min(dejaPaye + montant, total);
-
-    const updated = await prisma.commande.update({
-      where: { id: req.params.id },
-      data: { montantPaye: nouveauPaye },
-      include: { client: true, lignes: true },
-    });
-    res.json(updated);
   }),
 );
 

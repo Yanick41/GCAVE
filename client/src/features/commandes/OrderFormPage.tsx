@@ -1,6 +1,5 @@
 import {
   computeCommande,
-  creditRestant,
   formatMoney,
   type Lang,
   type RemiseType,
@@ -37,7 +36,6 @@ export function OrderFormPage() {
   const [lines, setLines] = useState<LineDraft[]>([emptyLine()]);
   const [remiseType, setRemiseType] = useState<RemiseType>("AUCUNE");
   const [remiseValeur, setRemiseValeur] = useState("0");
-  const [montantPaye, setMontantPaye] = useState("0");
   const [serverError, setServerError] = useState<string | null>(null);
 
   const { data: clients } = useQuery({
@@ -59,7 +57,6 @@ export function OrderFormPage() {
       }),
     [lines, remiseType, remiseValeur],
   );
-  const credit = creditRestant(calc.totalTTC, num(montantPaye));
 
   const mutation = useMutation({
     mutationFn: createCommande,
@@ -96,7 +93,6 @@ export function OrderFormPage() {
       })),
       remiseType,
       remiseValeur: num(remiseValeur),
-      montantPaye: num(montantPaye),
     });
   };
 
@@ -234,24 +230,6 @@ export function OrderFormPage() {
               {formatMoney(calc.totalTTC, lang)}
             </span>
           </div>
-
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-slate-500">{t("commandes:paid")}</span>
-            <input
-              type="number"
-              min="0"
-              value={montantPaye}
-              onChange={(e) => setMontantPaye(e.target.value)}
-              className={`${field} w-32 py-1 text-right`}
-            />
-          </div>
-
-          <Row
-            label={t("commandes:credit")}
-            value={formatMoney(credit, lang)}
-            strong
-            danger={credit > 0}
-          />
         </div>
 
         {serverError && (

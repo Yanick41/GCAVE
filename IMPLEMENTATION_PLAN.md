@@ -324,6 +324,7 @@ npm run dev                                       # http://localhost:3000
 | 3 Commandes | ✅ Fait | 2026-06-26 | Saisie temps réel (lignes/remise/total), création depuis fiche client, détail, liste. |
 | + Crédit | ✅ Ajout | 2026-06-26 | **Hors CDC initial** : montant payé + crédit restant par commande + paiements. |
 | 5 Dashboard | ✅ Fait | 2026-06-26 | CA, crédits payés/restants, meilleurs clients payeurs, courbe 30j, top produits. |
+| Module Clients (dépôt) | ✅ Pivot | 2026-06-26 | 2e CDC : compte client (Solde = Σcommandes − Σpaiements), paiements (mode/date/obs), historique avec solde courant, fiche en cartes, bilan PDF. Menu: Produits/Rapports/Paramètres en placeholders. |
 | 3 Commandes | ⬜ À faire | | |
 | 4 Historique/Export | ⬜ À faire | | |
 | 5 Dashboard | ⬜ À faire | | |

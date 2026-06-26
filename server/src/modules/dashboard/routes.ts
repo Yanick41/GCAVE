@@ -10,21 +10,18 @@ dashboardRouter.use(requireAuth);
 dashboardRouter.get(
   "/",
   ah(async (_req, res) => {
-    // On ignore les commandes annulées dans les agrégats
     const actives = { statut: { not: "ANNULEE" as const } };
 
-    // KPIs globaux
-    const agg = await prisma.commande.aggregate({
-      where: actives,
-      _sum: { totalTTC: true, montantPaye: true },
-      _count: true,
-    });
-    const chiffreAffaires = Number(agg._sum.totalTTC ?? 0);
-    const creditPaye = Number(agg._sum.montantPaye ?? 0);
-    const creditRestant = Math.max(chiffreAffaires - creditPaye, 0);
-    const nbCommandes = agg._count;
+    // Chiffre d'affaires (commandes) + total encaissé (paiements)
+    const [cmdAgg, payAgg] = await Promise.all([
+      prisma.commande.aggregate({ where: actives, _sum: { totalTTC: true }, _count: true }),
+      prisma.paiement.aggregate({ _sum: { montant: true } }),
+    ]);
+    const chiffreAffaires = Number(cmdAgg._sum.totalTTC ?? 0);
+    const totalEncaisse = Number(payAgg._sum.montant ?? 0);
+    const soldeGlobal = Math.max(chiffreAffaires - totalEncaisse, 0); // créances totales
+    const nbCommandes = cmdAgg._count;
 
-    // CA du jour
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const jour = await prisma.commande.aggregate({
@@ -33,17 +30,23 @@ dashboardRouter.get(
       _count: true,
     });
 
-    // Meilleurs clients payeurs (par montant payé)
-    const grouped = await prisma.commande.groupBy({
-      by: ["clientId"],
-      where: { ...actives, clientId: { not: null } },
-      _sum: { montantPaye: true, totalTTC: true },
-    });
-    const sorted = grouped
+    // Meilleurs clients payeurs (par total payé) + leur solde
+    const [payGroup, cmdGroup] = await Promise.all([
+      prisma.paiement.groupBy({ by: ["clientId"], _sum: { montant: true } }),
+      prisma.commande.groupBy({
+        by: ["clientId"],
+        where: { ...actives, clientId: { not: null } },
+        _sum: { totalTTC: true },
+      }),
+    ]);
+    const cmdByClient = new Map(
+      cmdGroup.map((g) => [g.clientId as string, Number(g._sum.totalTTC ?? 0)]),
+    );
+    const ranked = payGroup
       .map((g) => ({
-        clientId: g.clientId as string,
-        paye: Number(g._sum.montantPaye ?? 0),
-        total: Number(g._sum.totalTTC ?? 0),
+        clientId: g.clientId,
+        paye: Number(g._sum.montant ?? 0),
+        solde: Math.max((cmdByClient.get(g.clientId) ?? 0) - Number(g._sum.montant ?? 0), 0),
       }))
       .sort((a, b) => b.paye - a.paye)
       .slice(0, 5);
@@ -51,19 +54,19 @@ dashboardRouter.get(
     const clientsMap = new Map(
       (
         await prisma.client.findMany({
-          where: { id: { in: sorted.map((s) => s.clientId) } },
+          where: { id: { in: ranked.map((r) => r.clientId) } },
           select: { id: true, nom: true },
         })
       ).map((c) => [c.id, c.nom]),
     );
-    const topClients = sorted.map((s) => ({
-      clientId: s.clientId,
-      nom: clientsMap.get(s.clientId) ?? "—",
-      paye: s.paye,
-      restant: Math.max(s.total - s.paye, 0),
+    const topClients = ranked.map((r) => ({
+      clientId: r.clientId,
+      nom: clientsMap.get(r.clientId) ?? "—",
+      paye: r.paye,
+      restant: r.solde,
     }));
 
-    // Performance de vente — CA des 30 derniers jours, par jour
+    // Performance de vente (CA 30 jours)
     const since = new Date();
     since.setDate(since.getDate() - 29);
     since.setHours(0, 0, 0, 0);
@@ -83,7 +86,6 @@ dashboardRouter.get(
     }
     const tendance = Array.from(buckets.entries()).map(([date, ca]) => ({ date, ca }));
 
-    // Top produits (par nom)
     const lignes = await prisma.ligneCommande.groupBy({
       by: ["nomProduit"],
       _sum: { totalLigne: true, quantite: true },
@@ -99,8 +101,8 @@ dashboardRouter.get(
 
     res.json({
       chiffreAffaires,
-      creditPaye,
-      creditRestant,
+      creditPaye: totalEncaisse, // total encaissé (paiements)
+      creditRestant: soldeGlobal, // solde global (créances)
       nbCommandes,
       caJour: Number(jour._sum.totalTTC ?? 0),
       nbCommandesJour: jour._count,

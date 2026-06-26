@@ -8,6 +8,7 @@ import { clientsRouter } from "./modules/clients/routes.js";
 import { commandesRouter } from "./modules/commandes/routes.js";
 import { dashboardRouter } from "./modules/dashboard/routes.js";
 import { healthRouter } from "./modules/health/routes.js";
+import { paiementsRouter } from "./modules/paiements/routes.js";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/clients", clientsRouter);
 app.use("/api/commandes", commandesRouter);
+app.use("/api/paiements", paiementsRouter);
 app.use("/api/dashboard", dashboardRouter);
 
 app.use(notFound);

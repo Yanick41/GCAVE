@@ -2,8 +2,8 @@
   "title": "Dashboard",
   "kpi": {
     "revenue": "Revenue",
-    "creditPaid": "Credits paid",
-    "creditDue": "Credits outstanding",
+    "creditPaid": "Total collected",
+    "creditDue": "Outstanding balance",
     "orders": "Orders",
     "today": "today"
   },

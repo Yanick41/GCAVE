@@ -2,8 +2,8 @@
   "title": "Tableau de bord",
   "kpi": {
     "revenue": "Chiffre d'affaires",
-    "creditPaid": "Crédits payés",
-    "creditDue": "Crédits restants",
+    "creditPaid": "Total encaissé",
+    "creditDue": "Solde global (créances)",
     "orders": "Commandes",
     "today": "aujourd'hui"
   },

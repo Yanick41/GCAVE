@@ -32,7 +32,6 @@ export const commandeSchema = z
     lignes: z.array(ligneSchema).min(1),
     remiseType: remiseTypeSchema.default("AUCUNE"),
     remiseValeur: z.number().nonnegative().default(0),
-    montantPaye: z.number().nonnegative().default(0),
     statut: statutCommandeSchema.optional(),
   })
   .refine((d) => Boolean(d.clientId) || Boolean(d.clientNomLibre), {
@@ -40,9 +39,17 @@ export const commandeSchema = z
     path: ["clientId"],
   });
 
+export const modePaiementSchema = z.enum(["ESPECES", "MOBILE_MONEY", "VIREMENT"]);
+
 export const paiementSchema = z.object({
   montant: z.number().positive(),
+  mode: modePaiementSchema.default("ESPECES"),
+  date: z.string().optional(),
+  observation: z.string().trim().optional(),
 });
+
+export type ModePaiement = z.infer<typeof modePaiementSchema>;
+export type PaiementInput = z.infer<typeof paiementSchema>;
 
 export const commandeFiltersSchema = z.object({
   q: z.string().optional(),

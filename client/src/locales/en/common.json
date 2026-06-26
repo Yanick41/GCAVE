@@ -5,9 +5,13 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "products": "Products",
     "clients": "Clients",
     "newOrder": "New order",
     "orders": "Orders",
+    "payments": "Payments",
+    "reports": "Reports",
+    "settings": "Settings",
     "logout": "Log out"
   },
   "health": {
