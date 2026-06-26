@@ -32,6 +32,7 @@ export const commandeSchema = z
     lignes: z.array(ligneSchema).min(1),
     remiseType: remiseTypeSchema.default("AUCUNE"),
     remiseValeur: z.number().nonnegative().default(0),
+    montantPaye: z.number().nonnegative().optional(),
     statut: statutCommandeSchema.optional(),
   })
   .refine((d) => Boolean(d.clientId) || Boolean(d.clientNomLibre), {

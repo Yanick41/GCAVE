@@ -17,6 +17,8 @@
   "discountAmount": "Amount (FCFA)",
   "total": "TOTAL",
   "paid": "Amount paid",
+  "optional": "optional",
+  "remaining": "Remaining",
   "credit": "Credit due",
   "validate": "Confirm order",
   "saving": "Saving…",

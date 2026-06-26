@@ -1,4 +1,5 @@
 import { commandeSchema, computeCommande } from "@gca/shared";
+import { Prisma } from "@prisma/client";
 import { Router } from "express";
 import { ah } from "../../lib/async.js";
 import { prisma } from "../../lib/prisma.js";
@@ -49,6 +50,7 @@ commandesRouter.post(
       lignes: { nomProduit: string; quantite: number; prixUnitaire: number }[];
       remiseType: "AUCUNE" | "POURCENTAGE" | "MONTANT";
       remiseValeur: number;
+      montantPaye?: number;
       statut?: "BROUILLON" | "VALIDEE" | "ANNULEE";
     };
 
@@ -59,36 +61,55 @@ commandesRouter.post(
       remiseValeur: body.remiseValeur,
     });
 
-    const commande = await prisma.$transaction(async (tx) => {
-      const year = new Date().getFullYear();
-      const count = await tx.commande.count({
-        where: { numero: { startsWith: `CMD-${year}-` } },
-      });
-      const numero = `CMD-${year}-${String(count + 1).padStart(6, "0")}`;
+    // Paiement initial éventuel (optionnel), borné au total
+    const montantPaye = Math.min(Math.max(body.montantPaye ?? 0, 0), calc.totalTTC);
 
-      return tx.commande.create({
-        data: {
-          numero,
-          clientId: body.clientId ?? null,
-          clientNomLibre: body.clientNomLibre ?? null,
-          remiseType: body.remiseType,
-          remiseValeur: body.remiseValeur,
-          sousTotal: calc.sousTotal,
-          montantRemise: calc.montantRemise,
-          totalTTC: calc.totalTTC,
-          statut: body.statut ?? "VALIDEE",
-          lignes: {
-            create: calc.lignes.map((l) => ({
-              nomProduit: l.nomProduit,
-              quantite: l.quantite,
-              prixUnitaire: l.prixUnitaire,
-              totalLigne: l.totalLigne,
-            })),
-          },
-        },
-        include: { client: true, lignes: true },
-      });
+    // Numéro séquentiel (lecture hors transaction — le pooler Neon ne supporte
+    // pas les transactions interactives, on utilise une transaction "batch").
+    const year = new Date().getFullYear();
+    const count = await prisma.commande.count({
+      where: { numero: { startsWith: `CMD-${year}-` } },
     });
+    const numero = `CMD-${year}-${String(count + 1).padStart(6, "0")}`;
+
+    const createCommande = prisma.commande.create({
+      data: {
+        numero,
+        clientId: body.clientId ?? null,
+        clientNomLibre: body.clientNomLibre ?? null,
+        remiseType: body.remiseType,
+        remiseValeur: body.remiseValeur,
+        sousTotal: calc.sousTotal,
+        montantRemise: calc.montantRemise,
+        totalTTC: calc.totalTTC,
+        statut: body.statut ?? "VALIDEE",
+        lignes: {
+          create: calc.lignes.map((l) => ({
+            nomProduit: l.nomProduit,
+            quantite: l.quantite,
+            prixUnitaire: l.prixUnitaire,
+            totalLigne: l.totalLigne,
+          })),
+        },
+      },
+      include: { client: true, lignes: true },
+    });
+
+    // Transaction batch (compatible pooler) : commande (+ paiement initial si fourni)
+    const ops: Prisma.PrismaPromise<unknown>[] = [createCommande];
+    if (montantPaye > 0 && body.clientId) {
+      ops.push(
+        prisma.paiement.create({
+          data: {
+            clientId: body.clientId,
+            montant: montantPaye,
+            mode: "ESPECES",
+            observation: `Paiement à la commande ${numero}`,
+          },
+        }),
+      );
+    }
+    const [commande] = await prisma.$transaction(ops);
 
     res.status(201).json(commande);
   }),

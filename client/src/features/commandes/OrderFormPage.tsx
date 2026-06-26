@@ -1,9 +1,4 @@
-import {
-  computeCommande,
-  formatMoney,
-  type Lang,
-  type RemiseType,
-} from "@gca/shared";
+import { computeCommande, formatMoney, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -34,8 +29,7 @@ export function OrderFormPage() {
 
   const [clientId, setClientId] = useState(clientIdParam ?? "");
   const [lines, setLines] = useState<LineDraft[]>([emptyLine()]);
-  const [remiseType, setRemiseType] = useState<RemiseType>("AUCUNE");
-  const [remiseValeur, setRemiseValeur] = useState("0");
+  const [montantPaye, setMontantPaye] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
 
   const { data: clients } = useQuery({
@@ -52,11 +46,14 @@ export function OrderFormPage() {
           quantite: num(l.quantite),
           prixUnitaire: num(l.prixUnitaire),
         })),
-        remiseType,
-        remiseValeur: num(remiseValeur),
+        remiseType: "AUCUNE",
+        remiseValeur: 0,
       }),
-    [lines, remiseType, remiseValeur],
+    [lines],
   );
+
+  const paye = Math.min(num(montantPaye), calc.totalTTC);
+  const reste = Math.max(calc.totalTTC - paye, 0);
 
   const mutation = useMutation({
     mutationFn: createCommande,
@@ -64,6 +61,7 @@ export function OrderFormPage() {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["client", clientId] });
       queryClient.invalidateQueries({ queryKey: ["commandes"] });
+      queryClient.invalidateQueries({ queryKey: ["paiements"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       navigate(commande.clientId ? `/clients/${commande.clientId}` : "/commandes");
     },
@@ -91,8 +89,9 @@ export function OrderFormPage() {
         quantite: num(l.quantite),
         prixUnitaire: num(l.prixUnitaire),
       })),
-      remiseType,
-      remiseValeur: num(remiseValeur),
+      remiseType: "AUCUNE",
+      remiseValeur: 0,
+      montantPaye: paye > 0 ? paye : undefined,
     });
   };
 
@@ -187,49 +186,36 @@ export function OrderFormPage() {
         </button>
       </div>
 
-      {/* Totaux */}
+      {/* Totaux + paiement optionnel */}
       <div className="rounded-xl border bg-white p-5">
         <div className="ml-auto max-w-sm space-y-3 text-sm">
-          <Row label={t("commandes:subtotal")} value={formatMoney(calc.sousTotal, lang)} />
-
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-slate-500">{t("commandes:discount")}</span>
-            <div className="flex gap-2">
-              <select
-                value={remiseType}
-                onChange={(e) => setRemiseType(e.target.value as RemiseType)}
-                className={`${field} py-1 text-sm`}
-              >
-                <option value="AUCUNE">{t("commandes:discountNone")}</option>
-                <option value="POURCENTAGE">{t("commandes:discountPct")}</option>
-                <option value="MONTANT">{t("commandes:discountAmount")}</option>
-              </select>
-              {remiseType !== "AUCUNE" && (
-                <input
-                  type="number"
-                  min="0"
-                  value={remiseValeur}
-                  onChange={(e) => setRemiseValeur(e.target.value)}
-                  className={`${field} w-24 py-1 text-sm`}
-                />
-              )}
-            </div>
-          </div>
-
-          {calc.montantRemise > 0 && (
-            <Row
-              label="—"
-              value={`- ${formatMoney(calc.montantRemise, lang)}`}
-              muted
-            />
-          )}
-
-          <div className="flex items-center justify-between border-t pt-3">
+          <div className="flex items-center justify-between border-b pb-3">
             <span className="text-base font-semibold">{t("commandes:total")}</span>
             <span className="text-2xl font-bold text-green-600">
               {formatMoney(calc.totalTTC, lang)}
             </span>
           </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-slate-500">
+              {t("commandes:paid")}{" "}
+              <span className="text-xs text-slate-400">({t("commandes:optional")})</span>
+            </span>
+            <input
+              type="number"
+              min="0"
+              value={montantPaye}
+              onChange={(e) => setMontantPaye(e.target.value)}
+              placeholder="0"
+              className={`${field} w-32 py-1 text-right`}
+            />
+          </div>
+
+          <Row
+            label={t("commandes:remaining")}
+            value={formatMoney(reste, lang)}
+            valueClass={reste > 0 ? "text-rose-600 font-bold" : "text-emerald-600 font-bold"}
+          />
         </div>
 
         {serverError && (
@@ -255,26 +241,16 @@ export function OrderFormPage() {
 function Row({
   label,
   value,
-  muted,
-  strong,
-  danger,
+  valueClass = "text-slate-800",
 }: {
   label: string;
   value: string;
-  muted?: boolean;
-  strong?: boolean;
-  danger?: boolean;
+  valueClass?: string;
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className={muted ? "text-slate-300" : "text-slate-500"}>{label}</span>
-      <span
-        className={`tabular-nums ${strong ? "text-lg font-bold" : "font-medium"} ${
-          danger ? "text-red-600" : "text-slate-800"
-        }`}
-      >
-        {value}
-      </span>
+      <span className="text-slate-500">{label}</span>
+      <span className={`tabular-nums ${valueClass}`}>{value}</span>
     </div>
   );
 }
