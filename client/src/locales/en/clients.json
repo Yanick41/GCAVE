@@ -48,6 +48,11 @@
     "noOrders": "No orders for this client.",
     "noHistory": "No operations yet.",
     "archiveConfirm": "Archive this client? Their orders and payments will be kept.",
+    "bilan": {
+      "subtitle": "Client statement",
+      "clientSignature": "Client signature",
+      "managerSignature": "Manager signature & stamp"
+    },
     "hist": {
       "date": "Date",
       "type": "Operation",

@@ -48,6 +48,11 @@
     "noOrders": "Aucune commande pour ce client.",
     "noHistory": "Aucune opération pour l'instant.",
     "archiveConfirm": "Archiver ce client ? Ses commandes et paiements seront conservés.",
+    "bilan": {
+      "subtitle": "Bilan du client",
+      "clientSignature": "Signature du client",
+      "managerSignature": "Signature & cachet du gérant"
+    },
     "hist": {
       "date": "Date",
       "type": "Opération",

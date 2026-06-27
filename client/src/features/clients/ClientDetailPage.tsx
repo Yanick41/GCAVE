@@ -38,7 +38,7 @@ export function ClientDetailPage() {
 
   const printBilan = () =>
     genererBilanPDF(client, lang, {
-      title: t("clients:detail.printBalance"),
+      subtitle: t("clients:detail.bilan.subtitle"),
       client: t("paiements:columns.client"),
       phone: t("clients:columns.phone"),
       address: t("clients:columns.address"),
@@ -52,6 +52,8 @@ export function ClientDetailPage() {
       totalOrders: t("clients:detail.totalOrders"),
       totalPayments: t("clients:detail.totalPayments"),
       balance: t("clients:detail.currentBalance"),
+      clientSignature: t("clients:detail.bilan.clientSignature"),
+      managerSignature: t("clients:detail.bilan.managerSignature"),
       modes: {
         ESPECES: t("paiements:modes.ESPECES"),
         MOBILE_MONEY: t("paiements:modes.MOBILE_MONEY"),
