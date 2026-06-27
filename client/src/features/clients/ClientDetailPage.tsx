@@ -134,7 +134,7 @@ export function ClientDetailPage() {
         <Stat label={t("clients:detail.orders")} value={String(client.nbCommandes)} />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid items-start gap-6 md:grid-cols-3">
         {/* Infos */}
         <section className="rounded-xl border bg-white p-5">
           <h2 className="mb-3 font-semibold">{t("clients:detail.info")}</h2>

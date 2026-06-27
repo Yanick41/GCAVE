@@ -1,0 +1,25 @@
+{
+  "title": "Rapports",
+  "daily": "Rapport journalier",
+  "date": "Date",
+  "download": "Télécharger",
+  "print": "Imprimer",
+  "kpi": {
+    "orders": "Commandes du jour",
+    "revenue": "Chiffre d'affaires",
+    "collected": "Encaissé"
+  },
+  "ordersTable": "Commandes",
+  "paymentsTable": "Paiements",
+  "topProducts": "Top produits",
+  "noOrders": "Aucune commande ce jour.",
+  "noPayments": "Aucun paiement ce jour.",
+  "columns": {
+    "number": "N°",
+    "client": "Client",
+    "amount": "Montant",
+    "mode": "Mode",
+    "product": "Produit",
+    "qty": "Qté"
+  }
+}

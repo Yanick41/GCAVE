@@ -148,24 +148,26 @@ export function OrderFormPage() {
           : t("commandes:new")}
       </h1>
 
-      {/* Client */}
-      <div className="mb-4 rounded-xl border bg-white p-4">
-        <label className="mb-1 block text-sm font-medium text-slate-700">
-          {t("commandes:client")}
-        </label>
-        <select
-          value={clientId}
-          onChange={(e) => setClientId(e.target.value)}
-          className={`${field} w-full max-w-md`}
-        >
-          <option value="">{t("commandes:selectClient")}</option>
-          {clients?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nom} · {c.telephone}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Client — sélecteur masqué si on est déjà dans la fiche d'un client */}
+      {!clientIdParam && (
+        <div className="mb-4 rounded-xl border bg-white p-4">
+          <label className="mb-1 block text-sm font-medium text-slate-700">
+            {t("commandes:client")}
+          </label>
+          <select
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            className={`${field} w-full max-w-md`}
+          >
+            <option value="">{t("commandes:selectClient")}</option>
+            {clients?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nom} · {c.telephone}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Lignes */}
       <div className="mb-4 rounded-xl border bg-white p-4">

@@ -1,0 +1,25 @@
+{
+  "title": "Reports",
+  "daily": "Daily report",
+  "date": "Date",
+  "download": "Download",
+  "print": "Print",
+  "kpi": {
+    "orders": "Orders today",
+    "revenue": "Revenue",
+    "collected": "Collected"
+  },
+  "ordersTable": "Orders",
+  "paymentsTable": "Payments",
+  "topProducts": "Top products",
+  "noOrders": "No orders this day.",
+  "noPayments": "No payments this day.",
+  "columns": {
+    "number": "No.",
+    "client": "Client",
+    "amount": "Amount",
+    "mode": "Method",
+    "product": "Product",
+    "qty": "Qty"
+  }
+}

@@ -11,6 +11,7 @@ import { OrderFormPage } from "./features/commandes/OrderFormPage";
 import { OrdersListPage } from "./features/commandes/OrdersListPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { PaiementsListPage } from "./features/paiements/PaiementsListPage";
+import { RapportsPage } from "./features/rapports/RapportsPage";
 
 export default function App() {
   return (
@@ -36,7 +37,7 @@ export default function App() {
             <Route path="/commandes/:id" element={<OrderDetailPage />} />
 
             <Route path="/paiements" element={<PaiementsListPage />} />
-            <Route path="/rapports" element={<SoonPage titleKey="nav.reports" />} />
+            <Route path="/rapports" element={<RapportsPage />} />
             <Route path="/parametres" element={<SoonPage titleKey="nav.settings" />} />
           </Route>
         </Route>
