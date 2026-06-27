@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "Gestion Clients",
-    "tagline": "Calcul en temps réel · Commandes · Export & Historique"
+    "name": "GRANDE CAVE",
+    "tagline": "Gestion des créanciers"
   },
   "nav": {
     "dashboard": "Tableau de bord",

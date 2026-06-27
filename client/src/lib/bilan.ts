@@ -121,19 +121,20 @@ export function genererBilanPDF(client: ClientDetail, lang: Lang, labels: Labels
   // @ts-expect-error lastAutoTable est ajouté par le plugin
   const afterTotals = doc.lastAutoTable.finalY + 20;
   const sy = Math.max(afterTotals, pageH - 45);
-  doc.setFontSize(10);
+  doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(20);
-  doc.setDrawColor(150);
-  doc.setLineWidth(0.3);
+  doc.setDrawColor(80);
+  doc.setLineWidth(0.4);
 
-  // Colonne gauche : signature client
+  // Colonne gauche : signature client (libellé souligné, sans cadre)
   doc.text(labels.clientSignature, 16, sy);
-  doc.rect(16, sy + 3, 80, 26);
+  doc.line(16, sy + 2, 16 + doc.getTextWidth(labels.clientSignature), sy + 2);
 
-  // Colonne droite : signature + cachet gérant
-  doc.text(labels.managerSignature, pageW - 96, sy);
-  doc.rect(pageW - 96, sy + 3, 80, 26);
+  // Colonne droite : signature + cachet gérant (libellé souligné, sans cadre)
+  const mx = pageW - 96;
+  doc.text(labels.managerSignature, mx, sy);
+  doc.line(mx, sy + 2, mx + doc.getTextWidth(labels.managerSignature), sy + 2);
 
   doc.save(`bilan-${client.nom.replace(/\s+/g, "_")}.pdf`);
 }
