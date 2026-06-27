@@ -131,10 +131,11 @@ export function genererBilanPDF(client: ClientDetail, lang: Lang, labels: Labels
   doc.text(labels.clientSignature, 16, sy);
   doc.line(16, sy + 2, 16 + doc.getTextWidth(labels.clientSignature), sy + 2);
 
-  // Colonne droite : signature + cachet gérant (libellé souligné, sans cadre)
-  const mx = pageW - 96;
+  // Colonne droite : signature + cachet gérant — aligné sur la marge droite
+  const mw = doc.getTextWidth(labels.managerSignature);
+  const mx = pageW - 14 - mw;
   doc.text(labels.managerSignature, mx, sy);
-  doc.line(mx, sy + 2, mx + doc.getTextWidth(labels.managerSignature), sy + 2);
+  doc.line(mx, sy + 2, mx + mw, sy + 2);
 
   doc.save(`bilan-${client.nom.replace(/\s+/g, "_")}.pdf`);
 }
