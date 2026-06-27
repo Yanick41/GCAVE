@@ -22,6 +22,10 @@
   "credit": "Crédit restant",
   "validate": "Valider la commande",
   "saving": "Enregistrement…",
+  "invoice": "Facture",
+  "downloadInvoice": "Télécharger la facture",
+  "print": "Imprimer",
+  "date": "Date",
   "empty": "Aucune commande.",
   "noLines": "Ajoutez au moins un produit.",
   "columns": {

@@ -22,6 +22,10 @@
   "credit": "Credit due",
   "validate": "Confirm order",
   "saving": "Saving…",
+  "invoice": "Invoice",
+  "downloadInvoice": "Download invoice",
+  "print": "Print",
+  "date": "Date",
   "empty": "No orders.",
   "noLines": "Add at least one product.",
   "columns": {

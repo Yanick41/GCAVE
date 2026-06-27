@@ -1,10 +1,11 @@
 import { computeCommande, formatMoney, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Download, Plus, Printer, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { errorCode } from "../../lib/errors";
+import { genererFacturePDF } from "../../lib/facture";
 import { fetchClients } from "../clients/api";
 import { createCommande } from "./api";
 
@@ -97,6 +98,40 @@ export function OrderFormPage() {
 
   const selectedClientName = clients?.find((c) => c.id === clientId)?.nom;
   const field = "rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500";
+
+  const facture = (action: "download" | "print") => {
+    genererFacturePDF(
+      {
+        clientNom: selectedClientName ?? "—",
+        date: new Date(),
+        lignes: calc.lignes
+          .filter((l) => l.nomProduit.trim() && l.quantite > 0)
+          .map((l) => ({
+            nomProduit: l.nomProduit,
+            quantite: l.quantite,
+            prixUnitaire: l.prixUnitaire,
+            totalLigne: l.totalLigne,
+          })),
+        total: calc.totalTTC,
+        paye,
+        reste,
+      },
+      lang,
+      {
+        title: t("commandes:invoice"),
+        client: t("commandes:client"),
+        date: t("commandes:date"),
+        product: t("commandes:product"),
+        qty: t("commandes:qty"),
+        unitPrice: t("commandes:unitPrice"),
+        lineTotal: t("commandes:lineTotal"),
+        total: t("commandes:total"),
+        paid: t("commandes:paid"),
+        remaining: t("commandes:remaining"),
+      },
+      action,
+    );
+  };
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -224,7 +259,21 @@ export function OrderFormPage() {
           </p>
         )}
 
-        <div className="mt-5 flex justify-end">
+        <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
+          <button
+            onClick={() => facture("download")}
+            disabled={validLines.length === 0}
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            <Download size={16} /> {t("commandes:downloadInvoice")}
+          </button>
+          <button
+            onClick={() => facture("print")}
+            disabled={validLines.length === 0}
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            <Printer size={16} /> {t("commandes:print")}
+          </button>
           <button
             onClick={submit}
             disabled={!canSubmit || mutation.isPending}

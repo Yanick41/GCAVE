@@ -26,7 +26,7 @@ interface Labels {
 }
 
 /** Montant lisible dans le PDF : espaces normaux (pas d'insécable fin) + FCFA. */
-function pdfMoney(n: number): string {
+export function pdfMoney(n: number): string {
   const sign = n < 0 ? "-" : "";
   const abs = Math.round(Math.abs(n));
   return sign + abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " FCFA";
@@ -61,9 +61,8 @@ export function genererBilanPDF(client: ClientDetail, lang: Lang, labels: Labels
     doc.text(`${labels.address}: ${client.adresse}`, 14, infoY);
     infoY += 6;
   }
-  doc.text(`${labels.since}: ${formatDate(client.createdAt, lang)}`, 14, infoY);
 
-  let y = infoY + 10;
+  let y = infoY + 8;
 
   // Commandes
   doc.setTextColor(20);
@@ -110,7 +109,6 @@ export function genererBilanPDF(client: ClientDetail, lang: Lang, labels: Labels
   autoTable(doc, {
     startY: y,
     body: [
-      [labels.totalOrders, pdfMoney(client.totalCommandes)],
       [labels.totalPayments, pdfMoney(client.totalPaiements)],
       [labels.balance, pdfMoney(client.solde)],
     ],
