@@ -1,9 +1,10 @@
 import { computeCommande, formatMoney, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Plus, Printer, Trash2 } from "lucide-react";
+import { Download, Plus, Printer, Trash2, User } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { BackButton } from "../../components/BackButton";
 import { errorCode } from "../../lib/errors";
 import { genererFacturePDF } from "../../lib/facture";
 import { fetchClients } from "../clients/api";
@@ -135,12 +136,17 @@ export function OrderFormPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 text-sm text-slate-500 hover:underline"
-      >
-        ← {t("common:actions.back")}
-      </button>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <BackButton />
+        {clientId && selectedClientName && (
+          <button
+            onClick={() => navigate(`/clients/${clientId}`)}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+          >
+            <User size={16} /> {selectedClientName}
+          </button>
+        )}
+      </div>
 
       <h1 className="mb-6 text-2xl font-bold">
         {selectedClientName

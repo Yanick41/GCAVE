@@ -24,8 +24,6 @@ export default function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
 
-            <Route path="/produits" element={<SoonPage titleKey="nav.products" />} />
-
             <Route path="/clients" element={<ClientsListPage />} />
             <Route path="/clients/new" element={<ClientFormPage />} />
             <Route path="/clients/:id" element={<ClientDetailPage />} />

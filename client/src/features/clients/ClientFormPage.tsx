@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { BackButton } from "../../components/BackButton";
 import { errorCode } from "../../lib/errors";
 import { createClient, fetchClient, updateClient } from "./api";
 
@@ -60,12 +61,9 @@ export function ClientFormPage() {
 
   return (
     <div className="max-w-lg">
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 text-sm text-slate-500 hover:underline"
-      >
-        ← {t("common:actions.back")}
-      </button>
+      <div className="mb-4">
+        <BackButton />
+      </div>
 
       <h1 className="mb-6 text-2xl font-bold">
         {isEdit ? t("clients:form.editTitle") : t("clients:form.newTitle")}

@@ -1,6 +1,5 @@
 import {
   BarChart3,
-  Boxes,
   LayoutDashboard,
   LogOut,
   Package,
@@ -16,7 +15,6 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const navItems = [
   { to: "/dashboard", key: "nav.dashboard", Icon: LayoutDashboard },
-  { to: "/produits", key: "nav.products", Icon: Boxes },
   { to: "/clients", key: "nav.clients", Icon: Users },
   { to: "/commandes", key: "nav.orders", Icon: Package },
   { to: "/paiements", key: "nav.payments", Icon: Wallet },

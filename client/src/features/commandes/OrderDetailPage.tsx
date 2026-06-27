@@ -1,14 +1,14 @@
 import { formatDate, formatMoney, type Lang } from "@gca/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { BackButton } from "../../components/BackButton";
 import { fetchCommande } from "./api";
 
 export function OrderDetailPage() {
   const { t, i18n } = useTranslation(["commandes", "common"]);
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
   const { id } = useParams();
-  const navigate = useNavigate();
 
   const { data: c, isLoading } = useQuery({
     queryKey: ["commande", id],
@@ -21,12 +21,9 @@ export function OrderDetailPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 text-sm text-slate-500 hover:underline"
-      >
-        ← {t("common:actions.back")}
-      </button>
+      <div className="mb-4">
+        <BackButton />
+      </div>
 
       <div className="mb-4 flex items-baseline justify-between">
         <h1 className="text-2xl font-bold">{c.numero}</h1>

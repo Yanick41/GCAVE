@@ -4,6 +4,7 @@ import { Pencil, Plus, Printer, Trash2, Wallet } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { BackButton } from "../../components/BackButton";
 import { avatarColor, initials } from "../../lib/avatar";
 import { genererBilanPDF } from "../../lib/bilan";
 import { PaymentModal } from "../paiements/PaymentModal";
@@ -63,12 +64,9 @@ export function ClientDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <button
-        onClick={() => navigate("/clients")}
-        className="mb-4 text-sm text-slate-500 hover:underline"
-      >
-        ← {t("clients:title")}
-      </button>
+      <div className="mb-4">
+        <BackButton to="/clients" label={t("clients:title")} />
+      </div>
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-3">
