@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
 import { avatarColor, initials } from "../lib/avatar";
+import { InstallButton } from "./InstallButton";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -64,6 +65,7 @@ export function Layout() {
 
       <div className="flex flex-1 flex-col">
         <header className="flex items-center justify-end gap-4 border-b bg-white px-6 py-3 dark:bg-slate-900">
+          <InstallButton />
           <ThemeToggle />
           <LanguageSwitcher />
           <div className="flex items-center gap-2">
