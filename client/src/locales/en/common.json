@@ -38,6 +38,10 @@
     "loading": "Loading…",
     "soon": "Coming soon"
   },
+  "theme": {
+    "light": "Light mode",
+    "dark": "Dark mode"
+  },
   "errors": {
     "INVALID_CREDENTIALS": "Invalid email or password.",
     "UNAUTHORIZED": "Session expired, please log in again.",

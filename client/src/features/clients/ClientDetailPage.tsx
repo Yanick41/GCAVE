@@ -97,14 +97,14 @@ export function ClientDetailPage() {
           </button>
           <button
             onClick={printBilan}
-            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <Printer size={16} /> {t("clients:detail.printBalance")}
           </button>
           <button
             onClick={() => navigate(`/clients/${client.id}/edit`)}
             title={t("common:actions.edit")}
-            className="rounded-lg border border-slate-300 p-2 text-slate-500 hover:bg-slate-50"
+            className="rounded-lg border border-slate-300 p-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <Pencil size={16} />
           </button>
@@ -134,7 +134,7 @@ export function ClientDetailPage() {
 
       <div className="grid items-start gap-6 md:grid-cols-3">
         {/* Infos */}
-        <section className="rounded-xl border bg-white p-5">
+        <section className="rounded-xl border bg-white dark:bg-slate-900 p-5">
           <h2 className="mb-3 font-semibold">{t("clients:detail.info")}</h2>
           <dl className="space-y-2 text-sm">
             <Row label={t("clients:columns.phone")} value={client.telephone} />
@@ -144,7 +144,7 @@ export function ClientDetailPage() {
         </section>
 
         {/* Historique */}
-        <section className="rounded-xl border bg-white p-5 md:col-span-2">
+        <section className="rounded-xl border bg-white dark:bg-slate-900 p-5 md:col-span-2">
           <h2 className="mb-3 font-semibold">{t("clients:detail.history")}</h2>
           {client.historique.length === 0 ? (
             <p className="text-sm text-slate-400">{t("clients:detail.noHistory")}</p>
@@ -209,14 +209,14 @@ export function ClientDetailPage() {
 function Stat({
   label,
   value,
-  valueClass = "text-slate-800",
+  valueClass = "text-slate-800 dark:text-slate-100",
 }: {
   label: string;
   value: string;
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-xl border bg-white p-4">
+    <div className="rounded-xl border bg-white dark:bg-slate-900 p-4">
       <p className="text-xs text-slate-400">{label}</p>
       <p className={`text-lg font-bold tabular-nums ${valueClass}`}>{value}</p>
     </div>
@@ -227,7 +227,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
       <dt className="text-slate-500">{label}</dt>
-      <dd className="text-right font-medium text-slate-800">{value}</dd>
+      <dd className="text-right font-medium text-slate-800 dark:text-slate-100">{value}</dd>
     </div>
   );
 }

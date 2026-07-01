@@ -49,17 +49,17 @@ export function PaymentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl">
         <div className="mb-4 flex items-start justify-between">
           <h2 className="text-lg font-bold">{t("paiements:newFor", { name: clientName })}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 dark:text-slate-200">
             <X size={20} />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
               {t("paiements:amount")}
             </label>
             <input
@@ -73,7 +73,7 @@ export function PaymentModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
               {t("paiements:mode")}
             </label>
             <select value={mode} onChange={(e) => setMode(e.target.value as ModePaiement)} className={field}>
@@ -86,14 +86,14 @@ export function PaymentModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
               {t("paiements:date")}
             </label>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={field} />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
               {t("paiements:observation")}
             </label>
             <textarea
@@ -112,7 +112,7 @@ export function PaymentModal({
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={onClose}
-              className="rounded-lg border border-slate-300 px-4 py-2 font-medium text-slate-600 hover:bg-slate-50"
+              className="rounded-lg border border-slate-300 px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               {t("common:actions.cancel")}
             </button>

@@ -71,11 +71,11 @@ export function ClientFormPage() {
 
       <form
         onSubmit={handleSubmit((v) => mutation.mutate(v))}
-        className="space-y-4 rounded-lg border bg-white p-6"
+        className="space-y-4 rounded-lg border bg-white dark:bg-slate-900 p-6"
         noValidate
       >
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
             {t("clients:form.name")}
           </label>
           <input {...register("nom")} className={field} />
@@ -85,7 +85,7 @@ export function ClientFormPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
             {t("clients:form.phone")}
           </label>
           <input {...register("telephone")} className={field} />
@@ -95,7 +95,7 @@ export function ClientFormPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
             {t("clients:form.email")}
           </label>
           <input type="email" {...register("email")} className={field} />
@@ -107,7 +107,7 @@ export function ClientFormPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
             {t("clients:form.address")}
           </label>
           <textarea {...register("adresse")} rows={2} className={field} />
@@ -132,7 +132,7 @@ export function ClientFormPage() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="rounded-lg border border-slate-300 px-5 py-2 font-medium text-slate-600 hover:bg-slate-50"
+            className="rounded-lg border border-slate-300 px-5 py-2 font-medium text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             {t("common:actions.cancel")}
           </button>

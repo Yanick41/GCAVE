@@ -12,6 +12,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
 import { avatarColor, initials } from "../lib/avatar";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
   { to: "/dashboard", key: "nav.dashboard", Icon: LayoutDashboard },
@@ -34,8 +35,8 @@ export function Layout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-900">
-      <aside className="flex w-60 flex-col border-r bg-white">
+    <div className="flex min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <aside className="flex w-60 flex-col border-r bg-white dark:bg-slate-900">
         <div className="border-b px-5 py-4">
           <p className="text-lg font-bold leading-tight">{t("app.name")}</p>
           <p className="text-xs text-slate-400">{t("app.tagline")}</p>
@@ -49,8 +50,8 @@ export function Layout() {
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
                   isActive
-                    ? "bg-slate-800 text-white"
-                    : "text-slate-600 hover:bg-slate-100"
+                    ? "bg-slate-800 text-white dark:bg-slate-700"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                 }`
               }
             >
@@ -62,7 +63,8 @@ export function Layout() {
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-end gap-4 border-b bg-white px-6 py-3">
+        <header className="flex items-center justify-end gap-4 border-b bg-white px-6 py-3 dark:bg-slate-900">
+          <ThemeToggle />
           <LanguageSwitcher />
           <div className="flex items-center gap-2">
             <div
@@ -78,7 +80,7 @@ export function Layout() {
           <button
             onClick={handleLogout}
             title={t("nav.logout")}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-red-600 dark:hover:bg-slate-800"
           >
             <LogOut size={18} />
           </button>

@@ -8,7 +8,7 @@ export function BackButton({ to, label }: { to?: string; label?: string }) {
   return (
     <button
       onClick={() => (to ? navigate(to) : navigate(-1))}
-      className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+      className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
     >
       <ArrowLeft size={16} /> {label ?? t("actions.back")}
     </button>

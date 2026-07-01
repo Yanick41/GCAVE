@@ -1,1 +1,44 @@
 @import "tailwindcss";
+
+/* Mode sombre piloté par la classe .dark sur <html> (choix utilisateur) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --gca-border: var(--color-slate-200);
+  }
+  .dark {
+    color-scheme: dark;
+    --gca-border: var(--color-slate-800);
+  }
+
+  /* Bordure par défaut adaptée au thème (les utilitaires border-* la surchargent) */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--gca-border);
+  }
+
+  body {
+    background-color: var(--color-slate-50);
+    color: var(--color-slate-900);
+  }
+  .dark body {
+    background-color: var(--color-slate-950);
+    color: var(--color-slate-100);
+  }
+
+  /* Champs de formulaire adaptés au thème sombre (surchargent border-slate-300) */
+  .dark input,
+  .dark select,
+  .dark textarea {
+    background-color: var(--color-slate-800);
+    color: var(--color-slate-100);
+    border-color: var(--color-slate-700);
+  }
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: var(--color-slate-500);
+  }
+}

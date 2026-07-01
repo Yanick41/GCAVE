@@ -38,6 +38,10 @@
     "loading": "Chargement…",
     "soon": "Bientôt disponible"
   },
+  "theme": {
+    "light": "Mode clair",
+    "dark": "Mode sombre"
+  },
   "errors": {
     "INVALID_CREDENTIALS": "Email ou mot de passe incorrect.",
     "UNAUTHORIZED": "Session expirée, veuillez vous reconnecter.",

@@ -141,7 +141,7 @@ export function OrderFormPage() {
         {clientId && selectedClientName && (
           <button
             onClick={() => navigate(`/clients/${clientId}`)}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white dark:bg-slate-900 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <User size={16} /> {selectedClientName}
           </button>
@@ -156,8 +156,8 @@ export function OrderFormPage() {
 
       {/* Client — sélecteur masqué si on est déjà dans la fiche d'un client */}
       {!clientIdParam && (
-        <div className="mb-4 rounded-xl border bg-white p-4">
-          <label className="mb-1 block text-sm font-medium text-slate-700">
+        <div className="mb-4 rounded-xl border bg-white dark:bg-slate-900 p-4">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
             {t("commandes:client")}
           </label>
           <select
@@ -176,7 +176,7 @@ export function OrderFormPage() {
       )}
 
       {/* Lignes */}
-      <div className="mb-4 rounded-xl border bg-white p-4">
+      <div className="mb-4 rounded-xl border bg-white dark:bg-slate-900 p-4">
         <h2 className="mb-3 font-semibold">{t("commandes:lines")}</h2>
         <div className="space-y-2">
           <div className="hidden grid-cols-12 gap-2 px-1 text-xs uppercase text-slate-400 md:grid">
@@ -223,14 +223,14 @@ export function OrderFormPage() {
         </div>
         <button
           onClick={() => setLines((prev) => [...prev, emptyLine()])}
-          className="mt-3 flex items-center gap-1 text-sm font-medium text-slate-700 hover:underline"
+          className="mt-3 flex items-center gap-1 text-sm font-medium text-slate-700 dark:text-slate-200 hover:underline"
         >
           <Plus size={16} /> {t("commandes:addLine")}
         </button>
       </div>
 
       {/* Totaux + paiement optionnel */}
-      <div className="rounded-xl border bg-white p-5">
+      <div className="rounded-xl border bg-white dark:bg-slate-900 p-5">
         <div className="ml-auto max-w-sm space-y-3 text-sm">
           <div className="flex items-center justify-between border-b pb-3">
             <span className="text-base font-semibold">{t("commandes:total")}</span>
@@ -271,14 +271,14 @@ export function OrderFormPage() {
           <button
             onClick={() => facture("download")}
             disabled={validLines.length === 0}
-            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
           >
             <Download size={16} /> {t("commandes:downloadInvoice")}
           </button>
           <button
             onClick={() => facture("print")}
             disabled={validLines.length === 0}
-            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
           >
             <Printer size={16} /> {t("commandes:print")}
           </button>
@@ -298,7 +298,7 @@ export function OrderFormPage() {
 function Row({
   label,
   value,
-  valueClass = "text-slate-800",
+  valueClass = "text-slate-800 dark:text-slate-100",
 }: {
   label: string;
   value: string;

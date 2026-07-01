@@ -87,7 +87,7 @@ export function ClientsListPage() {
       {isLoading ? (
         <p className="py-10 text-center text-slate-400">{t("common:common.loading")}</p>
       ) : count === 0 ? (
-        <p className="rounded-xl border border-dashed bg-white py-12 text-center text-slate-400">
+        <p className="rounded-xl border border-dashed bg-white dark:bg-slate-900 py-12 text-center text-slate-400">
           {debounced ? t("clients:noResults") : t("clients:empty")}
         </p>
       ) : (
@@ -96,7 +96,7 @@ export function ClientsListPage() {
             <Link
               key={c.id}
               to={`/clients/${c.id}`}
-              className="group relative rounded-xl border bg-white p-5 shadow-sm transition hover:shadow-md"
+              className="group relative rounded-xl border bg-white dark:bg-slate-900 p-5 shadow-sm transition hover:shadow-md"
             >
               <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition group-hover:opacity-100">
                 <button
@@ -122,7 +122,7 @@ export function ClientsListPage() {
                   {initials(c.nom)}
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-slate-800">{c.nom}</p>
+                  <p className="truncate font-semibold text-slate-800 dark:text-slate-100">{c.nom}</p>
                   <p className="flex items-center gap-1 text-xs text-slate-400">
                     <Phone size={11} /> {c.telephone}
                   </p>

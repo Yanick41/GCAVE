@@ -33,9 +33,9 @@ export function OrderDetailPage() {
         {t("commandes:client")} : {c.client?.nom ?? c.clientNomLibre ?? "—"}
       </p>
 
-      <div className="overflow-hidden rounded-xl border bg-white">
+      <div className="overflow-hidden rounded-xl border bg-white dark:bg-slate-900">
         <table className="w-full text-left text-sm">
-          <thead className="border-b bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="border-b bg-slate-50 dark:bg-slate-800/60 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-4 py-2">{t("commandes:product")}</th>
               <th className="px-4 py-2 text-right">{t("commandes:qty")}</th>

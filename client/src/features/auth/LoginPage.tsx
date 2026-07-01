@@ -36,23 +36,23 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-950 p-4">
+      <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-lg">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
             {t("common:app.name")}
           </h1>
           <LanguageSwitcher />
         </div>
 
-        <h2 className="text-lg font-semibold text-slate-800">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
           {t("auth:login.title")}
         </h2>
         <p className="mb-6 text-sm text-slate-500">{t("auth:login.subtitle")}</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
               {t("auth:login.email")}
             </label>
             <input
@@ -67,7 +67,7 @@ export function LoginPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
               {t("auth:login.password")}
             </label>
             <input

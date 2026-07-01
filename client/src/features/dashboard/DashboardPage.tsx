@@ -63,7 +63,7 @@ export function DashboardPage() {
       </div>
 
       {/* Performance de vente */}
-      <section className="mt-6 rounded-xl border bg-white p-5">
+      <section className="mt-6 rounded-xl border bg-white dark:bg-slate-900 p-5">
         <h2 className="mb-4 font-semibold">{t("dashboard:salesPerformance")}</h2>
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -100,7 +100,7 @@ export function DashboardPage() {
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         {/* Meilleurs clients payeurs */}
-        <section className="rounded-xl border bg-white p-5">
+        <section className="rounded-xl border bg-white dark:bg-slate-900 p-5">
           <h2 className="font-semibold">{t("dashboard:topClients")}</h2>
           <p className="mb-4 text-xs text-slate-400">{t("dashboard:topClientsHint")}</p>
           {data.topClients.length === 0 ? (
@@ -133,7 +133,7 @@ export function DashboardPage() {
         </section>
 
         {/* Top produits */}
-        <section className="rounded-xl border bg-white p-5">
+        <section className="rounded-xl border bg-white dark:bg-slate-900 p-5">
           <h2 className="mb-4 font-semibold">{t("dashboard:topProducts")}</h2>
           {data.topProduits.length === 0 ? (
             <p className="text-sm text-slate-400">{t("dashboard:noData")}</p>
@@ -168,7 +168,7 @@ function Kpi({
   sub?: string;
 }) {
   return (
-    <div className="rounded-xl border bg-white p-5">
+    <div className="rounded-xl border bg-white dark:bg-slate-900 p-5">
       <div className={`mb-3 inline-flex rounded-lg p-2 ${color}`}>{icon}</div>
       <p className="text-sm text-slate-500">{label}</p>
       <p className="text-xl font-bold tabular-nums">{value}</p>

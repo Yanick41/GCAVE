@@ -30,9 +30,9 @@ export function PaiementsListPage() {
         <h1 className="text-2xl font-bold">{t("paiements:title")}</h1>
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border bg-white dark:bg-slate-900 shadow-sm">
         <table className="w-full text-left text-sm">
-          <thead className="border-b bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <thead className="border-b bg-slate-50 dark:bg-slate-800/60 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-5 py-3">{t("paiements:columns.date")}</th>
               <th className="px-5 py-3">{t("paiements:columns.client")}</th>
@@ -59,7 +59,7 @@ export function PaiementsListPage() {
                 <tr
                   key={p.id}
                   onClick={() => p.client && navigate(`/clients/${p.client.id}`)}
-                  className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
+                  className="cursor-pointer border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <td className="px-5 py-3 text-slate-500">{formatDate(p.date, lang)}</td>
                   <td className="px-5 py-3 font-medium">{p.client?.nom ?? "—"}</td>

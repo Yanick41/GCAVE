@@ -67,14 +67,14 @@ export function RapportsPage() {
           <button
             onClick={() => pdf("download")}
             disabled={!data}
-            className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
           >
             <Download size={16} /> {t("rapports:download")}
           </button>
           <button
             onClick={() => pdf("print")}
             disabled={!data}
-            className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
           >
             <Printer size={16} /> {t("rapports:print")}
           </button>
@@ -96,7 +96,7 @@ export function RapportsPage() {
           </div>
 
           <div className="grid items-start gap-6 md:grid-cols-2">
-            <section className="rounded-xl border bg-white p-5">
+            <section className="rounded-xl border bg-white dark:bg-slate-900 p-5">
               <h2 className="mb-3 font-semibold">{t("rapports:ordersTable")}</h2>
               {data.commandes.length === 0 ? (
                 <p className="text-sm text-slate-400">{t("rapports:noOrders")}</p>
@@ -122,7 +122,7 @@ export function RapportsPage() {
               )}
             </section>
 
-            <section className="rounded-xl border bg-white p-5">
+            <section className="rounded-xl border bg-white dark:bg-slate-900 p-5">
               <h2 className="mb-3 font-semibold">{t("rapports:paymentsTable")}</h2>
               {data.paiements.length === 0 ? (
                 <p className="text-sm text-slate-400">{t("rapports:noPayments")}</p>
@@ -154,7 +154,7 @@ export function RapportsPage() {
           </div>
 
           {data.topProduits.length > 0 && (
-            <section className="mt-6 rounded-xl border bg-white p-5">
+            <section className="mt-6 rounded-xl border bg-white dark:bg-slate-900 p-5">
               <h2 className="mb-3 font-semibold">{t("rapports:topProducts")}</h2>
               <table className="w-full text-left text-sm">
                 <thead className="border-b text-xs uppercase text-slate-400">
@@ -185,14 +185,14 @@ export function RapportsPage() {
 function Kpi({
   label,
   value,
-  valueClass = "text-slate-800",
+  valueClass = "text-slate-800 dark:text-slate-100",
 }: {
   label: string;
   value: string;
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-xl border bg-white p-5">
+    <div className="rounded-xl border bg-white dark:bg-slate-900 p-5">
       <p className="text-sm text-slate-500">{label}</p>
       <p className={`text-xl font-bold tabular-nums ${valueClass}`}>{value}</p>
     </div>

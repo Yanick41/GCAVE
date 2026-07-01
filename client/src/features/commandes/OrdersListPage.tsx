@@ -30,9 +30,9 @@ export function OrdersListPage() {
         <h1 className="text-2xl font-bold">{t("commandes:title")}</h1>
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border bg-white dark:bg-slate-900 shadow-sm">
         <table className="w-full text-left text-sm">
-          <thead className="border-b bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <thead className="border-b bg-slate-50 dark:bg-slate-800/60 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-5 py-3">{t("commandes:columns.number")}</th>
               <th className="px-5 py-3">{t("commandes:columns.client")}</th>
@@ -59,7 +59,7 @@ export function OrdersListPage() {
                 <tr
                   key={c.id}
                   onClick={() => navigate(`/commandes/${c.id}`)}
-                  className="cursor-pointer border-b last:border-0 hover:bg-slate-50"
+                  className="cursor-pointer border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <td className="px-5 py-3 font-medium">{c.numero}</td>
                   <td className="px-5 py-3">{c.client?.nom ?? c.clientNomLibre ?? "—"}</td>
