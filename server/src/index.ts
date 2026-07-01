@@ -13,8 +13,30 @@ import { rapportsRouter } from "./modules/rapports/routes.js";
 
 const app = express();
 
+// Origines autorisées : celles configurées (liste séparée par des virgules)
+// + tous les domaines *.vercel.app (production ET previews).
+const allowedOrigins = env.CLIENT_ORIGIN.split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 app.use(helmet());
-app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: true }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Requêtes sans origine (curl, health checks, même origine) : autorisées
+      if (!origin) return callback(null, true);
+      let host = "";
+      try {
+        host = new URL(origin).hostname;
+      } catch {
+        return callback(null, false);
+      }
+      const ok = allowedOrigins.includes(origin) || host.endsWith(".vercel.app");
+      return callback(null, ok);
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json({ limit: "1mb" }));
 
 // Routes
