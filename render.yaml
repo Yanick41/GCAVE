@@ -1,0 +1,26 @@
+# Déploiement de l'API sur Render (service Node persistant, plan gratuit).
+# Render > New > Blueprint > sélectionne ce dépôt. Puis renseigne les variables
+# marquées "sync: false" (secrets) dans le dashboard.
+services:
+  - type: web
+    name: gcave-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start --workspace @gca/server
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
