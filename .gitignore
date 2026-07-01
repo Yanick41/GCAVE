@@ -30,3 +30,7 @@ Thumbs.db
 # Vite / cache
 .vite/
 client/dist/
+
+# PWA dev output
+dev-dist/
+client/dev-dist/
