@@ -8,7 +8,8 @@ export const remiseTypeSchema = z.enum(["AUCUNE", "POURCENTAGE", "MONTANT"]);
 export const statutCommandeSchema = z.enum(["BROUILLON", "VALIDEE", "ANNULEE"]);
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  // Identifiant libre (nom d'utilisateur ou email) — plus de contrainte de format
+  email: z.string().trim().min(1),
   password: z.string().min(1),
 });
 

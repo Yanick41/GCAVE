@@ -20,7 +20,7 @@ export function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "admin@gca.local", password: "admin1234" },
+    defaultValues: { email: "LEGRE", password: "123456" },
   });
 
   if (isAuthenticated) return <Navigate to="/clients" replace />;
@@ -56,7 +56,7 @@ export function LoginPage() {
               {t("auth:login.email")}
             </label>
             <input
-              type="email"
+              type="text"
               autoComplete="username"
               {...register("email")}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500"

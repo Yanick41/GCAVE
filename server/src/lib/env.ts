@@ -8,9 +8,9 @@ const schema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
   CLIENT_ORIGIN: z.string().default("http://localhost:5173"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  // Authentification simple : un seul compte admin (pas de gestion d'utilisateurs)
-  ADMIN_EMAIL: z.string().default("admin@gca.local"),
-  ADMIN_PASSWORD: z.string().default("admin1234"),
+  // Authentification simple : un seul compte (identifiant + mot de passe)
+  ADMIN_EMAIL: z.string().default("LEGRE"),
+  ADMIN_PASSWORD: z.string().default("123456"),
 });
 
 /**
