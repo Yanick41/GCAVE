@@ -12,6 +12,8 @@ build/
 .env
 .env.*
 !.env.example
+# URL publique de l'API (pas un secret) — nécessaire au build Vercel
+!client/.env.production
 
 # Prisma
 server/prisma/*.db
