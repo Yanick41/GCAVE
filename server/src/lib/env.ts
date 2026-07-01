@@ -13,7 +13,36 @@ const schema = z.object({
   ADMIN_PASSWORD: z.string().default("admin1234"),
 });
 
-const parsed = schema.safeParse(process.env);
+/**
+ * Retire une éventuelle paire de guillemets entourant la valeur.
+ * Utile quand les variables sont collées avec leurs guillemets (ex: Render),
+ * ce qui casserait DATABASE_URL, la comparaison ADMIN_EMAIL, etc.
+ */
+function unquote(v: string | undefined): string | undefined {
+  if (
+    v &&
+    v.length >= 2 &&
+    ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'")))
+  ) {
+    return v.slice(1, -1);
+  }
+  return v;
+}
+
+const KEYS = [
+  "DATABASE_URL",
+  "DIRECT_URL",
+  "JWT_SECRET",
+  "PORT",
+  "CLIENT_ORIGIN",
+  "NODE_ENV",
+  "ADMIN_EMAIL",
+  "ADMIN_PASSWORD",
+] as const;
+
+const sanitized = Object.fromEntries(KEYS.map((k) => [k, unquote(process.env[k])]));
+
+const parsed = schema.safeParse(sanitized);
 
 if (!parsed.success) {
   console.error("❌ Variables d'environnement invalides :");
