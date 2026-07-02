@@ -106,8 +106,12 @@ export function ClientDetailPage() {
             unitPrice: t("commandes:unitPrice"),
             lineTotal: t("commandes:lineTotal"),
             total: t("commandes:total"),
+            subtotal: t("commandes:subtotal"),
+            previousBalance: t("commandes:previousBalance"),
+            grandTotal: t("commandes:grandTotal"),
             paid: t("commandes:paid"),
             remaining: t("commandes:remaining"),
+            stamp: t("commandes:stamp"),
           },
           "print",
         );

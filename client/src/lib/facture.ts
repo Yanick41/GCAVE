@@ -18,6 +18,8 @@ export interface FactureData {
   lignes: FactureLigne[];
   total: number;
   numero?: string;
+  /** Ancien solde du client reporté sur la facture (optionnel). */
+  ancienSolde?: number;
   /** paye/reste : optionnels (affichés seulement lors de la saisie initiale) */
   paye?: number;
   reste?: number;
@@ -32,8 +34,12 @@ export interface FactureLabels {
   unitPrice: string;
   lineTotal: string;
   total: string;
+  subtotal: string;
+  previousBalance: string;
+  grandTotal: string;
   paid: string;
   remaining: string;
+  stamp: string;
 }
 
 /** Génère la facture d'une commande (téléchargement ou impression). */
@@ -45,6 +51,7 @@ export function genererFacturePDF(
 ) {
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
 
   // En-tête
   doc.setFontSize(22);
@@ -65,10 +72,17 @@ export function genererFacturePDF(
   doc.text(`${labels.client}: ${data.clientNom}`, 14, 43);
   doc.text(`${labels.date}: ${formatDate(data.date, lang)}`, 14, 49);
 
-  // Lignes
+  // Lignes — en-têtes alignés à droite au-dessus des nombres
   autoTable(doc, {
     startY: 56,
-    head: [[labels.product, labels.qty, labels.unitPrice, labels.lineTotal]],
+    head: [
+      [
+        labels.product,
+        { content: labels.qty, styles: { halign: "right" } },
+        { content: labels.unitPrice, styles: { halign: "right" } },
+        { content: labels.lineTotal, styles: { halign: "right" } },
+      ],
+    ],
     body: data.lignes.map((l) => [
       l.nomProduit,
       String(l.quantite),
@@ -85,13 +99,25 @@ export function genererFacturePDF(
     },
   });
 
+  // Totaux
   // @ts-expect-error lastAutoTable est ajouté par le plugin
   const y = doc.lastAutoTable.finalY + 10;
-  const totalsBody: string[][] = [[labels.total, pdfMoney(data.total)]];
+  const hasAncien = data.ancienSolde !== undefined && data.ancienSolde !== 0;
+  const grandTotal = data.total + (data.ancienSolde ?? 0);
+
+  const totalsBody: string[][] = [];
+  if (hasAncien) {
+    totalsBody.push([labels.subtotal, pdfMoney(data.total)]);
+    totalsBody.push([labels.previousBalance, pdfMoney(data.ancienSolde ?? 0)]);
+    totalsBody.push([labels.grandTotal, pdfMoney(grandTotal)]);
+  } else {
+    totalsBody.push([labels.total, pdfMoney(data.total)]);
+  }
   if (data.paye !== undefined) {
     totalsBody.push([labels.paid, pdfMoney(data.paye)]);
-    totalsBody.push([labels.remaining, pdfMoney(data.reste ?? data.total - data.paye)]);
+    totalsBody.push([labels.remaining, pdfMoney(data.reste ?? grandTotal - data.paye)]);
   }
+
   autoTable(doc, {
     startY: y,
     body: totalsBody,
@@ -99,6 +125,19 @@ export function genererFacturePDF(
     styles: { fontSize: 12, fontStyle: "bold" },
     columnStyles: { 0: { cellWidth: 120 }, 1: { halign: "right" } },
   });
+
+  // Zone signature & cachet (bas de page)
+  // @ts-expect-error lastAutoTable est ajouté par le plugin
+  const sy = Math.max(doc.lastAutoTable.finalY + 24, pageH - 40);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.setTextColor(20);
+  doc.setDrawColor(80);
+  doc.setLineWidth(0.4);
+  const w = doc.getTextWidth(labels.stamp);
+  const sx = pageW - 14 - w;
+  doc.text(labels.stamp, sx, sy);
+  doc.line(sx, sy + 2, sx + w, sy + 2);
 
   const safeName = data.clientNom.replace(/\s+/g, "_");
   if (action === "download") {

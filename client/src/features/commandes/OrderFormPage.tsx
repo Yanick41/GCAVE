@@ -1,7 +1,7 @@
 import { computeCommande, formatMoney, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Plus, Printer, Trash2, User } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
@@ -31,6 +31,7 @@ export function OrderFormPage() {
 
   const [clientId, setClientId] = useState(clientIdParam ?? "");
   const [lines, setLines] = useState<LineDraft[]>([emptyLine()]);
+  const [ancienSolde, setAncienSolde] = useState("");
   const [montantPaye, setMontantPaye] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -38,6 +39,12 @@ export function OrderFormPage() {
     queryKey: ["clients", ""],
     queryFn: () => fetchClients(""),
   });
+
+  // Pré-remplit "Ancien non solde" avec le solde actuel du client (modifiable)
+  useEffect(() => {
+    const c = clients?.find((x) => x.id === clientId);
+    if (c) setAncienSolde(String(c.solde));
+  }, [clientId, clients]);
 
   // Calcul TEMPS RÉEL (en mémoire, < 50 ms) via le moteur partagé
   const calc = useMemo(
@@ -54,8 +61,11 @@ export function OrderFormPage() {
     [lines],
   );
 
-  const paye = Math.min(num(montantPaye), calc.totalTTC);
-  const reste = Math.max(calc.totalTTC - paye, 0);
+  const sousTotal = calc.totalTTC;
+  const ancien = Math.max(num(ancienSolde), 0);
+  const grandTotal = sousTotal + ancien;
+  const paye = Math.min(num(montantPaye), grandTotal);
+  const reste = Math.max(grandTotal - paye, 0);
 
   const mutation = useMutation({
     mutationFn: createCommande,
@@ -113,7 +123,8 @@ export function OrderFormPage() {
             prixUnitaire: l.prixUnitaire,
             totalLigne: l.totalLigne,
           })),
-        total: calc.totalTTC,
+        total: sousTotal,
+        ancienSolde: ancien,
         paye,
         reste,
       },
@@ -127,8 +138,12 @@ export function OrderFormPage() {
         unitPrice: t("commandes:unitPrice"),
         lineTotal: t("commandes:lineTotal"),
         total: t("commandes:total"),
+        subtotal: t("commandes:subtotal"),
+        previousBalance: t("commandes:previousBalance"),
+        grandTotal: t("commandes:grandTotal"),
         paid: t("commandes:paid"),
         remaining: t("commandes:remaining"),
+        stamp: t("commandes:stamp"),
       },
       action,
     );
@@ -232,10 +247,24 @@ export function OrderFormPage() {
       {/* Totaux + paiement optionnel */}
       <div className="rounded-xl border bg-white dark:bg-slate-900 p-5">
         <div className="ml-auto max-w-sm space-y-3 text-sm">
-          <div className="flex items-center justify-between border-b pb-3">
-            <span className="text-base font-semibold">{t("commandes:total")}</span>
+          <Row label={t("commandes:subtotal")} value={formatMoney(sousTotal, lang)} />
+
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-slate-500">{t("commandes:previousBalance")}</span>
+            <input
+              type="number"
+              min="0"
+              value={ancienSolde}
+              onChange={(e) => setAncienSolde(e.target.value)}
+              placeholder="0"
+              className={`${field} w-32 py-1 text-right`}
+            />
+          </div>
+
+          <div className="flex items-center justify-between border-y py-3">
+            <span className="text-base font-semibold">{t("commandes:grandTotal")}</span>
             <span className="text-2xl font-bold text-green-600">
-              {formatMoney(calc.totalTTC, lang)}
+              {formatMoney(grandTotal, lang)}
             </span>
           </div>
 
