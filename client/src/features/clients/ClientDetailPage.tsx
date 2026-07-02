@@ -1,7 +1,7 @@
 import { formatDate, formatMoney, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Printer, Trash2, Wallet } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, ChevronRight, Pencil, Plus, Printer, Trash2, Wallet } from "lucide-react";
+import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
@@ -21,6 +21,14 @@ export function ClientDetailPage() {
   const queryClient = useQueryClient();
   const [showPayment, setShowPayment] = useState(false);
   const [printingId, setPrintingId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggleExpand = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["client", id],
@@ -40,6 +48,9 @@ export function ClientDetailPage() {
   if (!client) return <p className="text-slate-400">{t("common:errors.NOT_FOUND")}</p>;
 
   const money = (n: number) => formatMoney(n, lang);
+
+  // Accès rapide aux lignes de produits d'une commande (pour l'affichage déplié)
+  const commandeMap = new Map(client.commandes.map((c) => [c.id, c]));
 
   const printBilan = () =>
     genererBilanPDF(client, lang, {
@@ -196,79 +207,149 @@ export function ClientDetailPage() {
         <Stat label={t("clients:detail.orders")} value={String(client.nbCommandes)} />
       </div>
 
-      <div className="grid items-start gap-6 md:grid-cols-3">
-        {/* Infos */}
-        <section className="rounded-xl border bg-white dark:bg-slate-900 p-5">
-          <h2 className="mb-3 font-semibold">{t("clients:detail.info")}</h2>
-          <dl className="space-y-2 text-sm">
-            <Row label={t("clients:columns.phone")} value={client.telephone} />
-            <Row label={t("clients:columns.email")} value={client.email ?? "—"} />
-            <Row label={t("clients:columns.address")} value={client.adresse ?? "—"} />
-          </dl>
-        </section>
+      {/* Infos (pleine largeur, compact) */}
+      <section className="mb-6 rounded-xl border bg-white dark:bg-slate-900 p-5">
+        <h2 className="mb-3 font-semibold">{t("clients:detail.info")}</h2>
+        <div className="grid gap-3 text-sm sm:grid-cols-3">
+          <Row label={t("clients:columns.phone")} value={client.telephone} />
+          <Row label={t("clients:columns.email")} value={client.email ?? "—"} />
+          <Row label={t("clients:columns.address")} value={client.adresse ?? "—"} />
+        </div>
+      </section>
 
-        {/* Historique */}
-        <section className="rounded-xl border bg-white dark:bg-slate-900 p-5 md:col-span-2">
-          <h2 className="mb-3 font-semibold">{t("clients:detail.history")}</h2>
-          {client.historique.length === 0 ? (
-            <p className="text-sm text-slate-400">{t("clients:detail.noHistory")}</p>
-          ) : (
+      {/* Historique (pleine largeur) */}
+      <section className="rounded-xl border bg-white dark:bg-slate-900 p-5">
+        <h2 className="mb-3 font-semibold">{t("clients:detail.history")}</h2>
+        {client.historique.length === 0 ? (
+          <p className="text-sm text-slate-400">{t("clients:detail.noHistory")}</p>
+        ) : (
+          <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="border-b text-xs uppercase text-slate-400">
                 <tr>
-                  <th className="w-8 py-2"></th>
-                  <th className="py-2">{t("clients:detail.hist.date")}</th>
+                  <th className="w-10 py-2"></th>
+                  <th className="py-2 whitespace-nowrap">{t("clients:detail.hist.date")}</th>
                   <th className="py-2">{t("clients:detail.hist.type")}</th>
-                  <th className="py-2 text-right">{t("clients:detail.hist.amount")}</th>
-                  <th className="py-2 text-right">{t("clients:detail.hist.balanceAfter")}</th>
+                  <th className="py-2 text-right whitespace-nowrap">
+                    {t("clients:detail.hist.amount")}
+                  </th>
+                  <th className="py-2 text-right whitespace-nowrap">
+                    {t("clients:detail.hist.balanceAfter")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {client.historique.map((op) => {
                   const isOrder = op.type === "COMMANDE";
+                  const cmd = isOrder ? commandeMap.get(op.id) : undefined;
+                  const isOpen = expanded.has(op.id);
                   return (
-                    <tr key={`${op.type}-${op.id}`} className="border-b last:border-0">
-                      <td className="py-2 pr-2">
-                        <button
-                          onClick={() => printOperation(op)}
-                          disabled={printingId === op.id}
-                          title={isOrder ? t("commandes:invoice") : t("paiements:receipt")}
-                          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    <Fragment key={`${op.type}-${op.id}`}>
+                      <tr className="border-b last:border-0">
+                        <td className="py-2 pr-2">
+                          <button
+                            onClick={() => printOperation(op)}
+                            disabled={printingId === op.id}
+                            title={isOrder ? t("commandes:invoice") : t("paiements:receipt")}
+                            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                          >
+                            <Printer size={15} />
+                          </button>
+                        </td>
+                        <td className="py-2 whitespace-nowrap text-slate-500">
+                          {formatDate(op.date, lang)}
+                        </td>
+                        <td className="py-2">
+                          <div className="flex items-center gap-2">
+                            {isOrder && cmd && cmd.lignes.length > 0 && (
+                              <button
+                                onClick={() => toggleExpand(op.id)}
+                                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                                title={t("commandes:lines")}
+                              >
+                                {isOpen ? (
+                                  <ChevronDown size={16} />
+                                ) : (
+                                  <ChevronRight size={16} />
+                                )}
+                              </button>
+                            )}
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${isOrder ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"}`}
+                            >
+                              {t(`clients:detail.hist.${op.type}`)}
+                            </span>
+                            {op.ref && (
+                              <span className="text-xs text-slate-400">{op.ref}</span>
+                            )}
+                            {op.mode && (
+                              <span className="text-xs text-slate-400">
+                                {t(`paiements:modes.${op.mode}`)}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td
+                          className={`py-2 text-right tabular-nums whitespace-nowrap ${isOrder ? "text-rose-600" : "text-emerald-600"}`}
                         >
-                          <Printer size={15} />
-                        </button>
-                      </td>
-                      <td className="py-2 text-slate-500">{formatDate(op.date, lang)}</td>
-                      <td className="py-2">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${isOrder ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"}`}
-                        >
-                          {t(`clients:detail.hist.${op.type}`)}
-                        </span>
-                        {op.ref && <span className="ml-2 text-xs text-slate-400">{op.ref}</span>}
-                        {op.mode && (
-                          <span className="ml-2 text-xs text-slate-400">
-                            {t(`paiements:modes.${op.mode}`)}
-                          </span>
-                        )}
-                      </td>
-                      <td
-                        className={`py-2 text-right tabular-nums ${isOrder ? "text-rose-600" : "text-emerald-600"}`}
-                      >
-                        {isOrder ? "+" : "−"}
-                        {money(op.montant)}
-                      </td>
-                      <td className="py-2 text-right font-medium tabular-nums">
-                        {money(op.soldeApres)}
-                      </td>
-                    </tr>
+                          {isOrder ? "+" : "−"}
+                          {money(op.montant)}
+                        </td>
+                        <td className="py-2 text-right font-medium tabular-nums whitespace-nowrap">
+                          {money(op.soldeApres)}
+                        </td>
+                      </tr>
+
+                      {isOrder && isOpen && cmd && (
+                        <tr className="border-b last:border-0">
+                          <td colSpan={5} className="bg-slate-50 p-3 dark:bg-slate-800/40">
+                            <table className="w-full text-xs">
+                              <thead className="text-slate-400">
+                                <tr>
+                                  <th className="py-1 text-left">{t("commandes:product")}</th>
+                                  <th className="py-1 text-right">{t("commandes:qty")}</th>
+                                  <th className="py-1 text-right">{t("commandes:unitPrice")}</th>
+                                  <th className="py-1 text-right">{t("commandes:lineTotal")}</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {cmd.lignes.map((l) => (
+                                  <tr key={l.id}>
+                                    <td className="py-1">{l.nomProduit}</td>
+                                    <td className="py-1 text-right tabular-nums">
+                                      {Number(l.quantite)}
+                                    </td>
+                                    <td className="py-1 text-right tabular-nums">
+                                      {money(Number(l.prixUnitaire))}
+                                    </td>
+                                    <td className="py-1 text-right font-medium tabular-nums">
+                                      {money(Number(l.totalLigne))}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                              <tfoot>
+                                <tr className="border-t">
+                                  <td colSpan={3} className="py-1 text-right font-semibold">
+                                    {t("commandes:total")}
+                                  </td>
+                                  <td className="py-1 text-right font-bold tabular-nums text-green-600">
+                                    {money(Number(cmd.totalTTC))}
+                                  </td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   );
                 })}
               </tbody>
             </table>
-          )}
-        </section>
-      </div>
+          </div>
+        )}
+      </section>
 
       {showPayment && (
         <PaymentModal

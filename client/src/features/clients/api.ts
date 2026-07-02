@@ -16,12 +16,21 @@ export interface ClientListItem {
   solde: number;
 }
 
+export interface LigneResume {
+  id: string;
+  nomProduit: string;
+  quantite: string;
+  prixUnitaire: string;
+  totalLigne: string;
+}
+
 export interface CommandeResume {
   id: string;
   numero: string;
   date: string;
   totalTTC: string;
   statut: "BROUILLON" | "VALIDEE" | "ANNULEE";
+  lignes: LigneResume[];
 }
 
 export interface Paiement {
