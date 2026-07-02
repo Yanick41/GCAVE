@@ -1,5 +1,6 @@
 {
   "title": "Payments",
+  "receipt": "Payment receipt",
   "new": "New payment",
   "newFor": "New payment — {{name}}",
   "amount": "Amount",

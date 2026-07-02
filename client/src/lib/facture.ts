@@ -17,8 +17,10 @@ export interface FactureData {
   date: Date;
   lignes: FactureLigne[];
   total: number;
-  paye: number;
-  reste: number;
+  numero?: string;
+  /** paye/reste : optionnels (affichés seulement lors de la saisie initiale) */
+  paye?: number;
+  reste?: number;
 }
 
 export interface FactureLabels {
@@ -56,7 +58,7 @@ export function genererFacturePDF(
   doc.setFont("helvetica", "normal");
   doc.setFontSize(14);
   doc.setTextColor(90);
-  doc.text(labels.title, 14, 33);
+  doc.text(data.numero ? `${labels.title} N° ${data.numero}` : labels.title, 14, 33);
 
   doc.setFontSize(11);
   doc.setTextColor(20);
@@ -85,13 +87,14 @@ export function genererFacturePDF(
 
   // @ts-expect-error lastAutoTable est ajouté par le plugin
   const y = doc.lastAutoTable.finalY + 10;
+  const totalsBody: string[][] = [[labels.total, pdfMoney(data.total)]];
+  if (data.paye !== undefined) {
+    totalsBody.push([labels.paid, pdfMoney(data.paye)]);
+    totalsBody.push([labels.remaining, pdfMoney(data.reste ?? data.total - data.paye)]);
+  }
   autoTable(doc, {
     startY: y,
-    body: [
-      [labels.total, pdfMoney(data.total)],
-      [labels.paid, pdfMoney(data.paye)],
-      [labels.remaining, pdfMoney(data.reste)],
-    ],
+    body: totalsBody,
     theme: "plain",
     styles: { fontSize: 12, fontStyle: "bold" },
     columnStyles: { 0: { cellWidth: 120 }, 1: { halign: "right" } },

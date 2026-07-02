@@ -7,8 +7,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
 import { avatarColor, initials } from "../../lib/avatar";
 import { genererBilanPDF } from "../../lib/bilan";
+import { genererFacturePDF } from "../../lib/facture";
+import { genererRecuPDF } from "../../lib/recu";
+import { fetchCommande } from "../commandes/api";
 import { PaymentModal } from "../paiements/PaymentModal";
-import { archiveClient, fetchClient } from "./api";
+import { archiveClient, fetchClient, type HistoriqueOp } from "./api";
 
 export function ClientDetailPage() {
   const { t, i18n } = useTranslation(["clients", "common", "paiements"]);
@@ -17,6 +20,7 @@ export function ClientDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showPayment, setShowPayment] = useState(false);
+  const [printingId, setPrintingId] = useState<string | null>(null);
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["client", id],
@@ -61,6 +65,66 @@ export function ClientDetailPage() {
         VIREMENT: t("paiements:modes.VIREMENT"),
       },
     });
+
+  // Imprimer une opération de l'historique : facture (commande) ou reçu (paiement)
+  const printOperation = async (op: HistoriqueOp) => {
+    setPrintingId(op.id);
+    try {
+      if (op.type === "COMMANDE") {
+        const cmd = await fetchCommande(op.id);
+        genererFacturePDF(
+          {
+            clientNom: client.nom,
+            date: new Date(cmd.date),
+            numero: cmd.numero,
+            lignes: cmd.lignes.map((l) => ({
+              nomProduit: l.nomProduit,
+              quantite: Number(l.quantite),
+              prixUnitaire: Number(l.prixUnitaire),
+              totalLigne: Number(l.totalLigne),
+            })),
+            total: Number(cmd.totalTTC),
+          },
+          lang,
+          {
+            title: t("commandes:invoice"),
+            client: t("paiements:columns.client"),
+            date: t("clients:detail.hist.date"),
+            product: t("commandes:product"),
+            qty: t("commandes:qty"),
+            unitPrice: t("commandes:unitPrice"),
+            lineTotal: t("commandes:lineTotal"),
+            total: t("commandes:total"),
+            paid: t("commandes:paid"),
+            remaining: t("commandes:remaining"),
+          },
+          "print",
+        );
+      } else {
+        genererRecuPDF(
+          {
+            clientNom: client.nom,
+            date: new Date(op.date),
+            montant: op.montant,
+            mode: t(`paiements:modes.${op.mode}`),
+            observation: op.observation,
+          },
+          lang,
+          {
+            title: t("paiements:receipt"),
+            client: t("paiements:columns.client"),
+            date: t("paiements:date"),
+            amount: t("paiements:amount"),
+            mode: t("paiements:mode"),
+            observation: t("paiements:observation"),
+          },
+          "print",
+        );
+      }
+    } finally {
+      setPrintingId(null);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -152,6 +216,7 @@ export function ClientDetailPage() {
             <table className="w-full text-left text-sm">
               <thead className="border-b text-xs uppercase text-slate-400">
                 <tr>
+                  <th className="w-8 py-2"></th>
                   <th className="py-2">{t("clients:detail.hist.date")}</th>
                   <th className="py-2">{t("clients:detail.hist.type")}</th>
                   <th className="py-2 text-right">{t("clients:detail.hist.amount")}</th>
@@ -163,6 +228,16 @@ export function ClientDetailPage() {
                   const isOrder = op.type === "COMMANDE";
                   return (
                     <tr key={`${op.type}-${op.id}`} className="border-b last:border-0">
+                      <td className="py-2 pr-2">
+                        <button
+                          onClick={() => printOperation(op)}
+                          disabled={printingId === op.id}
+                          title={isOrder ? t("commandes:invoice") : t("paiements:receipt")}
+                          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                        >
+                          <Printer size={15} />
+                        </button>
+                      </td>
                       <td className="py-2 text-slate-500">{formatDate(op.date, lang)}</td>
                       <td className="py-2">
                         <span

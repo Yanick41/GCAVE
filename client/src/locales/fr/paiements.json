@@ -1,5 +1,6 @@
 {
   "title": "Paiements",
+  "receipt": "Reçu de paiement",
   "new": "Nouveau paiement",
   "newFor": "Nouveau paiement — {{name}}",
   "amount": "Montant",
