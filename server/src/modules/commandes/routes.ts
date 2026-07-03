@@ -50,6 +50,7 @@ commandesRouter.post(
       lignes: { nomProduit: string; quantite: number; prixUnitaire: number }[];
       remiseType: "AUCUNE" | "POURCENTAGE" | "MONTANT";
       remiseValeur: number;
+      ancienSolde?: number;
       montantPaye?: number;
       statut?: "BROUILLON" | "VALIDEE" | "ANNULEE";
     };
@@ -61,8 +62,10 @@ commandesRouter.post(
       remiseValeur: body.remiseValeur,
     });
 
-    // Paiement initial éventuel (optionnel), borné au total
-    const montantPaye = Math.min(Math.max(body.montantPaye ?? 0, 0), calc.totalTTC);
+    // Ancien solde reporté (info facture) + paiement initial éventuel, bornés
+    const ancienSolde = Math.max(body.ancienSolde ?? 0, 0);
+    const grandTotal = calc.totalTTC + ancienSolde;
+    const montantPaye = Math.min(Math.max(body.montantPaye ?? 0, 0), grandTotal);
 
     // Numéro séquentiel (lecture hors transaction — le pooler Neon ne supporte
     // pas les transactions interactives, on utilise une transaction "batch").
@@ -82,6 +85,8 @@ commandesRouter.post(
         sousTotal: calc.sousTotal,
         montantRemise: calc.montantRemise,
         totalTTC: calc.totalTTC,
+        ancienSolde,
+        montantPaye,
         statut: body.statut ?? "VALIDEE",
         lignes: {
           create: calc.lignes.map((l) => ({

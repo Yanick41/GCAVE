@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BellRing,
   LayoutDashboard,
   LogOut,
   Package,
@@ -10,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
+import { RappelsAlertBanner, useAlertes } from "../features/rappels/RappelsAlert";
 import { avatarColor, initials } from "../lib/avatar";
 import { InstallButton } from "./InstallButton";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -20,6 +22,7 @@ const navItems = [
   { to: "/clients", key: "nav.clients", Icon: Users },
   { to: "/commandes", key: "nav.orders", Icon: Package },
   { to: "/paiements", key: "nav.payments", Icon: Wallet },
+  { to: "/rappels", key: "nav.reminders", Icon: BellRing },
   { to: "/rapports", key: "nav.reports", Icon: BarChart3 },
   { to: "/parametres", key: "nav.settings", Icon: Settings },
 ];
@@ -29,6 +32,9 @@ export function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const name = user?.nom ?? "—";
+  const { data: alertes } = useAlertes();
+  const rappelBadge = alertes?.total ?? 0;
+  const rappelUrgent = (alertes?.enRetard.length ?? 0) > 0;
 
   const handleLogout = () => {
     logout();
@@ -57,7 +63,14 @@ export function Layout() {
               }
             >
               <Icon size={18} />
-              {t(key)}
+              <span className="flex-1">{t(key)}</span>
+              {to === "/rappels" && rappelBadge > 0 && (
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-xs font-bold text-white ${rappelUrgent ? "bg-rose-600" : "bg-amber-500"}`}
+                >
+                  {rappelBadge}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -88,6 +101,7 @@ export function Layout() {
           </button>
         </header>
         <main className="flex-1 overflow-auto p-6">
+          <RappelsAlertBanner />
           <Outlet />
         </main>
       </div>

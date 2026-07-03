@@ -8,6 +8,7 @@ import enCommandes from "../locales/en/commandes.json";
 import enCommon from "../locales/en/common.json";
 import enDashboard from "../locales/en/dashboard.json";
 import enPaiements from "../locales/en/paiements.json";
+import enRappels from "../locales/en/rappels.json";
 import enRapports from "../locales/en/rapports.json";
 import frAuth from "../locales/fr/auth.json";
 import frClients from "../locales/fr/clients.json";
@@ -15,6 +16,7 @@ import frCommandes from "../locales/fr/commandes.json";
 import frCommon from "../locales/fr/common.json";
 import frDashboard from "../locales/fr/dashboard.json";
 import frPaiements from "../locales/fr/paiements.json";
+import frRappels from "../locales/fr/rappels.json";
 import frRapports from "../locales/fr/rapports.json";
 
 export const resources = {
@@ -25,6 +27,7 @@ export const resources = {
     commandes: frCommandes,
     dashboard: frDashboard,
     paiements: frPaiements,
+    rappels: frRappels,
     rapports: frRapports,
   },
   en: {
@@ -34,6 +37,7 @@ export const resources = {
     commandes: enCommandes,
     dashboard: enDashboard,
     paiements: enPaiements,
+    rappels: enRappels,
     rapports: enRapports,
   },
 } as const;
@@ -45,7 +49,16 @@ i18n
     resources,
     fallbackLng: "fr",
     supportedLngs: ["fr", "en"],
-    ns: ["common", "auth", "clients", "commandes", "dashboard", "paiements", "rapports"],
+    ns: [
+      "common",
+      "auth",
+      "clients",
+      "commandes",
+      "dashboard",
+      "paiements",
+      "rappels",
+      "rapports",
+    ],
     defaultNS: "common",
     interpolation: { escapeValue: false },
     detection: {

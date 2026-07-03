@@ -1,4 +1,4 @@
-import { clientSchema, paiementSchema, soldeClient } from "@gca/shared";
+import { clientSchema, paiementSchema, rappelSchema, soldeClient } from "@gca/shared";
 import { Router } from "express";
 import { ah } from "../../lib/async.js";
 import { prisma } from "../../lib/prisma.js";
@@ -80,6 +80,7 @@ clientsRouter.get(
       include: {
         commandes: { include: { lignes: true }, orderBy: { date: "asc" } },
         paiements: { orderBy: { date: "asc" } },
+        rappels: { orderBy: [{ statut: "asc" }, { echeance: "asc" }] },
       },
     });
     if (!client || client.archived) throw new AppError("NOT_FOUND", 404);
@@ -139,6 +140,7 @@ clientsRouter.get(
       solde,
       commandes: client.commandes,
       paiements: client.paiements,
+      rappels: client.rappels,
       historique: historiqueAsc.reverse(), // plus récent en premier
     });
   }),
@@ -220,5 +222,24 @@ clientsRouter.post(
       },
     });
     res.status(201).json(paiement);
+  }),
+);
+
+// Rappels — créer un rappel pour le client
+clientsRouter.post(
+  "/:id/rappels",
+  validate(rappelSchema),
+  ah(async (req, res) => {
+    const client = await prisma.client.findUnique({ where: { id: req.params.id } });
+    if (!client || client.archived) throw new AppError("NOT_FOUND", 404);
+    const { note, echeance, priorite } = req.body as {
+      note: string;
+      echeance: string;
+      priorite: "FAIBLE" | "NORMALE" | "URGENTE";
+    };
+    const rappel = await prisma.rappel.create({
+      data: { clientId: req.params.id, note, echeance: new Date(echeance), priorite },
+    });
+    res.status(201).json(rappel);
   }),
 );

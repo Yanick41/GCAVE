@@ -1,5 +1,6 @@
 import type { ClientInput, PaiementInput } from "@gca/shared";
 import { api } from "../../lib/api";
+import type { Rappel } from "../rappels/api";
 
 export type ModePaiement = "ESPECES" | "MOBILE_MONEY" | "VIREMENT";
 
@@ -65,6 +66,7 @@ export interface ClientDetail {
   solde: number;
   commandes: CommandeResume[];
   paiements: Paiement[];
+  rappels: Rappel[];
   historique: HistoriqueOp[];
 }
 

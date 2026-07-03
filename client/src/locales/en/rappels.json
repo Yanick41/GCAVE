@@ -1,0 +1,49 @@
+{
+  "title": "Reminders",
+  "subtitle": "Track receivables and due dates",
+  "new": "New reminder",
+  "newFor": "New reminder — {{name}}",
+  "note": "Note",
+  "notePlaceholder": "e.g. follow up on the outstanding balance",
+  "echeance": "Due date",
+  "priorite": "Priority",
+  "save": "Save reminder",
+  "saving": "Saving…",
+  "empty": "No reminders.",
+  "emptyDone": "No completed reminders.",
+  "done": "Complete",
+  "postpone": "Postpone",
+  "delete": "Delete",
+  "overdue": "Overdue",
+  "dueSoon": "Upcoming",
+  "deleteConfirm": "Delete this reminder?",
+  "postponePrompt": "New due date (YYYY-MM-DD):",
+  "filter": {
+    "current": "Active",
+    "done": "Completed"
+  },
+  "priorities": {
+    "FAIBLE": "Low",
+    "NORMALE": "Normal",
+    "URGENTE": "Urgent"
+  },
+  "statuses": {
+    "EN_COURS": "Active",
+    "TERMINE": "Done"
+  },
+  "columns": {
+    "client": "Client",
+    "note": "Note",
+    "echeance": "Due date",
+    "priorite": "Priority",
+    "actions": "Actions"
+  },
+  "alert": {
+    "title": "Reminders to handle",
+    "overdue_one": "{{count}} overdue reminder",
+    "overdue_other": "{{count}} overdue reminders",
+    "soon_one": "{{count}} upcoming reminder",
+    "soon_other": "{{count}} upcoming reminders",
+    "view": "View reminders"
+  }
+}

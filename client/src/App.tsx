@@ -11,6 +11,7 @@ import { OrderFormPage } from "./features/commandes/OrderFormPage";
 import { OrdersListPage } from "./features/commandes/OrdersListPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { PaiementsListPage } from "./features/paiements/PaiementsListPage";
+import { RappelsPage } from "./features/rappels/RappelsPage";
 import { RapportsPage } from "./features/rapports/RapportsPage";
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/commandes/:id" element={<OrderDetailPage />} />
 
             <Route path="/paiements" element={<PaiementsListPage />} />
+            <Route path="/rappels" element={<RappelsPage />} />
             <Route path="/rapports" element={<RapportsPage />} />
             <Route path="/parametres" element={<SoonPage titleKey="nav.settings" />} />
           </Route>

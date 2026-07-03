@@ -9,6 +9,7 @@ import { commandesRouter } from "./modules/commandes/routes.js";
 import { dashboardRouter } from "./modules/dashboard/routes.js";
 import { healthRouter } from "./modules/health/routes.js";
 import { paiementsRouter } from "./modules/paiements/routes.js";
+import { rappelsRouter } from "./modules/rappels/routes.js";
 import { rapportsRouter } from "./modules/rapports/routes.js";
 
 const app = express();
@@ -45,6 +46,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/clients", clientsRouter);
 app.use("/api/commandes", commandesRouter);
 app.use("/api/paiements", paiementsRouter);
+app.use("/api/rappels", rappelsRouter);
 app.use("/api/rapports", rapportsRouter);
 app.use("/api/dashboard", dashboardRouter);
 

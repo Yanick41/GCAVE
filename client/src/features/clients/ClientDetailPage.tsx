@@ -1,6 +1,15 @@
 import { formatDate, formatMoney, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, Pencil, Plus, Printer, Trash2, Wallet } from "lucide-react";
+import {
+  BellRing,
+  ChevronDown,
+  ChevronRight,
+  Pencil,
+  Plus,
+  Printer,
+  Trash2,
+  Wallet,
+} from "lucide-react";
 import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -11,6 +20,8 @@ import { genererFacturePDF } from "../../lib/facture";
 import { genererRecuPDF } from "../../lib/recu";
 import { fetchCommande } from "../commandes/api";
 import { PaymentModal } from "../paiements/PaymentModal";
+import { RappelItem } from "../rappels/RappelItem";
+import { RappelModal } from "../rappels/RappelModal";
 import { archiveClient, fetchClient, type HistoriqueOp } from "./api";
 
 export function ClientDetailPage() {
@@ -20,6 +31,7 @@ export function ClientDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showPayment, setShowPayment] = useState(false);
+  const [showRappel, setShowRappel] = useState(false);
   const [printingId, setPrintingId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -95,6 +107,10 @@ export function ClientDetailPage() {
               totalLigne: Number(l.totalLigne),
             })),
             total: Number(cmd.totalTTC),
+            ancienSolde: Number(cmd.ancienSolde),
+            paye: Number(cmd.montantPaye),
+            reste:
+              Number(cmd.totalTTC) + Number(cmd.ancienSolde) - Number(cmd.montantPaye),
           },
           lang,
           {
@@ -175,6 +191,12 @@ export function ClientDetailPage() {
             <Wallet size={16} /> {t("clients:detail.newPayment")}
           </button>
           <button
+            onClick={() => setShowRappel(true)}
+            className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-400"
+          >
+            <BellRing size={16} /> {t("rappels:new", { ns: "rappels" })}
+          </button>
+          <button
             onClick={printBilan}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
@@ -220,6 +242,18 @@ export function ClientDetailPage() {
           <Row label={t("clients:columns.address")} value={client.adresse ?? "—"} />
         </div>
       </section>
+
+      {/* Rappels du client */}
+      {client.rappels.length > 0 && (
+        <section className="mb-6 rounded-xl border bg-white dark:bg-slate-900 p-5">
+          <h2 className="mb-3 font-semibold">{t("rappels:title", { ns: "rappels" })}</h2>
+          <div className="space-y-2">
+            {client.rappels.map((r) => (
+              <RappelItem key={r.id} rappel={r} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Historique (pleine largeur) */}
       <section className="rounded-xl border bg-white dark:bg-slate-900 p-5">
@@ -360,6 +394,13 @@ export function ClientDetailPage() {
           clientId={client.id}
           clientName={client.nom}
           onClose={() => setShowPayment(false)}
+        />
+      )}
+      {showRappel && (
+        <RappelModal
+          clientId={client.id}
+          clientName={client.nom}
+          onClose={() => setShowRappel(false)}
         />
       )}
     </div>

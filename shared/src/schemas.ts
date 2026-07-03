@@ -33,6 +33,7 @@ export const commandeSchema = z
     lignes: z.array(ligneSchema).min(1),
     remiseType: remiseTypeSchema.default("AUCUNE"),
     remiseValeur: z.number().nonnegative().default(0),
+    ancienSolde: z.number().nonnegative().optional(),
     montantPaye: z.number().nonnegative().optional(),
     statut: statutCommandeSchema.optional(),
   })
@@ -52,6 +53,24 @@ export const paiementSchema = z.object({
 
 export type ModePaiement = z.infer<typeof modePaiementSchema>;
 export type PaiementInput = z.infer<typeof paiementSchema>;
+
+// ── Rappels (module CRM) ─────────────────────────────────────────────
+export const prioriteRappelSchema = z.enum(["FAIBLE", "NORMALE", "URGENTE"]);
+export const statutRappelSchema = z.enum(["EN_COURS", "TERMINE"]);
+
+export const rappelSchema = z.object({
+  note: z.string().trim().min(1),
+  echeance: z.string().min(1), // date ISO (YYYY-MM-DD ou datetime)
+  priorite: prioriteRappelSchema.default("NORMALE"),
+});
+
+export const reporterRappelSchema = z.object({
+  echeance: z.string().min(1),
+});
+
+export type PrioriteRappel = z.infer<typeof prioriteRappelSchema>;
+export type StatutRappel = z.infer<typeof statutRappelSchema>;
+export type RappelInput = z.infer<typeof rappelSchema>;
 
 export const commandeFiltersSchema = z.object({
   q: z.string().optional(),

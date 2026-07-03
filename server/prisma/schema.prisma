@@ -33,6 +33,17 @@ enum ModePaiement {
   VIREMENT
 }
 
+enum PrioriteRappel {
+  FAIBLE
+  NORMALE
+  URGENTE
+}
+
+enum StatutRappel {
+  EN_COURS
+  TERMINE
+}
+
 model Utilisateur {
   id           String     @id @default(cuid())
   nom          String
@@ -52,10 +63,26 @@ model Client {
   archived  Boolean    @default(false) // F-A04 : suppression logique
   commandes Commande[]
   paiements Paiement[]
+  rappels   Rappel[]
   createdAt DateTime   @default(now())
 
   @@index([nom])
   @@index([telephone])
+}
+
+model Rappel {
+  id        String         @id @default(cuid())
+  clientId  String
+  client    Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  note      String
+  echeance  DateTime // date d'échéance du rappel
+  priorite  PrioriteRappel @default(NORMALE)
+  statut    StatutRappel   @default(EN_COURS)
+  createdAt DateTime       @default(now())
+
+  @@index([clientId])
+  @@index([echeance])
+  @@index([statut])
 }
 
 model Paiement {
@@ -86,7 +113,8 @@ model Commande {
   sousTotal      Decimal         @db.Decimal(12, 2)
   montantRemise  Decimal         @db.Decimal(12, 2)
   totalTTC       Decimal         @db.Decimal(12, 2)
-  montantPaye    Decimal         @default(0) @db.Decimal(12, 2) // crédit déjà payé
+  ancienSolde    Decimal         @default(0) @db.Decimal(12, 2) // solde reporté sur la facture
+  montantPaye    Decimal         @default(0) @db.Decimal(12, 2) // acompte à la commande
   statut         StatutCommande  @default(VALIDEE)
   date           DateTime        @default(now())
 

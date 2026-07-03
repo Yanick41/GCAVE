@@ -20,6 +20,8 @@ export interface Commande {
   sousTotal: string;
   montantRemise: string;
   totalTTC: string;
+  ancienSolde: string;
+  montantPaye: string;
   statut: "BROUILLON" | "VALIDEE" | "ANNULEE";
   date: string;
   lignes: LigneCommande[];

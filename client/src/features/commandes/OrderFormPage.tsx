@@ -103,6 +103,7 @@ export function OrderFormPage() {
       })),
       remiseType: "AUCUNE",
       remiseValeur: 0,
+      ancienSolde: ancien > 0 ? ancien : undefined,
       montantPaye: paye > 0 ? paye : undefined,
     });
   };

@@ -1,0 +1,49 @@
+{
+  "title": "Rappels",
+  "subtitle": "Suivi des créances et échéances",
+  "new": "Nouveau rappel",
+  "newFor": "Nouveau rappel — {{name}}",
+  "note": "Note",
+  "notePlaceholder": "Ex : relancer pour le paiement du solde",
+  "echeance": "Échéance",
+  "priorite": "Priorité",
+  "save": "Enregistrer le rappel",
+  "saving": "Enregistrement…",
+  "empty": "Aucun rappel.",
+  "emptyDone": "Aucun rappel terminé.",
+  "done": "Terminer",
+  "postpone": "Reporter",
+  "delete": "Supprimer",
+  "overdue": "En retard",
+  "dueSoon": "À venir",
+  "deleteConfirm": "Supprimer ce rappel ?",
+  "postponePrompt": "Nouvelle date d'échéance (AAAA-MM-JJ) :",
+  "filter": {
+    "current": "En cours",
+    "done": "Terminés"
+  },
+  "priorities": {
+    "FAIBLE": "Faible",
+    "NORMALE": "Normale",
+    "URGENTE": "Urgente"
+  },
+  "statuses": {
+    "EN_COURS": "En cours",
+    "TERMINE": "Terminé"
+  },
+  "columns": {
+    "client": "Client",
+    "note": "Note",
+    "echeance": "Échéance",
+    "priorite": "Priorité",
+    "actions": "Actions"
+  },
+  "alert": {
+    "title": "Rappels à traiter",
+    "overdue_one": "{{count}} rappel en retard",
+    "overdue_other": "{{count}} rappels en retard",
+    "soon_one": "{{count}} rappel à venir",
+    "soon_other": "{{count}} rappels à venir",
+    "view": "Voir les rappels"
+  }
+}
