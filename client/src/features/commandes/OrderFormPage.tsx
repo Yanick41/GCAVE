@@ -1,7 +1,7 @@
 import { computeCommande, formatMoney, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Plus, Printer, Trash2, User } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
@@ -31,7 +31,6 @@ export function OrderFormPage() {
 
   const [clientId, setClientId] = useState(clientIdParam ?? "");
   const [lines, setLines] = useState<LineDraft[]>([emptyLine()]);
-  const [ancienSolde, setAncienSolde] = useState("");
   const [montantPaye, setMontantPaye] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -40,11 +39,7 @@ export function OrderFormPage() {
     queryFn: () => fetchClients(""),
   });
 
-  // Pré-remplit "Ancien non solde" avec le solde actuel du client (modifiable)
-  useEffect(() => {
-    const c = clients?.find((x) => x.id === clientId);
-    if (c) setAncienSolde(String(c.solde));
-  }, [clientId, clients]);
+  const selectedClient = clients?.find((c) => c.id === clientId);
 
   // Calcul TEMPS RÉEL (en mémoire, < 50 ms) via le moteur partagé
   const calc = useMemo(
@@ -61,8 +56,9 @@ export function OrderFormPage() {
     [lines],
   );
 
+  // Ancien solde = solde RÉEL du client (même fonction partout) -> jamais de désynchro
   const sousTotal = calc.totalTTC;
-  const ancien = Math.max(num(ancienSolde), 0);
+  const ancien = Math.max(selectedClient?.solde ?? 0, 0);
   const grandTotal = sousTotal + ancien;
   const paye = Math.min(num(montantPaye), grandTotal);
   const reste = Math.max(grandTotal - paye, 0);
@@ -108,7 +104,7 @@ export function OrderFormPage() {
     });
   };
 
-  const selectedClientName = clients?.find((c) => c.id === clientId)?.nom;
+  const selectedClientName = selectedClient?.nom;
   const field = "rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500";
 
   const facture = (action: "download" | "print") => {
@@ -250,17 +246,7 @@ export function OrderFormPage() {
         <div className="ml-auto max-w-sm space-y-3 text-sm">
           <Row label={t("commandes:subtotal")} value={formatMoney(sousTotal, lang)} />
 
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-slate-500">{t("commandes:previousBalance")}</span>
-            <input
-              type="number"
-              min="0"
-              value={ancienSolde}
-              onChange={(e) => setAncienSolde(e.target.value)}
-              placeholder="0"
-              className={`${field} w-32 py-1 text-right`}
-            />
-          </div>
+          <Row label={t("commandes:previousBalance")} value={formatMoney(ancien, lang)} />
 
           <div className="flex items-center justify-between border-y py-3">
             <span className="text-base font-semibold">{t("commandes:grandTotal")}</span>
