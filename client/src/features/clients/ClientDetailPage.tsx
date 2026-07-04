@@ -1,4 +1,4 @@
-import { formatDate, formatMoney, type Lang } from "@gca/shared";
+import { formatDate, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BellRing,
@@ -20,6 +20,7 @@ import { genererFacturePDF } from "../../lib/facture";
 import { genererRecuPDF } from "../../lib/recu";
 import { fetchCommande } from "../commandes/api";
 import { PaymentModal } from "../paiements/PaymentModal";
+import { useMoney } from "../privacy/mask";
 import { RappelItem } from "../rappels/RappelItem";
 import { RappelModal } from "../rappels/RappelModal";
 import { archiveClient, fetchClient, type HistoriqueOp } from "./api";
@@ -27,6 +28,7 @@ import { archiveClient, fetchClient, type HistoriqueOp } from "./api";
 export function ClientDetailPage() {
   const { t, i18n } = useTranslation(["clients", "common", "paiements"]);
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
+  const money = useMoney();
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -58,8 +60,6 @@ export function ClientDetailPage() {
 
   if (isLoading) return <p className="text-slate-400">{t("common:common.loading")}</p>;
   if (!client) return <p className="text-slate-400">{t("common:errors.NOT_FOUND")}</p>;
-
-  const money = (n: number) => formatMoney(n, lang);
 
   // Accès rapide aux lignes de produits d'une commande (pour l'affichage déplié)
   const commandeMap = new Map(client.commandes.map((c) => [c.id, c]));

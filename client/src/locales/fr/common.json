@@ -43,6 +43,10 @@
     "light": "Mode clair",
     "dark": "Mode sombre"
   },
+  "privacy": {
+    "hide": "Masquer les montants",
+    "show": "Afficher les montants"
+  },
   "install": {
     "button": "Installer l'app"
   },

@@ -1,8 +1,9 @@
-import { formatDate, formatMoney, type Lang } from "@gca/shared";
+import { formatDate, type Lang } from "@gca/shared";
 import { useQuery } from "@tanstack/react-query";
 import { Package } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useMoney } from "../privacy/mask";
 import { fetchCommandes } from "./api";
 
 const statusStyle: Record<string, string> = {
@@ -14,6 +15,7 @@ const statusStyle: Record<string, string> = {
 export function OrdersListPage() {
   const { t, i18n } = useTranslation(["commandes", "common"]);
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
+  const money = useMoney();
   const navigate = useNavigate();
 
   const { data: commandes, isLoading } = useQuery({
@@ -65,7 +67,7 @@ export function OrdersListPage() {
                   <td className="px-5 py-3">{c.client?.nom ?? c.clientNomLibre ?? "—"}</td>
                   <td className="px-5 py-3 text-slate-500">{formatDate(c.date, lang)}</td>
                   <td className="px-5 py-3 text-right tabular-nums">
-                    {formatMoney(Number(c.totalTTC), lang)}
+                    {money(Number(c.totalTTC))}
                   </td>
                   <td className="px-5 py-3 text-center">
                     <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyle[c.statut]}`}>

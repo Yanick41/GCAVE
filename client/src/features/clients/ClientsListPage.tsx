@@ -1,15 +1,15 @@
-import { formatMoney, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MapPin, Pencil, Phone, Plus, Receipt, Trash2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
+import { useMoney } from "../privacy/mask";
 import { avatarColor, initials } from "../../lib/avatar";
 import { archiveClient, fetchClients, type SortKey } from "./api";
 
 export function ClientsListPage() {
-  const { t, i18n } = useTranslation(["clients", "common"]);
-  const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
+  const { t } = useTranslation(["clients", "common"]);
+  const money = useMoney();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -141,7 +141,7 @@ export function ClientsListPage() {
                   <p
                     className={`text-lg font-bold tabular-nums ${c.solde > 0 ? "text-rose-600" : "text-emerald-600"}`}
                   >
-                    {formatMoney(c.solde, lang)}
+                    {money(c.solde)}
                   </p>
                 </div>
                 <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">

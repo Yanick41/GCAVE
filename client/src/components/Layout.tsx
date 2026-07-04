@@ -15,6 +15,7 @@ import { RappelsAlertBanner, useAlertes } from "../features/rappels/RappelsAlert
 import { avatarColor, initials } from "../lib/avatar";
 import { InstallButton } from "./InstallButton";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { MaskToggle } from "./MaskToggle";
 import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
@@ -79,6 +80,7 @@ export function Layout() {
       <div className="flex flex-1 flex-col">
         <header className="flex items-center justify-end gap-4 border-b bg-white px-6 py-3 dark:bg-slate-900">
           <InstallButton />
+          <MaskToggle />
           <ThemeToggle />
           <LanguageSwitcher />
           <div className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import { computeCommande, formatMoney, type Lang } from "@gca/shared";
+import { computeCommande, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Plus, Printer, Trash2, User } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -8,6 +8,7 @@ import { BackButton } from "../../components/BackButton";
 import { errorCode } from "../../lib/errors";
 import { genererFacturePDF } from "../../lib/facture";
 import { fetchClients } from "../clients/api";
+import { useMoney } from "../privacy/mask";
 import { createCommande } from "./api";
 
 interface LineDraft {
@@ -25,6 +26,7 @@ const num = (s: string) => {
 export function OrderFormPage() {
   const { t, i18n } = useTranslation(["commandes", "common"]);
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
+  const money = useMoney();
   const { id: clientIdParam } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -221,7 +223,7 @@ export function OrderFormPage() {
                 onChange={(e) => updateLine(i, { prixUnitaire: e.target.value })}
               />
               <span className="col-span-2 text-right text-sm font-semibold tabular-nums md:col-span-2">
-                {formatMoney(calc.lignes[i]?.totalLigne ?? 0, lang)}
+                {money(calc.lignes[i]?.totalLigne ?? 0)}
               </span>
               <button
                 onClick={() => removeLine(i)}
@@ -244,14 +246,14 @@ export function OrderFormPage() {
       {/* Totaux + paiement optionnel */}
       <div className="rounded-xl border bg-white dark:bg-slate-900 p-5">
         <div className="ml-auto max-w-sm space-y-3 text-sm">
-          <Row label={t("commandes:subtotal")} value={formatMoney(sousTotal, lang)} />
+          <Row label={t("commandes:subtotal")} value={money(sousTotal)} />
 
-          <Row label={t("commandes:previousBalance")} value={formatMoney(ancien, lang)} />
+          <Row label={t("commandes:previousBalance")} value={money(ancien)} />
 
           <div className="flex items-center justify-between border-y py-3">
             <span className="text-base font-semibold">{t("commandes:grandTotal")}</span>
             <span className="text-2xl font-bold text-green-600">
-              {formatMoney(grandTotal, lang)}
+              {money(grandTotal)}
             </span>
           </div>
 
@@ -272,7 +274,7 @@ export function OrderFormPage() {
 
           <Row
             label={t("commandes:remaining")}
-            value={formatMoney(reste, lang)}
+            value={money(reste)}
             valueClass={reste > 0 ? "text-rose-600 font-bold" : "text-emerald-600 font-bold"}
           />
         </div>

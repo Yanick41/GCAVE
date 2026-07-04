@@ -1,4 +1,3 @@
-import { formatMoney, type Lang } from "@gca/shared";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Package, TrendingUp, Wallet, WalletCards } from "lucide-react";
@@ -11,12 +10,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useMoney } from "../privacy/mask";
 import { avatarColor, initials } from "../../lib/avatar";
 import { fetchDashboard } from "./api";
 
 export function DashboardPage() {
-  const { t, i18n } = useTranslation(["dashboard", "commandes"]);
-  const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
+  const { t } = useTranslation(["dashboard", "commandes"]);
+  const fmt = useMoney();
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
@@ -25,8 +25,6 @@ export function DashboardPage() {
 
   if (isLoading || !data)
     return <p className="text-slate-400">{t("dashboard:title")}…</p>;
-
-  const fmt = (n: number) => formatMoney(n, lang);
 
   return (
     <div className="mx-auto max-w-5xl">

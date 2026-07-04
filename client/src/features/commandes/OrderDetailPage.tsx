@@ -1,13 +1,15 @@
-import { formatDate, formatMoney, type Lang } from "@gca/shared";
+import { formatDate, type Lang } from "@gca/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
+import { useMoney } from "../privacy/mask";
 import { fetchCommande } from "./api";
 
 export function OrderDetailPage() {
   const { t, i18n } = useTranslation(["commandes", "common"]);
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
+  const money = useMoney();
   const { id } = useParams();
 
   const { data: c, isLoading } = useQuery({
@@ -49,10 +51,10 @@ export function OrderDetailPage() {
                 <td className="px-4 py-2 font-medium">{l.nomProduit}</td>
                 <td className="px-4 py-2 text-right tabular-nums">{Number(l.quantite)}</td>
                 <td className="px-4 py-2 text-right tabular-nums">
-                  {formatMoney(Number(l.prixUnitaire), lang)}
+                  {money(Number(l.prixUnitaire))}
                 </td>
                 <td className="px-4 py-2 text-right font-medium tabular-nums">
-                  {formatMoney(Number(l.totalLigne), lang)}
+                  {money(Number(l.totalLigne))}
                 </td>
               </tr>
             ))}
@@ -61,17 +63,17 @@ export function OrderDetailPage() {
       </div>
 
       <div className="mt-4 ml-auto max-w-sm space-y-2 text-sm">
-        <Line label={t("commandes:subtotal")} value={formatMoney(Number(c.sousTotal), lang)} />
+        <Line label={t("commandes:subtotal")} value={money(Number(c.sousTotal))} />
         {Number(c.montantRemise) > 0 && (
           <Line
             label={t("commandes:discount")}
-            value={`- ${formatMoney(Number(c.montantRemise), lang)}`}
+            value={`- ${money(Number(c.montantRemise))}`}
           />
         )}
         <div className="flex justify-between border-t pt-2">
           <span className="font-semibold">{t("commandes:total")}</span>
           <span className="text-xl font-bold text-green-600">
-            {formatMoney(Number(c.totalTTC), lang)}
+            {money(Number(c.totalTTC))}
           </span>
         </div>
       </div>

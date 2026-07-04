@@ -1,9 +1,9 @@
-import { formatMoney, type Lang } from "@gca/shared";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3, Download, Printer } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { genererRapportPDF } from "../../lib/rapport";
+import { useMoney } from "../privacy/mask";
 import { fetchRapportJour } from "./api";
 
 function todayISO() {
@@ -13,16 +13,14 @@ function todayISO() {
 }
 
 export function RapportsPage() {
-  const { t, i18n } = useTranslation(["rapports", "paiements"]);
-  const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
+  const { t } = useTranslation(["rapports", "paiements"]);
+  const money = useMoney();
   const [date, setDate] = useState(todayISO());
 
   const { data, isLoading } = useQuery({
     queryKey: ["rapport", date],
     queryFn: () => fetchRapportJour(date),
   });
-
-  const money = (n: number) => formatMoney(n, lang);
 
   const pdf = (action: "download" | "print") => {
     if (!data) return;
