@@ -67,13 +67,17 @@ commandesRouter.post(
     const grandTotal = calc.totalTTC + ancienSolde;
     const montantPaye = Math.min(Math.max(body.montantPaye ?? 0, 0), grandTotal);
 
-    // Numéro séquentiel (lecture hors transaction — le pooler Neon ne supporte
-    // pas les transactions interactives, on utilise une transaction "batch").
+    // Numéro séquentiel basé sur le MAX existant + 1 (robuste aux suppressions ;
+    // un count+1 collisionnerait avec un numéro déjà attribué). Zéro-padding 6
+    // chiffres => l'ordre lexical = l'ordre numérique.
     const year = new Date().getFullYear();
-    const count = await prisma.commande.count({
+    const last = await prisma.commande.findFirst({
       where: { numero: { startsWith: `CMD-${year}-` } },
+      orderBy: { numero: "desc" },
+      select: { numero: true },
     });
-    const numero = `CMD-${year}-${String(count + 1).padStart(6, "0")}`;
+    const lastSeq = last ? parseInt(last.numero.slice(-6), 10) : 0;
+    const numero = `CMD-${year}-${String(lastSeq + 1).padStart(6, "0")}`;
 
     const createCommande = prisma.commande.create({
       data: {
