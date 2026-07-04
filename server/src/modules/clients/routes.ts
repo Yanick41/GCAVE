@@ -50,6 +50,7 @@ clientsRouter.get(
     const payMap = new Map(paySums.map((s) => [s.clientId, Number(s._sum.montant ?? 0)]));
 
     let result = clients.map((c) => {
+      const soldeInitial = Number(c.soldeInitial);
       const totalCommandes = cmdMap.get(c.id) ?? 0;
       const totalPaiements = payMap.get(c.id) ?? 0;
       return {
@@ -60,9 +61,10 @@ clientsRouter.get(
         adresse: c.adresse,
         createdAt: c.createdAt,
         nbCommandes: c._count.commandes,
+        soldeInitial,
         totalCommandes,
         totalPaiements,
-        solde: soldeClient(totalCommandes, totalPaiements),
+        solde: soldeClient(soldeInitial, totalCommandes, totalPaiements),
       };
     });
     if (sort === "solde") result = result.sort((a, b) => b.solde - a.solde);
@@ -85,10 +87,11 @@ clientsRouter.get(
     });
     if (!client || client.archived) throw new AppError("NOT_FOUND", 404);
 
+    const soldeInitial = Number(client.soldeInitial);
     const commandesActives = client.commandes.filter((c) => c.statut !== "ANNULEE");
     const totalCommandes = commandesActives.reduce((s, c) => s + Number(c.totalTTC), 0);
     const totalPaiements = client.paiements.reduce((s, p) => s + Number(p.montant), 0);
-    const solde = soldeClient(totalCommandes, totalPaiements);
+    const solde = soldeClient(soldeInitial, totalCommandes, totalPaiements);
 
     // Historique chronologique avec solde courant après chaque opération
     type Op = {
@@ -121,7 +124,7 @@ clientsRouter.get(
       })),
     ].sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    let running = 0;
+    let running = soldeInitial; // le solde courant part du solde d'ouverture
     const historiqueAsc = ops.map((op) => {
       running += op.type === "COMMANDE" ? op.montant : -op.montant;
       return { ...op, soldeApres: Math.round(running * 100) / 100 };
@@ -135,6 +138,7 @@ clientsRouter.get(
       adresse: client.adresse,
       createdAt: client.createdAt,
       nbCommandes: commandesActives.length,
+      soldeInitial,
       totalCommandes,
       totalPaiements,
       solde,
@@ -156,9 +160,14 @@ clientsRouter.post(
       telephone: string;
       email?: string;
       adresse?: string;
+      soldeInitial?: number;
     };
     const client = await prisma.client.create({
-      data: { ...data, email: data.email || null },
+      data: {
+        ...data,
+        email: data.email || null,
+        soldeInitial: data.soldeInitial ?? 0,
+      },
     });
     res.status(201).json(client);
   }),
@@ -174,12 +183,17 @@ clientsRouter.patch(
       telephone: string;
       email?: string;
       adresse?: string;
+      soldeInitial?: number;
     };
     const existing = await prisma.client.findUnique({ where: { id: req.params.id } });
     if (!existing || existing.archived) throw new AppError("NOT_FOUND", 404);
     const client = await prisma.client.update({
       where: { id: req.params.id },
-      data: { ...data, email: data.email || null },
+      data: {
+        ...data,
+        email: data.email || null,
+        soldeInitial: data.soldeInitial ?? Number(existing.soldeInitial),
+      },
     });
     res.json(client);
   }),

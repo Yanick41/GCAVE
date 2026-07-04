@@ -55,12 +55,13 @@ model Utilisateur {
 }
 
 model Client {
-  id        String     @id @default(cuid())
-  nom       String
-  telephone String
-  email     String?
-  adresse   String?
-  archived  Boolean    @default(false) // F-A04 : suppression logique
+  id           String     @id @default(cuid())
+  nom          String
+  telephone    String
+  email        String?
+  adresse      String?
+  soldeInitial Decimal    @default(0) @db.Decimal(12, 2) // solde d'ouverture (créance reprise du papier)
+  archived     Boolean    @default(false) // F-A04 : suppression logique
   commandes Commande[]
   paiements Paiement[]
   rappels   Rappel[]

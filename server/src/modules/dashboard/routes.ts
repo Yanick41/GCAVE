@@ -12,14 +12,17 @@ dashboardRouter.get(
   ah(async (_req, res) => {
     const actives = { statut: { not: "ANNULEE" as const } };
 
-    // Chiffre d'affaires (commandes) + total encaissé (paiements)
-    const [cmdAgg, payAgg] = await Promise.all([
+    // Chiffre d'affaires (commandes) + total encaissé (paiements) + soldes d'ouverture
+    const [cmdAgg, payAgg, cliAgg] = await Promise.all([
       prisma.commande.aggregate({ where: actives, _sum: { totalTTC: true }, _count: true }),
       prisma.paiement.aggregate({ _sum: { montant: true } }),
+      prisma.client.aggregate({ where: { archived: false }, _sum: { soldeInitial: true } }),
     ]);
     const chiffreAffaires = Number(cmdAgg._sum.totalTTC ?? 0);
     const totalEncaisse = Number(payAgg._sum.montant ?? 0);
-    const soldeGlobal = Math.max(chiffreAffaires - totalEncaisse, 0); // créances totales
+    const totalSoldeInitial = Number(cliAgg._sum.soldeInitial ?? 0);
+    // Créances totales = soldes d'ouverture + commandes − encaissements
+    const soldeGlobal = Math.max(totalSoldeInitial + chiffreAffaires - totalEncaisse, 0);
     const nbCommandes = cmdAgg._count;
 
     const startOfDay = new Date();
@@ -43,11 +46,7 @@ dashboardRouter.get(
       cmdGroup.map((g) => [g.clientId as string, Number(g._sum.totalTTC ?? 0)]),
     );
     const ranked = payGroup
-      .map((g) => ({
-        clientId: g.clientId,
-        paye: Number(g._sum.montant ?? 0),
-        solde: Math.max((cmdByClient.get(g.clientId) ?? 0) - Number(g._sum.montant ?? 0), 0),
-      }))
+      .map((g) => ({ clientId: g.clientId, paye: Number(g._sum.montant ?? 0) }))
       .sort((a, b) => b.paye - a.paye)
       .slice(0, 5);
 
@@ -55,16 +54,18 @@ dashboardRouter.get(
       (
         await prisma.client.findMany({
           where: { id: { in: ranked.map((r) => r.clientId) } },
-          select: { id: true, nom: true },
+          select: { id: true, nom: true, soldeInitial: true },
         })
-      ).map((c) => [c.id, c.nom]),
+      ).map((c) => [c.id, { nom: c.nom, soldeInitial: Number(c.soldeInitial) }]),
     );
-    const topClients = ranked.map((r) => ({
-      clientId: r.clientId,
-      nom: clientsMap.get(r.clientId) ?? "—",
-      paye: r.paye,
-      restant: r.solde,
-    }));
+    const topClients = ranked.map((r) => {
+      const info = clientsMap.get(r.clientId);
+      const restant = Math.max(
+        (info?.soldeInitial ?? 0) + (cmdByClient.get(r.clientId) ?? 0) - r.paye,
+        0,
+      );
+      return { clientId: r.clientId, nom: info?.nom ?? "—", paye: r.paye, restant };
+    });
 
     // Performance de vente (CA 30 jours)
     const since = new Date();

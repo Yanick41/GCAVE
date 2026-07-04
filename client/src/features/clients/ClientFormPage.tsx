@@ -24,7 +24,7 @@ export function ClientFormPage() {
     formState: { errors, isSubmitting },
   } = useForm<ClientInput>({
     resolver: zodResolver(clientSchema),
-    defaultValues: { nom: "", telephone: "", email: "", adresse: "" },
+    defaultValues: { nom: "", telephone: "", email: "", adresse: "", soldeInitial: 0 },
   });
 
   // En édition : charger le client puis pré-remplir
@@ -41,6 +41,7 @@ export function ClientFormPage() {
         telephone: existing.telephone,
         email: existing.email ?? "",
         adresse: existing.adresse ?? "",
+        soldeInitial: existing.soldeInitial ?? 0,
       });
     }
   }, [existing, reset]);
@@ -111,6 +112,21 @@ export function ClientFormPage() {
             {t("clients:form.address")}
           </label>
           <textarea {...register("adresse")} rows={2} className={field} />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
+            {t("clients:form.openingBalance")}
+          </label>
+          <input
+            type="number"
+            step="any"
+            {...register("soldeInitial", {
+              setValueAs: (v) => (v === "" || v == null ? 0 : Number(v)),
+            })}
+            className={field}
+          />
+          <p className="mt-1 text-xs text-slate-400">{t("clients:form.openingBalanceHint")}</p>
         </div>
 
         {serverError && (

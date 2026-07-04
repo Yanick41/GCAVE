@@ -18,6 +18,7 @@ export const clientSchema = z.object({
   telephone: z.string().trim().min(1),
   email: z.union([z.string().email(), z.literal("")]).optional(),
   adresse: z.string().trim().optional(),
+  soldeInitial: z.number().optional(), // solde d'ouverture (créance reprise du papier)
 });
 
 export const ligneSchema = z.object({

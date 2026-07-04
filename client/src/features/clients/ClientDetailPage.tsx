@@ -240,6 +240,9 @@ export function ClientDetailPage() {
           <Row label={t("clients:columns.phone")} value={client.telephone} />
           <Row label={t("clients:columns.email")} value={client.email ?? "—"} />
           <Row label={t("clients:columns.address")} value={client.adresse ?? "—"} />
+          {client.soldeInitial !== 0 && (
+            <Row label={t("clients:detail.openingBalance")} value={money(client.soldeInitial)} />
+          )}
         </div>
       </section>
 

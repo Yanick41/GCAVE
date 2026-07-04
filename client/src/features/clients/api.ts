@@ -12,6 +12,7 @@ export interface ClientListItem {
   adresse: string | null;
   createdAt: string;
   nbCommandes: number;
+  soldeInitial: number;
   totalCommandes: number;
   totalPaiements: number;
   solde: number;
@@ -61,6 +62,7 @@ export interface ClientDetail {
   adresse: string | null;
   createdAt: string;
   nbCommandes: number;
+  soldeInitial: number;
   totalCommandes: number;
   totalPaiements: number;
   solde: number;

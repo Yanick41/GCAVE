@@ -47,10 +47,15 @@ export function creditRestant(totalTTC: number, montantPaye: number): number {
   return round2(Math.max((totalTTC || 0) - (montantPaye || 0), 0));
 }
 
-/** Solde d'un compte client = total des commandes − total des paiements (CDC §8).
- *  Positif = le client doit de l'argent. */
-export function soldeClient(totalCommandes: number, totalPaiements: number): number {
-  return round2((totalCommandes || 0) - (totalPaiements || 0));
+/** Solde d'un compte client = solde initial (repris du papier) + total des
+ *  commandes − total des paiements. Positif = le client doit de l'argent.
+ *  SOURCE DE VÉRITÉ UNIQUE : utilisée partout (fiche, liste, dashboard). */
+export function soldeClient(
+  soldeInitial: number,
+  totalCommandes: number,
+  totalPaiements: number,
+): number {
+  return round2((soldeInitial || 0) + (totalCommandes || 0) - (totalPaiements || 0));
 }
 
 /** total_ligne = quantite × prix_unitaire (CDC §5.3). */
