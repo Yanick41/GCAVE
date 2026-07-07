@@ -124,6 +124,56 @@ commandesRouter.post(
   }),
 );
 
+// F-C04 — modifier une commande (lignes) ; totaux recalculés côté serveur.
+// L'ancien solde et le paiement initial ne sont pas modifiés (snapshots).
+commandesRouter.patch(
+  "/:id",
+  validate(commandeSchema),
+  ah(async (req, res) => {
+    const existing = await prisma.commande.findUnique({ where: { id: req.params.id } });
+    if (!existing) throw new AppError("NOT_FOUND", 404);
+
+    const body = req.body as {
+      lignes: { nomProduit: string; quantite: number; prixUnitaire: number }[];
+      remiseType: "AUCUNE" | "POURCENTAGE" | "MONTANT";
+      remiseValeur: number;
+    };
+    const calc = computeCommande({
+      lignes: body.lignes,
+      remiseType: body.remiseType,
+      remiseValeur: body.remiseValeur,
+    });
+
+    // Transaction batch (compatible pooler) : remplace les lignes + met à jour les totaux
+    await prisma.$transaction([
+      prisma.ligneCommande.deleteMany({ where: { commandeId: req.params.id } }),
+      prisma.ligneCommande.createMany({
+        data: calc.lignes.map((l) => ({
+          commandeId: req.params.id,
+          nomProduit: l.nomProduit,
+          quantite: l.quantite,
+          prixUnitaire: l.prixUnitaire,
+          totalLigne: l.totalLigne,
+        })),
+      }),
+      prisma.commande.update({
+        where: { id: req.params.id },
+        data: {
+          sousTotal: calc.sousTotal,
+          montantRemise: calc.montantRemise,
+          totalTTC: calc.totalTTC,
+        },
+      }),
+    ]);
+
+    const updated = await prisma.commande.findUnique({
+      where: { id: req.params.id },
+      include: { client: true, lignes: true },
+    });
+    res.json(updated);
+  }),
+);
+
 // F-C05 — supprimer
 commandesRouter.delete(
   "/:id",

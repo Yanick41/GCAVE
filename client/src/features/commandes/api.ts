@@ -43,3 +43,8 @@ export async function createCommande(input: CommandeInput): Promise<Commande> {
   const { data } = await api.post<Commande>("/api/commandes", input);
   return data;
 }
+
+export async function updateCommande(id: string, input: CommandeInput): Promise<Commande> {
+  const { data } = await api.patch<Commande>(`/api/commandes/${id}`, input);
+  return data;
+}

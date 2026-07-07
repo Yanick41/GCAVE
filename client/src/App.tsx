@@ -33,6 +33,7 @@ export default function App() {
 
             <Route path="/commandes" element={<OrdersListPage />} />
             <Route path="/commandes/new" element={<OrderFormPage />} />
+            <Route path="/commandes/:orderId/edit" element={<OrderFormPage />} />
             <Route path="/commandes/:id" element={<OrderDetailPage />} />
 
             <Route path="/paiements" element={<PaiementsListPage />} />

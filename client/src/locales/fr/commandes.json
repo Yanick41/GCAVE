@@ -2,6 +2,8 @@
   "title": "Commandes",
   "new": "Nouvelle commande",
   "newFor": "Nouvelle commande pour {{name}}",
+  "editTitle": "Modifier la commande",
+  "edit": "Modifier",
   "client": "Client",
   "selectClient": "Sélectionner un client…",
   "lines": "Lignes de produits",

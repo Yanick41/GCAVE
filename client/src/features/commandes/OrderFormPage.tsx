@@ -1,7 +1,7 @@
-import { computeCommande, type Lang } from "@gca/shared";
+import { computeCommande, type CommandeInput, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Plus, Printer, Trash2, User } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
@@ -9,7 +9,7 @@ import { errorCode } from "../../lib/errors";
 import { genererFacturePDF } from "../../lib/facture";
 import { fetchClients } from "../clients/api";
 import { useMoney } from "../privacy/mask";
-import { createCommande } from "./api";
+import { createCommande, fetchCommande, updateCommande } from "./api";
 
 interface LineDraft {
   nomProduit: string;
@@ -27,7 +27,8 @@ export function OrderFormPage() {
   const { t, i18n } = useTranslation(["commandes", "common"]);
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
   const money = useMoney();
-  const { id: clientIdParam } = useParams();
+  const { id: clientIdParam, orderId } = useParams();
+  const isEdit = Boolean(orderId);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -40,6 +41,29 @@ export function OrderFormPage() {
     queryKey: ["clients", ""],
     queryFn: () => fetchClients(""),
   });
+
+  // Édition : charger la commande et pré-remplir (une seule fois)
+  const { data: order } = useQuery({
+    queryKey: ["commande", orderId],
+    queryFn: () => fetchCommande(orderId!),
+    enabled: isEdit,
+  });
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (order && !prefilled.current) {
+      prefilled.current = true;
+      setClientId(order.clientId ?? "");
+      setLines(
+        order.lignes.length
+          ? order.lignes.map((l) => ({
+              nomProduit: l.nomProduit,
+              quantite: String(Number(l.quantite)),
+              prixUnitaire: String(Number(l.prixUnitaire)),
+            }))
+          : [emptyLine()],
+      );
+    }
+  }, [order]);
 
   const selectedClient = clients?.find((c) => c.id === clientId);
 
@@ -58,22 +82,34 @@ export function OrderFormPage() {
     [lines],
   );
 
-  // Ancien solde = solde RÉEL du client (même fonction partout) -> jamais de désynchro
+  // Ancien solde = solde RÉEL du client (création) OU snapshot figé (édition)
   const sousTotal = calc.totalTTC;
-  const ancien = Math.max(selectedClient?.solde ?? 0, 0);
+  const ancien = isEdit
+    ? Number(order?.ancienSolde ?? 0)
+    : Math.max(selectedClient?.solde ?? 0, 0);
   const grandTotal = sousTotal + ancien;
-  const paye = Math.min(num(montantPaye), grandTotal);
+  const paye = isEdit
+    ? Number(order?.montantPaye ?? 0)
+    : Math.min(num(montantPaye), grandTotal);
   const reste = Math.max(grandTotal - paye, 0);
 
   const mutation = useMutation({
-    mutationFn: createCommande,
+    mutationFn: (input: CommandeInput) =>
+      isEdit ? updateCommande(orderId!, input) : createCommande(input),
     onSuccess: (commande) => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
-      queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["client", commande.clientId] });
       queryClient.invalidateQueries({ queryKey: ["commandes"] });
+      queryClient.invalidateQueries({ queryKey: ["commande", commande.id] });
       queryClient.invalidateQueries({ queryKey: ["paiements"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      navigate(commande.clientId ? `/clients/${commande.clientId}` : "/commandes");
+      navigate(
+        isEdit
+          ? `/commandes/${commande.id}`
+          : commande.clientId
+            ? `/clients/${commande.clientId}`
+            : "/commandes",
+      );
     },
     onError: (err) => setServerError(t(`common:errors.${errorCode(err)}`)),
   });
@@ -102,11 +138,11 @@ export function OrderFormPage() {
       remiseType: "AUCUNE",
       remiseValeur: 0,
       ancienSolde: ancien > 0 ? ancien : undefined,
-      montantPaye: paye > 0 ? paye : undefined,
+      montantPaye: !isEdit && paye > 0 ? paye : undefined,
     });
   };
 
-  const selectedClientName = selectedClient?.nom;
+  const selectedClientName = selectedClient?.nom ?? order?.client?.nom;
   const field = "rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500";
 
   const facture = (action: "download" | "print") => {
@@ -163,13 +199,15 @@ export function OrderFormPage() {
       </div>
 
       <h1 className="mb-6 text-2xl font-bold">
-        {selectedClientName
-          ? t("commandes:newFor", { name: selectedClientName })
-          : t("commandes:new")}
+        {isEdit
+          ? `${t("commandes:editTitle")}${order ? ` — ${order.numero}` : ""}`
+          : selectedClientName
+            ? t("commandes:newFor", { name: selectedClientName })
+            : t("commandes:new")}
       </h1>
 
-      {/* Client — sélecteur masqué si on est déjà dans la fiche d'un client */}
-      {!clientIdParam && (
+      {/* Client — sélecteur masqué en fiche client ou en édition */}
+      {!clientIdParam && !isEdit && (
         <div className="mb-4 rounded-xl border bg-white dark:bg-slate-900 p-4">
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
             {t("commandes:client")}
@@ -257,20 +295,24 @@ export function OrderFormPage() {
             </span>
           </div>
 
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-slate-500">
-              {t("commandes:paid")}{" "}
-              <span className="text-xs text-slate-400">({t("commandes:optional")})</span>
-            </span>
-            <input
-              type="number"
-              min="0"
-              value={montantPaye}
-              onChange={(e) => setMontantPaye(e.target.value)}
-              placeholder="0"
-              className={`${field} w-32 py-1 text-right`}
-            />
-          </div>
+          {isEdit ? (
+            <Row label={t("commandes:paid")} value={money(paye)} />
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-slate-500">
+                {t("commandes:paid")}{" "}
+                <span className="text-xs text-slate-400">({t("commandes:optional")})</span>
+              </span>
+              <input
+                type="number"
+                min="0"
+                value={montantPaye}
+                onChange={(e) => setMontantPaye(e.target.value)}
+                placeholder="0"
+                className={`${field} w-32 py-1 text-right`}
+              />
+            </div>
+          )}
 
           <Row
             label={t("commandes:remaining")}
@@ -305,7 +347,11 @@ export function OrderFormPage() {
             disabled={!canSubmit || mutation.isPending}
             className="rounded-lg bg-slate-800 px-6 py-2.5 font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
           >
-            {mutation.isPending ? t("commandes:saving") : t("commandes:validate")}
+            {mutation.isPending
+              ? t("commandes:saving")
+              : isEdit
+                ? t("common:actions.save")
+                : t("commandes:validate")}
           </button>
         </div>
       </div>

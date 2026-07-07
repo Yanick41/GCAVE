@@ -2,6 +2,8 @@
   "title": "Orders",
   "new": "New order",
   "newFor": "New order for {{name}}",
+  "editTitle": "Edit order",
+  "edit": "Edit",
   "client": "Client",
   "selectClient": "Select a client…",
   "lines": "Product lines",

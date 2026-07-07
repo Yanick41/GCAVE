@@ -1,7 +1,8 @@
 import { formatDate, type Lang } from "@gca/shared";
 import { useQuery } from "@tanstack/react-query";
+import { Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
 import { useMoney } from "../privacy/mask";
 import { fetchCommande } from "./api";
@@ -23,8 +24,14 @@ export function OrderDetailPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between gap-2">
         <BackButton />
+        <Link
+          to={`/commandes/${c.id}/edit`}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+        >
+          <Pencil size={16} /> {t("commandes:edit")}
+        </Link>
       </div>
 
       <div className="mb-4 flex items-baseline justify-between">
