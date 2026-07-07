@@ -48,7 +48,13 @@
     "show": "Afficher les montants"
   },
   "install": {
-    "button": "Installer l'app"
+    "button": "Installer l'app",
+    "title": "Installer l'application",
+    "help": "L'application s'installe sur votre appareil (icône + fenêtre dédiée, comme un vrai logiciel, utilisable même hors connexion).",
+    "helpChrome": "Chrome / Edge (PC) : cliquez l'icône ⊕ « Installer » dans la barre d'adresse, ou menu ⋮ → « Installer GRANDE CAVE ».",
+    "helpSafari": "Safari (Mac) : menu Partager → « Ajouter au Dock ».",
+    "helpAndroid": "Android : menu ⋮ → « Installer l'application ».",
+    "close": "Compris"
   },
   "errors": {
     "INVALID_CREDENTIALS": "Email ou mot de passe incorrect.",

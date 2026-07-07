@@ -48,7 +48,13 @@
     "show": "Show amounts"
   },
   "install": {
-    "button": "Install app"
+    "button": "Install app",
+    "title": "Install the application",
+    "help": "The app installs on your device (icon + dedicated window, like a real program, usable even offline).",
+    "helpChrome": "Chrome / Edge (PC): click the ⊕ “Install” icon in the address bar, or menu ⋮ → “Install GRANDE CAVE”.",
+    "helpSafari": "Safari (Mac): Share menu → “Add to Dock”.",
+    "helpAndroid": "Android: menu ⋮ → “Install app”.",
+    "close": "Got it"
   },
   "errors": {
     "INVALID_CREDENTIALS": "Invalid email or password.",
