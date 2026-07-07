@@ -288,14 +288,25 @@ export function ClientDetailPage() {
                     <Fragment key={`${op.type}-${op.id}`}>
                       <tr className="border-b last:border-0">
                         <td className="py-2 pr-2">
-                          <button
-                            onClick={() => printOperation(op)}
-                            disabled={printingId === op.id}
-                            title={isOrder ? t("commandes:invoice") : t("paiements:receipt")}
-                            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                          >
-                            <Printer size={15} />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => printOperation(op)}
+                              disabled={printingId === op.id}
+                              title={isOrder ? t("commandes:invoice") : t("paiements:receipt")}
+                              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            >
+                              <Printer size={15} />
+                            </button>
+                            {isOrder && (
+                              <button
+                                onClick={() => navigate(`/commandes/${op.id}/edit`)}
+                                title={t("commandes:edit", { ns: "commandes" })}
+                                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-800"
+                              >
+                                <Pencil size={15} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td className="py-2 whitespace-nowrap text-slate-500">
                           {formatDate(op.date, lang)}
