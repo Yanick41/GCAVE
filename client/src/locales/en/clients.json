@@ -62,7 +62,8 @@
       "amount": "Amount",
       "balanceAfter": "Balance after",
       "COMMANDE": "Order",
-      "PAIEMENT": "Payment"
+      "PAIEMENT": "Payment",
+      "BON": "Delivery (pay-on-delivery)"
     }
   }
 }

@@ -34,7 +34,7 @@ clientsRouter.get(
     });
 
     const ids = clients.map((c) => c.id);
-    const [cmdSums, paySums] = await Promise.all([
+    const [cmdSums, paySums, bonSums] = await Promise.all([
       prisma.commande.groupBy({
         by: ["clientId"],
         where: { clientId: { in: ids }, statut: { not: "ANNULEE" } },
@@ -45,14 +45,22 @@ clientsRouter.get(
         where: { clientId: { in: ids } },
         _sum: { montant: true },
       }),
+      // Créances aller-retour livrées, en attente de paiement
+      prisma.bonCommande.groupBy({
+        by: ["clientId"],
+        where: { clientId: { in: ids }, allerRetour: true, statut: "LIVRE" },
+        _sum: { montant: true },
+      }),
     ]);
     const cmdMap = new Map(cmdSums.map((s) => [s.clientId, Number(s._sum.totalTTC ?? 0)]));
     const payMap = new Map(paySums.map((s) => [s.clientId, Number(s._sum.montant ?? 0)]));
+    const bonMap = new Map(bonSums.map((s) => [s.clientId, Number(s._sum.montant ?? 0)]));
 
     let result = clients.map((c) => {
       const soldeInitial = Number(c.soldeInitial);
       const totalCommandes = cmdMap.get(c.id) ?? 0;
       const totalPaiements = payMap.get(c.id) ?? 0;
+      const creancesLivrees = bonMap.get(c.id) ?? 0;
       return {
         id: c.id,
         nom: c.nom,
@@ -64,7 +72,8 @@ clientsRouter.get(
         soldeInitial,
         totalCommandes,
         totalPaiements,
-        solde: soldeClient(soldeInitial, totalCommandes, totalPaiements),
+        // Solde = commandes − paiements + créances aller-retour livrées non payées
+        solde: soldeClient(soldeInitial, totalCommandes, totalPaiements) + creancesLivrees,
       };
     });
     if (sort === "solde") result = result.sort((a, b) => b.solde - a.solde);
@@ -95,12 +104,16 @@ clientsRouter.get(
     const commandesActives = client.commandes.filter((c) => c.statut !== "ANNULEE");
     const totalCommandes = commandesActives.reduce((s, c) => s + Number(c.totalTTC), 0);
     const totalPaiements = client.paiements.reduce((s, p) => s + Number(p.montant), 0);
-    const solde = soldeClient(soldeInitial, totalCommandes, totalPaiements);
+    // Bons aller-retour LIVRÉS (créance en attente de paiement) : comptent comme débit
+    const bonsLivres = client.bonsCommande.filter((b) => b.allerRetour && b.statut === "LIVRE");
+    const totalCreancesLivrees = bonsLivres.reduce((s, b) => s + Number(b.montant), 0);
+    const solde =
+      soldeClient(soldeInitial, totalCommandes, totalPaiements) + totalCreancesLivrees;
 
     // Historique chronologique avec solde courant après chaque opération
     type Op = {
       id: string;
-      type: "COMMANDE" | "PAIEMENT";
+      type: "COMMANDE" | "PAIEMENT" | "BON";
       date: Date;
       montant: number;
       ref: string | null;
@@ -117,6 +130,15 @@ clientsRouter.get(
         mode: null,
         observation: null,
       })),
+      ...bonsLivres.map((b) => ({
+        id: b.id,
+        type: "BON" as const,
+        date: b.date,
+        montant: Number(b.montant),
+        ref: b.numero,
+        mode: null,
+        observation: null,
+      })),
       ...client.paiements.map((p) => ({
         id: p.id,
         type: "PAIEMENT" as const,
@@ -130,7 +152,8 @@ clientsRouter.get(
 
     let running = soldeInitial; // le solde courant part du solde d'ouverture
     const historiqueAsc = ops.map((op) => {
-      running += op.type === "COMMANDE" ? op.montant : -op.montant;
+      // COMMANDE et BON (livraison aller-retour) sont des débits ; PAIEMENT un crédit
+      running += op.type === "PAIEMENT" ? -op.montant : op.montant;
       return { ...op, soldeApres: Math.round(running * 100) / 100 };
     });
 

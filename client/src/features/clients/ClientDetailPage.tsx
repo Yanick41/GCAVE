@@ -15,7 +15,7 @@ import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
-import { bonStatusStyle } from "../bons/BonsListPage";
+import { AllerRetourBadge, bonStatusStyle } from "../bons/BonsListPage";
 import { avatarColor, initials } from "../../lib/avatar";
 import { genererBilanPDF } from "../../lib/bilan";
 import { genererFacturePDF } from "../../lib/facture";
@@ -292,12 +292,17 @@ export function ClientDetailPage() {
                     <td className="py-2 font-medium">{b.numero}</td>
                     <td className="py-2 text-slate-500">{formatDate(b.date, lang)}</td>
                     <td className="py-2 text-right tabular-nums">{b.lignes.length}</td>
-                    <td className="py-2 text-center">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${bonStatusStyle[b.statut]}`}
-                      >
-                        {t(`bons:statuses.${b.statut}`, { ns: "bons" })}
-                      </span>
+                    <td className="py-2">
+                      <div className="flex items-center justify-center gap-2">
+                        {b.allerRetour && (
+                          <AllerRetourBadge label={t("bons:allerRetour", { ns: "bons" })} />
+                        )}
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${bonStatusStyle[b.statut]}`}
+                        >
+                          {t(`bons:statuses.${b.statut}`, { ns: "bons" })}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -331,6 +336,8 @@ export function ClientDetailPage() {
               <tbody>
                 {client.historique.map((op) => {
                   const isOrder = op.type === "COMMANDE";
+                  const isBon = op.type === "BON";
+                  const isDebit = op.type !== "PAIEMENT"; // commande + bon livré = débit
                   const cmd = isOrder ? commandeMap.get(op.id) : undefined;
                   const isOpen = expanded.has(op.id);
                   return (
@@ -338,22 +345,34 @@ export function ClientDetailPage() {
                       <tr className="border-b last:border-0">
                         <td className="py-2 pr-2">
                           <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => printOperation(op)}
-                              disabled={printingId === op.id}
-                              title={isOrder ? t("commandes:invoice") : t("paiements:receipt")}
-                              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                            >
-                              <Printer size={15} />
-                            </button>
-                            {isOrder && (
+                            {isBon ? (
                               <button
-                                onClick={() => navigate(`/commandes/${op.id}/edit`)}
-                                title={t("commandes:edit", { ns: "commandes" })}
-                                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-800"
+                                onClick={() => navigate(`/bons/${op.id}`)}
+                                title={t("bons:detailTitle", { ns: "bons" })}
+                                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                               >
-                                <Pencil size={15} />
+                                <ClipboardList size={15} />
                               </button>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => printOperation(op)}
+                                  disabled={printingId === op.id}
+                                  title={isOrder ? t("commandes:invoice") : t("paiements:receipt")}
+                                  className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                >
+                                  <Printer size={15} />
+                                </button>
+                                {isOrder && (
+                                  <button
+                                    onClick={() => navigate(`/commandes/${op.id}/edit`)}
+                                    title={t("commandes:edit", { ns: "commandes" })}
+                                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-800"
+                                  >
+                                    <Pencil size={15} />
+                                  </button>
+                                )}
+                              </>
                             )}
                           </div>
                         </td>
@@ -376,7 +395,7 @@ export function ClientDetailPage() {
                               </button>
                             )}
                             <span
-                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${isOrder ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"}`}
+                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${isDebit ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"}`}
                             >
                               {t(`clients:detail.hist.${op.type}`)}
                             </span>
@@ -391,9 +410,9 @@ export function ClientDetailPage() {
                           </div>
                         </td>
                         <td
-                          className={`py-2 text-right tabular-nums whitespace-nowrap ${isOrder ? "text-rose-600" : "text-emerald-600"}`}
+                          className={`py-2 text-right tabular-nums whitespace-nowrap ${isDebit ? "text-rose-600" : "text-emerald-600"}`}
                         >
-                          {isOrder ? "+" : "−"}
+                          {isDebit ? "+" : "−"}
                           {money(op.montant)}
                         </td>
                         <td className="py-2 text-right font-medium tabular-nums whitespace-nowrap">

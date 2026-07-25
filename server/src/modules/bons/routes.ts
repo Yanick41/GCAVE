@@ -10,6 +10,8 @@ export const bonsRouter = Router();
 
 bonsRouter.use(requireAuth);
 
+type StatutBonValue = "BROUILLON" | "ENVOYE" | "VALIDE" | "LIVRE" | "PAYE" | "CONVERTI";
+
 type BonBody = {
   clientId?: string | null;
   clientNomLibre?: string;
@@ -17,7 +19,9 @@ type BonBody = {
   adresseLivraison?: string;
   lignes: { designation: string; quantite: number; servi?: string }[];
   notes?: string;
-  statut?: "BROUILLON" | "ENVOYE" | "VALIDE" | "CONVERTI";
+  statut?: StatutBonValue;
+  allerRetour?: boolean;
+  montant?: number;
   commandeId?: string | null;
 };
 
@@ -77,6 +81,8 @@ bonsRouter.post(
         adresseLivraison: body.adresseLivraison || null,
         notes: body.notes || null,
         statut: body.statut ?? "BROUILLON",
+        allerRetour: body.allerRetour ?? false,
+        montant: body.montant ?? 0,
         lignes: {
           create: body.lignes.map((l, i) => ({
             designation: l.designation,
@@ -123,6 +129,8 @@ bonsRouter.patch(
           adresseLivraison: body.adresseLivraison || null,
           notes: body.notes || null,
           ...(body.statut ? { statut: body.statut } : {}),
+          ...(body.allerRetour !== undefined ? { allerRetour: body.allerRetour } : {}),
+          ...(body.montant !== undefined ? { montant: body.montant } : {}),
           ...(body.commandeId !== undefined ? { commandeId: body.commandeId || null } : {}),
         },
       }),
@@ -130,6 +138,31 @@ bonsRouter.patch(
 
     const updated = await prisma.bonCommande.findUnique({
       where: { id: req.params.id },
+      include: { client: true, lignes: { orderBy: { ordre: "asc" } } },
+    });
+    res.json(updated);
+  }),
+);
+
+// Changer le statut (transition rapide : Envoyé / Livré / Payé…)
+const STATUTS_VALIDES: StatutBonValue[] = [
+  "BROUILLON",
+  "ENVOYE",
+  "VALIDE",
+  "LIVRE",
+  "PAYE",
+  "CONVERTI",
+];
+bonsRouter.post(
+  "/:id/statut",
+  ah(async (req, res) => {
+    const existing = await prisma.bonCommande.findUnique({ where: { id: req.params.id } });
+    if (!existing) throw new AppError("NOT_FOUND", 404);
+    const { statut } = req.body as { statut?: StatutBonValue };
+    if (!statut || !STATUTS_VALIDES.includes(statut)) throw new AppError("VALIDATION_ERROR", 400);
+    const updated = await prisma.bonCommande.update({
+      where: { id: req.params.id },
+      data: { statut },
       include: { client: true, lignes: { orderBy: { ordre: "asc" } } },
     });
     res.json(updated);

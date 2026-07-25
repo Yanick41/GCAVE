@@ -47,13 +47,15 @@ export interface BonResume {
   id: string;
   numero: string;
   date: string;
-  statut: "BROUILLON" | "ENVOYE" | "VALIDE" | "CONVERTI";
+  statut: "BROUILLON" | "ENVOYE" | "VALIDE" | "LIVRE" | "PAYE" | "CONVERTI";
+  allerRetour: boolean;
+  montant: string;
   lignes: { id: string }[];
 }
 
 export interface HistoriqueOp {
   id: string;
-  type: "COMMANDE" | "PAIEMENT";
+  type: "COMMANDE" | "PAIEMENT" | "BON";
   date: string;
   montant: number;
   ref: string | null;

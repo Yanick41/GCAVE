@@ -74,7 +74,14 @@ export type StatutRappel = z.infer<typeof statutRappelSchema>;
 export type RappelInput = z.infer<typeof rappelSchema>;
 
 // ── Bons de commande ─────────────────────────────────────────────────
-export const statutBonSchema = z.enum(["BROUILLON", "ENVOYE", "VALIDE", "CONVERTI"]);
+export const statutBonSchema = z.enum([
+  "BROUILLON",
+  "ENVOYE",
+  "VALIDE",
+  "LIVRE",
+  "PAYE",
+  "CONVERTI",
+]);
 
 export const ligneBonSchema = z.object({
   designation: z.string().trim().min(1),
@@ -91,6 +98,8 @@ export const bonCommandeSchema = z
     lignes: z.array(ligneBonSchema).min(1),
     notes: z.string().trim().optional(),
     statut: statutBonSchema.optional(),
+    allerRetour: z.boolean().optional(),
+    montant: z.number().nonnegative().optional(), // créance (mode aller-retour)
     commandeId: z.string().optional().nullable(),
   })
   .refine((d) => Boolean(d.clientId) || Boolean(d.clientNomLibre), {

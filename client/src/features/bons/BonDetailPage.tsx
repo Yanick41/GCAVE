@@ -1,16 +1,25 @@
 import { formatDate, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRightLeft, Download, Pencil, Printer, Trash2, User } from "lucide-react";
+import { ArrowRightLeft, Check, Download, Pencil, Printer, Trash2, Truck, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
 import { genererBonPDF } from "../../lib/bon";
-import { bonStatusStyle } from "./BonsListPage";
-import { deleteBon, fetchBon } from "./api";
+import { useMoney } from "../privacy/mask";
+import { AllerRetourBadge, bonStatusStyle } from "./BonsListPage";
+import { deleteBon, fetchBon, setBonStatut, type StatutBon } from "./api";
+
+// Statut suivant dans le flux aller-retour : Brouillon→Envoyé→Livré→Payé
+const NEXT_AR: Partial<Record<StatutBon, StatutBon>> = {
+  BROUILLON: "ENVOYE",
+  ENVOYE: "LIVRE",
+  LIVRE: "PAYE",
+};
 
 export function BonDetailPage() {
   const { t, i18n } = useTranslation(["bons", "common"]);
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
+  const money = useMoney();
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -30,12 +39,27 @@ export function BonDetailPage() {
     },
   });
 
+  const changeStatut = useMutation({
+    mutationFn: (s: StatutBon) => setBonStatut(id!, s),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ["bon", id] });
+      queryClient.invalidateQueries({ queryKey: ["bons"] });
+      // Le solde du client dépend des bons livrés → rafraîchir
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      if (updated.clientId) queryClient.invalidateQueries({ queryKey: ["client", updated.clientId] });
+    },
+  });
+
   if (isLoading) return <p className="text-slate-400">{t("common:common.loading")}</p>;
   if (!bon) return <p className="text-slate-400">{t("common:errors.NOT_FOUND")}</p>;
 
   const clientNom = bon.client?.nom ?? bon.clientNomLibre ?? "—";
   const totalQuantite = bon.lignes.reduce((s, l) => s + Number(l.quantite), 0);
   const isConverted = bon.statut === "CONVERTI";
+  const montant = Number(bon.montant);
+  // Prochaine étape du flux aller-retour (Marquer envoyé / livré / payé)
+  const nextAR = bon.allerRetour ? NEXT_AR[bon.statut] : undefined;
+  const NextIcon = nextAR === "PAYE" ? Check : nextAR === "LIVRE" ? Truck : ArrowRightLeft;
 
   const pdf = (action: "download" | "print") =>
     genererBonPDF(
@@ -92,8 +116,9 @@ export function BonDetailPage() {
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-bold">{bon.numero}</h1>
+            {bon.allerRetour && <AllerRetourBadge label={t("bons:allerRetour")} />}
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-medium ${bonStatusStyle[bon.statut]}`}
             >
@@ -115,6 +140,15 @@ export function BonDetailPage() {
           >
             <Printer size={16} /> {t("bons:print")}
           </button>
+          {nextAR && (
+            <button
+              onClick={() => changeStatut.mutate(nextAR)}
+              disabled={changeStatut.isPending}
+              className="flex items-center gap-2 rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-400 disabled:opacity-50"
+            >
+              <NextIcon size={16} /> {t(`bons:mark.${nextAR}`)}
+            </button>
+          )}
           {!isConverted && (
             <button
               onClick={() => navigate(`/bons/${bon.id}/edit`)}
@@ -170,7 +204,22 @@ export function BonDetailPage() {
           />
           <Row label={t("bons:phone")} value={bon.telephone ?? "—"} />
           <Row label={t("bons:deliveryAddress")} value={bon.adresseLivraison ?? "—"} />
+          {bon.allerRetour && (
+            <Row
+              label={t("bons:montant")}
+              value={
+                <span className="font-semibold text-slate-800 dark:text-slate-100">
+                  {money(montant)}
+                </span>
+              }
+            />
+          )}
         </div>
+        {bon.allerRetour && bon.statut === "LIVRE" && (
+          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+            {t("bons:creanceNotice", { montant: money(montant) })}
+          </p>
+        )}
       </section>
 
       {/* Lignes produits */}

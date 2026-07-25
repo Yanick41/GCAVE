@@ -27,8 +27,19 @@
     "BROUILLON": "Draft",
     "ENVOYE": "Sent",
     "VALIDE": "Approved",
+    "LIVRE": "Delivered",
+    "PAYE": "Paid",
     "CONVERTI": "Converted to order"
   },
+  "mark": {
+    "ENVOYE": "Mark as sent",
+    "LIVRE": "Mark as delivered",
+    "PAYE": "Mark as paid"
+  },
+  "allerRetour": "Pay on delivery (deliver first, pay later)",
+  "allerRetourHint": "The goods are delivered first; the customer pays once delivery is done. The balance reflects the receivable as soon as it is delivered.",
+  "montant": "Amount due (receivable)",
+  "creanceNotice": "Delivered — {{montant}} receivable awaiting payment (included in the customer's balance).",
   "save": "Save",
   "saving": "Saving…",
   "print": "Print",

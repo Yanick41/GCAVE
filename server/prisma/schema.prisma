@@ -48,6 +48,8 @@ enum StatutBon {
   BROUILLON
   ENVOYE
   VALIDE
+  LIVRE // aller-retour : livré, en attente de paiement
+  PAYE // aller-retour : payé après livraison
   CONVERTI
 }
 
@@ -157,6 +159,8 @@ model BonCommande {
   lignes           LigneBon[]
   notes            String? // notes libres
   statut           StatutBon  @default(BROUILLON)
+  allerRetour      Boolean    @default(false) // paiement à la livraison (livré puis payé)
+  montant          Decimal    @default(0) @db.Decimal(12, 2) // montant de la créance (aller-retour)
   commandeId       String? // commande générée à la conversion (référence libre)
   date             DateTime   @default(now())
   createdAt        DateTime   @default(now())

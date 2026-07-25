@@ -27,8 +27,19 @@
     "BROUILLON": "Brouillon",
     "ENVOYE": "Envoyé",
     "VALIDE": "Validé",
+    "LIVRE": "Livré",
+    "PAYE": "Payé",
     "CONVERTI": "Converti en commande"
   },
+  "mark": {
+    "ENVOYE": "Marquer envoyé",
+    "LIVRE": "Marquer livré",
+    "PAYE": "Marquer payé"
+  },
+  "allerRetour": "Aller-retour (livraison puis paiement)",
+  "allerRetourHint": "Le produit est livré d'abord ; le client paie une fois la livraison effectuée. Le solde reflète la créance dès la livraison.",
+  "montant": "Montant à payer (créance)",
+  "creanceNotice": "Livré — créance de {{montant}} en attente de paiement (incluse dans le solde du client).",
   "save": "Enregistrer",
   "saving": "Enregistrement…",
   "print": "Imprimer",

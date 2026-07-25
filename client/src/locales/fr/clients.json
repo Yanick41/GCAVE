@@ -62,7 +62,8 @@
       "amount": "Montant",
       "balanceAfter": "Solde après",
       "COMMANDE": "Commande",
-      "PAIEMENT": "Paiement"
+      "PAIEMENT": "Paiement",
+      "BON": "Livraison (A/R)"
     }
   }
 }

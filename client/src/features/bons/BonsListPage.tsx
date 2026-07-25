@@ -1,6 +1,6 @@
 import { formatDate, type Lang } from "@gca/shared";
 import { useQuery } from "@tanstack/react-query";
-import { ClipboardList, Plus } from "lucide-react";
+import { ClipboardList, Plus, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { fetchBons, type StatutBon } from "./api";
@@ -9,8 +9,22 @@ export const bonStatusStyle: Record<StatutBon, string> = {
   BROUILLON: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200",
   ENVOYE: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
   VALIDE: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  LIVRE: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  PAYE: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
   CONVERTI: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
 };
+
+/** Petit badge indiquant le mode aller-retour (livraison puis paiement). */
+export function AllerRetourBadge({ label }: { label: string }) {
+  return (
+    <span
+      title={label}
+      className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600 dark:bg-amber-900/30 dark:text-amber-300"
+    >
+      <RefreshCw size={11} /> A/R
+    </span>
+  );
+}
 
 export function BonsListPage() {
   const { t, i18n } = useTranslation(["bons", "common"]);
@@ -74,12 +88,15 @@ export function BonsListPage() {
                   <td className="px-5 py-3">{b.client?.nom ?? b.clientNomLibre ?? "—"}</td>
                   <td className="px-5 py-3 text-slate-500">{formatDate(b.date, lang)}</td>
                   <td className="px-5 py-3 text-right tabular-nums">{b.lignes.length}</td>
-                  <td className="px-5 py-3 text-center">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${bonStatusStyle[b.statut]}`}
-                    >
-                      {t(`bons:statuses.${b.statut}`)}
-                    </span>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center justify-center gap-2">
+                      {b.allerRetour && <AllerRetourBadge label={t("bons:allerRetour")} />}
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${bonStatusStyle[b.statut]}`}
+                      >
+                        {t(`bons:statuses.${b.statut}`)}
+                      </span>
+                    </div>
                   </td>
                 </tr>
               ))

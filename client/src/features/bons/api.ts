@@ -1,7 +1,7 @@
 import type { BonCommandeInput } from "@gca/shared";
 import { api } from "../../lib/api";
 
-export type StatutBon = "BROUILLON" | "ENVOYE" | "VALIDE" | "CONVERTI";
+export type StatutBon = "BROUILLON" | "ENVOYE" | "VALIDE" | "LIVRE" | "PAYE" | "CONVERTI";
 
 export interface LigneBon {
   id: string;
@@ -21,6 +21,8 @@ export interface BonCommande {
   adresseLivraison: string | null;
   notes: string | null;
   statut: StatutBon;
+  allerRetour: boolean;
+  montant: string;
   commandeId: string | null;
   date: string;
   lignes: LigneBon[];
@@ -54,5 +56,10 @@ export async function deleteBon(id: string): Promise<void> {
 
 export async function marquerConverti(id: string, commandeId?: string): Promise<BonCommande> {
   const { data } = await api.post<BonCommande>(`/api/bons/${id}/converti`, { commandeId });
+  return data;
+}
+
+export async function setBonStatut(id: string, statut: StatutBon): Promise<BonCommande> {
+  const { data } = await api.post<BonCommande>(`/api/bons/${id}/statut`, { statut });
   return data;
 }
