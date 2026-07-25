@@ -1,7 +1,5 @@
 import {
-  BarChart3,
   BellRing,
-  LayoutDashboard,
   LogOut,
   Package,
   Settings,
@@ -19,12 +17,10 @@ import { MaskToggle } from "./MaskToggle";
 import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
-  { to: "/dashboard", key: "nav.dashboard", Icon: LayoutDashboard },
   { to: "/clients", key: "nav.clients", Icon: Users },
   { to: "/commandes", key: "nav.orders", Icon: Package },
   { to: "/paiements", key: "nav.payments", Icon: Wallet },
   { to: "/rappels", key: "nav.reminders", Icon: BellRing },
-  { to: "/rapports", key: "nav.reports", Icon: BarChart3 },
   { to: "/parametres", key: "nav.settings", Icon: Settings },
 ];
 
