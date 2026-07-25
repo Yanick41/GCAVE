@@ -80,7 +80,7 @@ bonsRouter.post(
         telephone: body.telephone || null,
         adresseLivraison: body.adresseLivraison || null,
         notes: body.notes || null,
-        statut: body.statut ?? "BROUILLON",
+        statut: body.statut ?? "LIVRE", // livré dès la création (workflow simplifié)
         allerRetour: body.allerRetour ?? false,
         montant: body.montant ?? 0,
         lignes: {

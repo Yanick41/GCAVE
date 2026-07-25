@@ -32,13 +32,10 @@
     "CONVERTI": "Converti en commande"
   },
   "mark": {
-    "ENVOYE": "Marquer envoyé",
-    "LIVRE": "Marquer livré",
     "PAYE": "Marquer payé"
   },
-  "allerRetour": "Aller-retour (livraison puis paiement)",
-  "allerRetourHint": "Le produit est livré d'abord ; le client paie une fois la livraison effectuée. Le solde reflète la créance dès la livraison.",
   "montant": "Montant à payer (créance)",
+  "montantHint": "Ajouté au solde du client tant que le bon est « Livré ». Laissez 0 si aucune créance.",
   "creanceNotice": "Livré — créance de {{montant}} en attente de paiement (incluse dans le solde du client).",
   "save": "Enregistrer",
   "saving": "Enregistrement…",

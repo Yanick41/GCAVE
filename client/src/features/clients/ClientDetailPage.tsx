@@ -15,7 +15,7 @@ import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
-import { AllerRetourBadge, bonStatusStyle } from "../bons/BonsListPage";
+import { bonStatusStyle } from "../bons/BonsListPage";
 import { avatarColor, initials } from "../../lib/avatar";
 import { genererBilanPDF } from "../../lib/bilan";
 import { genererFacturePDF } from "../../lib/facture";
@@ -292,17 +292,12 @@ export function ClientDetailPage() {
                     <td className="py-2 font-medium">{b.numero}</td>
                     <td className="py-2 text-slate-500">{formatDate(b.date, lang)}</td>
                     <td className="py-2 text-right tabular-nums">{b.lignes.length}</td>
-                    <td className="py-2">
-                      <div className="flex items-center justify-center gap-2">
-                        {b.allerRetour && (
-                          <AllerRetourBadge label={t("bons:allerRetour", { ns: "bons" })} />
-                        )}
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${bonStatusStyle[b.statut]}`}
-                        >
-                          {t(`bons:statuses.${b.statut}`, { ns: "bons" })}
-                        </span>
-                      </div>
+                    <td className="py-2 text-center">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${bonStatusStyle[b.statut]}`}
+                      >
+                        {t(`bons:statuses.${b.statut}`, { ns: "bons" })}
+                      </span>
                     </td>
                   </tr>
                 ))}

@@ -1,7 +1,9 @@
 import type { BonCommandeInput } from "@gca/shared";
 import { api } from "../../lib/api";
 
-export type StatutBon = "BROUILLON" | "ENVOYE" | "VALIDE" | "LIVRE" | "PAYE" | "CONVERTI";
+// Workflow simplifié : un bon est LIVRE dès sa création, puis PAYE.
+// CONVERTI reste possible via la conversion en commande.
+export type StatutBon = "LIVRE" | "PAYE" | "CONVERTI";
 
 export interface LigneBon {
   id: string;
@@ -21,7 +23,6 @@ export interface BonCommande {
   adresseLivraison: string | null;
   notes: string | null;
   statut: StatutBon;
-  allerRetour: boolean;
   montant: string;
   commandeId: string | null;
   date: string;

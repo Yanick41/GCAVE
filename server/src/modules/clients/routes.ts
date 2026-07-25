@@ -45,10 +45,10 @@ clientsRouter.get(
         where: { clientId: { in: ids } },
         _sum: { montant: true },
       }),
-      // Créances aller-retour livrées, en attente de paiement
+      // Créances des bons livrés (non encore payés), en attente de paiement
       prisma.bonCommande.groupBy({
         by: ["clientId"],
-        where: { clientId: { in: ids }, allerRetour: true, statut: "LIVRE" },
+        where: { clientId: { in: ids }, statut: "LIVRE" },
         _sum: { montant: true },
       }),
     ]);
@@ -104,8 +104,8 @@ clientsRouter.get(
     const commandesActives = client.commandes.filter((c) => c.statut !== "ANNULEE");
     const totalCommandes = commandesActives.reduce((s, c) => s + Number(c.totalTTC), 0);
     const totalPaiements = client.paiements.reduce((s, p) => s + Number(p.montant), 0);
-    // Bons aller-retour LIVRÉS (créance en attente de paiement) : comptent comme débit
-    const bonsLivres = client.bonsCommande.filter((b) => b.allerRetour && b.statut === "LIVRE");
+    // Bons LIVRÉS (créance en attente de paiement) : comptent comme débit
+    const bonsLivres = client.bonsCommande.filter((b) => b.statut === "LIVRE");
     const totalCreancesLivrees = bonsLivres.reduce((s, b) => s + Number(b.montant), 0);
     const solde =
       soldeClient(soldeInitial, totalCommandes, totalPaiements) + totalCreancesLivrees;

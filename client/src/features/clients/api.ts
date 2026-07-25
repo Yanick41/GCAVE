@@ -47,8 +47,7 @@ export interface BonResume {
   id: string;
   numero: string;
   date: string;
-  statut: "BROUILLON" | "ENVOYE" | "VALIDE" | "LIVRE" | "PAYE" | "CONVERTI";
-  allerRetour: boolean;
+  statut: "LIVRE" | "PAYE" | "CONVERTI";
   montant: string;
   lignes: { id: string }[];
 }

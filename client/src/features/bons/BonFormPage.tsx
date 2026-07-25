@@ -8,7 +8,7 @@ import { BackButton } from "../../components/BackButton";
 import { genererBonPDF } from "../../lib/bon";
 import { errorCode } from "../../lib/errors";
 import { fetchClients } from "../clients/api";
-import { createBon, fetchBon, updateBon, type StatutBon } from "./api";
+import { createBon, fetchBon, updateBon } from "./api";
 
 interface LineDraft {
   designation: string;
@@ -21,10 +21,6 @@ const num = (s: string) => {
   const n = parseFloat(s.replace(",", "."));
   return Number.isFinite(n) ? n : 0;
 };
-
-// Statuts proposés selon le mode : aller-retour = Brouillon→Envoyé→Livré→Payé
-const STATUTS_AR: StatutBon[] = ["BROUILLON", "ENVOYE", "LIVRE", "PAYE"];
-const STATUTS_NORMAL: StatutBon[] = ["BROUILLON", "ENVOYE", "VALIDE"];
 
 export function BonFormPage() {
   const { t, i18n } = useTranslation(["bons", "common"]);
@@ -40,8 +36,6 @@ export function BonFormPage() {
   const [adresseLivraison, setAdresseLivraison] = useState("");
   const [lines, setLines] = useState<LineDraft[]>([emptyLine()]);
   const [notes, setNotes] = useState("");
-  const [statut, setStatut] = useState<StatutBon>("BROUILLON");
-  const [allerRetour, setAllerRetour] = useState(false);
   const [montant, setMontant] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -69,8 +63,6 @@ export function BonFormPage() {
       setTelephone(bon.telephone ?? "");
       setAdresseLivraison(bon.adresseLivraison ?? "");
       setNotes(bon.notes ?? "");
-      setStatut(bon.statut);
-      setAllerRetour(bon.allerRetour);
       setMontant(Number(bon.montant) ? String(Number(bon.montant)) : "");
       setLines(
         bon.lignes.length
@@ -110,17 +102,6 @@ export function BonFormPage() {
     (s, l) => (l.designation.trim() ? s + num(l.quantite) : s),
     0,
   );
-
-  // Options de statut selon le mode ; on garde CONVERTI si le bon l'est déjà
-  const statutOptions: StatutBon[] = allerRetour ? STATUTS_AR : STATUTS_NORMAL;
-  const allStatuts = statut === "CONVERTI" ? [...statutOptions, "CONVERTI" as StatutBon] : statutOptions;
-
-  // Bascule aller-retour : réaligne le statut si le courant n'est plus valide
-  const onToggleAllerRetour = (on: boolean) => {
-    setAllerRetour(on);
-    const allowed = on ? STATUTS_AR : STATUTS_NORMAL;
-    if (statut !== "CONVERTI" && !allowed.includes(statut)) setStatut("BROUILLON");
-  };
 
   const updateLine = (i: number, patch: Partial<LineDraft>) =>
     setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
@@ -166,9 +147,9 @@ export function BonFormPage() {
     telephone: telephone.trim() || undefined,
     adresseLivraison: adresseLivraison.trim() || undefined,
     notes: notes.trim() || undefined,
-    statut,
-    allerRetour,
-    montant: allerRetour ? num(montant) : 0,
+    // Création → LIVRE ; en édition on préserve le statut existant (Livré/Payé)
+    statut: isEdit ? undefined : "LIVRE",
+    montant: num(montant),
     lignes: validLines.map((l) => ({
       designation: l.designation.trim(),
       quantite: num(l.quantite),
@@ -372,57 +353,22 @@ export function BonFormPage() {
         </button>
       </div>
 
-      {/* Pied : aller-retour + statut + total + notes */}
+      {/* Pied : montant (créance) + total + notes */}
       <div className="rounded-xl border bg-white p-5 dark:bg-slate-900">
-        {/* Mode aller-retour (livraison puis paiement) */}
-        <div className="mb-4 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={allerRetour}
-              onChange={(e) => onToggleAllerRetour(e.target.checked)}
-              className="mt-0.5 h-5 w-5 rounded border-slate-300 accent-amber-500"
-            />
-            <span>
-              <span className="block text-sm font-semibold text-slate-800 dark:text-slate-100">
-                {t("bons:allerRetour")}
-              </span>
-              <span className="block text-xs text-slate-400">{t("bons:allerRetourHint")}</span>
-            </span>
-          </label>
-          {allerRetour && (
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <span className="text-sm text-slate-600 dark:text-slate-300">
-                {t("bons:montant")}
-              </span>
-              <input
-                type="number"
-                min="0"
-                value={montant}
-                onChange={(e) => setMontant(e.target.value)}
-                placeholder="0"
-                className={`${field} w-40 text-right`}
-              />
-            </div>
-          )}
-        </div>
-
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              {t("bons:status")}
+              {t("bons:montant")}
             </label>
-            <select
-              value={statut}
-              onChange={(e) => setStatut(e.target.value as StatutBon)}
-              className={`${field}`}
-            >
-              {allStatuts.map((s) => (
-                <option key={s} value={s}>
-                  {t(`bons:statuses.${s}`)}
-                </option>
-              ))}
-            </select>
+            <input
+              type="number"
+              min="0"
+              value={montant}
+              onChange={(e) => setMontant(e.target.value)}
+              placeholder="0"
+              className={`${field} w-44 text-right`}
+            />
+            <p className="mt-1 text-xs text-slate-400">{t("bons:montantHint")}</p>
           </div>
           <div className="text-right">
             <p className="text-sm text-slate-500">{t("bons:totalQty")}</p>

@@ -32,13 +32,10 @@
     "CONVERTI": "Converted to order"
   },
   "mark": {
-    "ENVOYE": "Mark as sent",
-    "LIVRE": "Mark as delivered",
     "PAYE": "Mark as paid"
   },
-  "allerRetour": "Pay on delivery (deliver first, pay later)",
-  "allerRetourHint": "The goods are delivered first; the customer pays once delivery is done. The balance reflects the receivable as soon as it is delivered.",
   "montant": "Amount due (receivable)",
+  "montantHint": "Added to the customer's balance while the order is \"Delivered\". Leave 0 if there is no receivable.",
   "creanceNotice": "Delivered — {{montant}} receivable awaiting payment (included in the customer's balance).",
   "save": "Save",
   "saving": "Saving…",
