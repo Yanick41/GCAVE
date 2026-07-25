@@ -73,6 +73,35 @@ export type PrioriteRappel = z.infer<typeof prioriteRappelSchema>;
 export type StatutRappel = z.infer<typeof statutRappelSchema>;
 export type RappelInput = z.infer<typeof rappelSchema>;
 
+// ── Bons de commande ─────────────────────────────────────────────────
+export const statutBonSchema = z.enum(["BROUILLON", "ENVOYE", "VALIDE", "CONVERTI"]);
+
+export const ligneBonSchema = z.object({
+  designation: z.string().trim().min(1),
+  quantite: z.number().positive(),
+  servi: z.string().trim().optional(), // saisie libre, non calculée
+});
+
+export const bonCommandeSchema = z
+  .object({
+    clientId: z.string().optional().nullable(),
+    clientNomLibre: z.string().trim().optional(),
+    telephone: z.string().trim().optional(),
+    adresseLivraison: z.string().trim().optional(),
+    lignes: z.array(ligneBonSchema).min(1),
+    notes: z.string().trim().optional(),
+    statut: statutBonSchema.optional(),
+    commandeId: z.string().optional().nullable(),
+  })
+  .refine((d) => Boolean(d.clientId) || Boolean(d.clientNomLibre), {
+    message: "CLIENT_REQUIRED",
+    path: ["clientId"],
+  });
+
+export type StatutBon = z.infer<typeof statutBonSchema>;
+export type LigneBonInput = z.infer<typeof ligneBonSchema>;
+export type BonCommandeInput = z.infer<typeof bonCommandeSchema>;
+
 export const commandeFiltersSchema = z.object({
   q: z.string().optional(),
   clientId: z.string().optional(),

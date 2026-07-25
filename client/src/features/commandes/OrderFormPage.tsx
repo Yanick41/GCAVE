@@ -3,8 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Plus, Printer, Trash2, User } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
+import { marquerConverti } from "../bons/api";
 import { errorCode } from "../../lib/errors";
 import { genererFacturePDF } from "../../lib/facture";
 import { fetchClients } from "../clients/api";
@@ -15,6 +16,13 @@ interface LineDraft {
   nomProduit: string;
   quantite: string;
   prixUnitaire: string;
+}
+
+/** État de navigation lors d'une conversion depuis un bon de commande. */
+interface BonPrefill {
+  fromBonId?: string;
+  clientId?: string;
+  prefillLines?: { nomProduit: string; quantite: number }[];
 }
 
 const emptyLine = (): LineDraft => ({ nomProduit: "", quantite: "1", prixUnitaire: "" });
@@ -30,10 +38,22 @@ export function OrderFormPage() {
   const { id: clientIdParam, orderId } = useParams();
   const isEdit = Boolean(orderId);
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
 
-  const [clientId, setClientId] = useState(clientIdParam ?? "");
-  const [lines, setLines] = useState<LineDraft[]>([emptyLine()]);
+  // Conversion depuis un bon de commande : pré-remplissage via l'état de navigation
+  const bonPrefill = (location.state as BonPrefill | null) ?? null;
+
+  const [clientId, setClientId] = useState(clientIdParam ?? bonPrefill?.clientId ?? "");
+  const [lines, setLines] = useState<LineDraft[]>(
+    bonPrefill?.prefillLines?.length
+      ? bonPrefill.prefillLines.map((l) => ({
+          nomProduit: l.nomProduit,
+          quantite: String(l.quantite),
+          prixUnitaire: "",
+        }))
+      : [emptyLine()],
+  );
   const [montantPaye, setMontantPaye] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -96,7 +116,17 @@ export function OrderFormPage() {
   const mutation = useMutation({
     mutationFn: (input: CommandeInput) =>
       isEdit ? updateCommande(orderId!, input) : createCommande(input),
-    onSuccess: (commande) => {
+    onSuccess: async (commande) => {
+      // Conversion : marquer le bon d'origine comme « Converti »
+      if (!isEdit && bonPrefill?.fromBonId) {
+        try {
+          await marquerConverti(bonPrefill.fromBonId, commande.id);
+          queryClient.invalidateQueries({ queryKey: ["bons"] });
+          queryClient.invalidateQueries({ queryKey: ["bon", bonPrefill.fromBonId] });
+        } catch {
+          // non bloquant : la commande est créée même si le marquage échoue
+        }
+      }
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["client", commande.clientId] });
       queryClient.invalidateQueries({ queryKey: ["commandes"] });

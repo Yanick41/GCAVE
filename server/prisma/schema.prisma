@@ -44,6 +44,13 @@ enum StatutRappel {
   TERMINE
 }
 
+enum StatutBon {
+  BROUILLON
+  ENVOYE
+  VALIDE
+  CONVERTI
+}
+
 model Utilisateur {
   id           String     @id @default(cuid())
   nom          String
@@ -62,10 +69,11 @@ model Client {
   adresse      String?
   soldeInitial Decimal    @default(0) @db.Decimal(12, 2) // solde d'ouverture (créance reprise du papier)
   archived     Boolean    @default(false) // F-A04 : suppression logique
-  commandes Commande[]
-  paiements Paiement[]
-  rappels   Rappel[]
-  createdAt DateTime   @default(now())
+  commandes    Commande[]
+  paiements    Paiement[]
+  rappels      Rappel[]
+  bonsCommande BonCommande[]
+  createdAt    DateTime      @default(now())
 
   @@index([nom])
   @@index([telephone])
@@ -134,4 +142,38 @@ model LigneCommande {
   totalLigne   Decimal  @db.Decimal(12, 2)
 
   @@index([commandeId])
+}
+
+// Bon de commande — document de préparation (sans prix) validé avec le client
+// avant conversion en commande réelle. Voir module "Bons de commande".
+model BonCommande {
+  id               String     @id @default(cuid())
+  numero           String     @unique // ex: BC-2026-000001
+  clientId         String?
+  client           Client?    @relation(fields: [clientId], references: [id])
+  clientNomLibre   String? // client ponctuel (saisie libre)
+  telephone        String? // téléphone de livraison
+  adresseLivraison String? // adresse de livraison
+  lignes           LigneBon[]
+  notes            String? // notes libres
+  statut           StatutBon  @default(BROUILLON)
+  commandeId       String? // commande générée à la conversion (référence libre)
+  date             DateTime   @default(now())
+  createdAt        DateTime   @default(now())
+
+  @@index([clientId])
+  @@index([date])
+  @@index([statut])
+}
+
+model LigneBon {
+  id          String      @id @default(cuid())
+  bonId       String
+  bon         BonCommande @relation(fields: [bonId], references: [id], onDelete: Cascade)
+  designation String
+  quantite    Decimal     @db.Decimal(12, 3)
+  servi       String? // quantité servie — saisie manuelle libre (pas de calcul auto)
+  ordre       Int         @default(0) // ordre d'affichage des lignes
+
+  @@index([bonId])
 }

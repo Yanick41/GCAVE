@@ -1,5 +1,6 @@
 import {
   BellRing,
+  ClipboardList,
   LogOut,
   Package,
   Settings,
@@ -17,6 +18,7 @@ import { MaskToggle } from "./MaskToggle";
 import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
+  { to: "/bons", key: "nav.purchaseOrders", Icon: ClipboardList },
   { to: "/clients", key: "nav.clients", Icon: Users },
   { to: "/commandes", key: "nav.orders", Icon: Package },
   { to: "/paiements", key: "nav.payments", Icon: Wallet },

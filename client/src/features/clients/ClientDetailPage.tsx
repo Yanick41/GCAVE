@@ -4,6 +4,7 @@ import {
   BellRing,
   ChevronDown,
   ChevronRight,
+  ClipboardList,
   Pencil,
   Plus,
   Printer,
@@ -14,6 +15,7 @@ import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
+import { bonStatusStyle } from "../bons/BonsListPage";
 import { avatarColor, initials } from "../../lib/avatar";
 import { genererBilanPDF } from "../../lib/bilan";
 import { genererFacturePDF } from "../../lib/facture";
@@ -26,7 +28,7 @@ import { RappelModal } from "../rappels/RappelModal";
 import { archiveClient, fetchClient, type HistoriqueOp } from "./api";
 
 export function ClientDetailPage() {
-  const { t, i18n } = useTranslation(["clients", "common", "paiements"]);
+  const { t, i18n } = useTranslation(["clients", "common", "paiements", "bons"]);
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
   const money = useMoney();
   const { id } = useParams();
@@ -185,6 +187,12 @@ export function ClientDetailPage() {
             <Plus size={16} /> {t("clients:detail.newOrder")}
           </button>
           <button
+            onClick={() => navigate(`/clients/${client.id}/bons/new`)}
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <ClipboardList size={16} /> {t("bons:newShort", { ns: "bons" })}
+          </button>
+          <button
             onClick={() => setShowPayment(true)}
             className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
           >
@@ -254,6 +262,47 @@ export function ClientDetailPage() {
             {client.rappels.map((r) => (
               <RappelItem key={r.id} rappel={r} />
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Bons de commande du client */}
+      {client.bonsCommande.length > 0 && (
+        <section className="mb-6 rounded-xl border bg-white dark:bg-slate-900 p-5">
+          <h2 className="mb-3 flex items-center gap-2 font-semibold">
+            <ClipboardList size={18} /> {t("bons:title", { ns: "bons" })}
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b text-xs uppercase text-slate-400">
+                <tr>
+                  <th className="py-2">{t("bons:columns.number", { ns: "bons" })}</th>
+                  <th className="py-2">{t("bons:columns.date", { ns: "bons" })}</th>
+                  <th className="py-2 text-right">{t("bons:columns.items", { ns: "bons" })}</th>
+                  <th className="py-2 text-center">{t("bons:columns.status", { ns: "bons" })}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {client.bonsCommande.map((b) => (
+                  <tr
+                    key={b.id}
+                    onClick={() => navigate(`/bons/${b.id}`)}
+                    className="cursor-pointer border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  >
+                    <td className="py-2 font-medium">{b.numero}</td>
+                    <td className="py-2 text-slate-500">{formatDate(b.date, lang)}</td>
+                    <td className="py-2 text-right tabular-nums">{b.lignes.length}</td>
+                    <td className="py-2 text-center">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${bonStatusStyle[b.statut]}`}
+                      >
+                        {t(`bons:statuses.${b.statut}`, { ns: "bons" })}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       )}

@@ -6,6 +6,7 @@
   "nav": {
     "dashboard": "Tableau de bord",
     "products": "Produits",
+    "purchaseOrders": "Bons de commande",
     "clients": "Clients",
     "newOrder": "Nouvelle commande",
     "orders": "Commandes",

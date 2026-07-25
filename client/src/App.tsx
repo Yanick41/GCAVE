@@ -3,6 +3,9 @@ import { Layout } from "./components/Layout";
 import { SoonPage } from "./components/SoonPage";
 import { LoginPage } from "./features/auth/LoginPage";
 import { ProtectedRoute } from "./features/auth/ProtectedRoute";
+import { BonDetailPage } from "./features/bons/BonDetailPage";
+import { BonFormPage } from "./features/bons/BonFormPage";
+import { BonsListPage } from "./features/bons/BonsListPage";
 import { ClientDetailPage } from "./features/clients/ClientDetailPage";
 import { ClientFormPage } from "./features/clients/ClientFormPage";
 import { ClientsListPage } from "./features/clients/ClientsListPage";
@@ -22,11 +25,17 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<Navigate to="/clients" replace />} />
 
+            <Route path="/bons" element={<BonsListPage />} />
+            <Route path="/bons/new" element={<BonFormPage />} />
+            <Route path="/bons/:bonId/edit" element={<BonFormPage />} />
+            <Route path="/bons/:id" element={<BonDetailPage />} />
+
             <Route path="/clients" element={<ClientsListPage />} />
             <Route path="/clients/new" element={<ClientFormPage />} />
             <Route path="/clients/:id" element={<ClientDetailPage />} />
             <Route path="/clients/:id/edit" element={<ClientFormPage />} />
             <Route path="/clients/:id/commandes/new" element={<OrderFormPage />} />
+            <Route path="/clients/:id/bons/new" element={<BonFormPage />} />
 
             <Route path="/commandes" element={<OrdersListPage />} />
             <Route path="/commandes/new" element={<OrderFormPage />} />

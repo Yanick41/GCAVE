@@ -83,6 +83,10 @@ clientsRouter.get(
         commandes: { include: { lignes: true }, orderBy: { date: "asc" } },
         paiements: { orderBy: { date: "asc" } },
         rappels: { orderBy: [{ statut: "asc" }, { echeance: "asc" }] },
+        bonsCommande: {
+          include: { lignes: { orderBy: { ordre: "asc" } } },
+          orderBy: { date: "desc" },
+        },
       },
     });
     if (!client || client.archived) throw new AppError("NOT_FOUND", 404);
@@ -145,6 +149,7 @@ clientsRouter.get(
       commandes: client.commandes,
       paiements: client.paiements,
       rappels: client.rappels,
+      bonsCommande: client.bonsCommande,
       historique: historiqueAsc.reverse(), // plus récent en premier
     });
   }),

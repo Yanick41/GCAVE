@@ -3,6 +3,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 
 import enAuth from "../locales/en/auth.json";
+import enBons from "../locales/en/bons.json";
 import enClients from "../locales/en/clients.json";
 import enCommandes from "../locales/en/commandes.json";
 import enCommon from "../locales/en/common.json";
@@ -11,6 +12,7 @@ import enPaiements from "../locales/en/paiements.json";
 import enRappels from "../locales/en/rappels.json";
 import enRapports from "../locales/en/rapports.json";
 import frAuth from "../locales/fr/auth.json";
+import frBons from "../locales/fr/bons.json";
 import frClients from "../locales/fr/clients.json";
 import frCommandes from "../locales/fr/commandes.json";
 import frCommon from "../locales/fr/common.json";
@@ -23,6 +25,7 @@ export const resources = {
   fr: {
     common: frCommon,
     auth: frAuth,
+    bons: frBons,
     clients: frClients,
     commandes: frCommandes,
     dashboard: frDashboard,
@@ -33,6 +36,7 @@ export const resources = {
   en: {
     common: enCommon,
     auth: enAuth,
+    bons: enBons,
     clients: enClients,
     commandes: enCommandes,
     dashboard: enDashboard,
@@ -52,6 +56,7 @@ i18n
     ns: [
       "common",
       "auth",
+      "bons",
       "clients",
       "commandes",
       "dashboard",

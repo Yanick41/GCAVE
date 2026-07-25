@@ -43,6 +43,14 @@ export interface Paiement {
   observation: string | null;
 }
 
+export interface BonResume {
+  id: string;
+  numero: string;
+  date: string;
+  statut: "BROUILLON" | "ENVOYE" | "VALIDE" | "CONVERTI";
+  lignes: { id: string }[];
+}
+
 export interface HistoriqueOp {
   id: string;
   type: "COMMANDE" | "PAIEMENT";
@@ -69,6 +77,7 @@ export interface ClientDetail {
   commandes: CommandeResume[];
   paiements: Paiement[];
   rappels: Rappel[];
+  bonsCommande: BonResume[];
   historique: HistoriqueOp[];
 }
 
