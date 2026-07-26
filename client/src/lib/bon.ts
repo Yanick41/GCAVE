@@ -197,20 +197,6 @@ export function genererBonPDF(data: BonData, lang: Lang, action: "download" | "p
     doc.text(doc.splitTextToSize(data.notes, pageW - 2 * M), M, y + 5);
   }
 
-  // ── Cachet & signatures (bas de page) ──
-  const sigY = Math.max(y + 26, pageH - 34);
-  const sigW = 72;
-  doc.setDrawColor(120);
-  doc.setLineWidth(0.3);
-  doc.line(M, sigY, M + sigW, sigY);
-  const rx = pageW - M - sigW;
-  doc.line(rx, sigY, rx + sigW, sigY);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(60);
-  doc.text(t.clientSignature, M, sigY + 5);
-  doc.text(t.stamp, rx, sigY + 5);
-
   // ── Pied de page ──
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
