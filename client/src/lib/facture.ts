@@ -287,14 +287,11 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
     },
   });
 
-  // ── Totaux (droite) ──
+  // ── Bloc de clôture : totaux + NET + montant en lettres + signatures ──
+  // On l'écoule juste après le tableau ; on ne bascule sur une nouvelle page
+  // QUE si l'ensemble ne tient pas (évite une 2ᵉ page à moitié vide).
   // @ts-expect-error lastAutoTable ajouté par le plugin
   let y = doc.lastAutoTable.finalY + 8;
-  // Place suffisante pour totaux + NET + lettres + signatures ? sinon nouvelle page
-  if (y > pageH - 75) {
-    doc.addPage();
-    y = 20;
-  }
   const hasAncien = data.ancienSolde !== undefined && data.ancienSolde !== 0;
   const net = data.total + (data.ancienSolde ?? 0);
 
@@ -306,6 +303,13 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
   if (data.paye !== undefined && data.paye > 0) {
     totalsBody.push([t.paid, `${nombre(data.paye)}`]);
     totalsBody.push([t.remaining, `${nombre(data.reste ?? net - data.paye)}`]);
+  }
+
+  // Hauteur estimée du bloc : saut de page seulement si nécessaire
+  const tailH = totalsBody.length * 6 + 12 /*NET*/ + 18 /*lettres*/ + 24 /*signatures*/;
+  if (y + tailH > pageH - 12) {
+    doc.addPage();
+    y = 20;
   }
 
   if (totalsBody.length > 0) {
@@ -334,7 +338,7 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
   y += 12;
 
   // ── Montant en toutes lettres ──
-  y += 10;
+  y += 8;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(90);
@@ -344,9 +348,10 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
   doc.setTextColor(20);
   const lettres = `${montantEnLettres(net, lang)} ${t.francs}.`;
   doc.text(doc.splitTextToSize(lettres, pageW - 2 * M), M, y + 6);
+  y += 14;
 
-  // ── Cachet & signatures (bas de page) ──
-  const sigY = Math.max(y + 26, pageH - 34);
+  // ── Cachet & signatures — juste sous le contenu (pas d'ancrage bas de page) ──
+  const sigY = y + 12;
   const sigW = 72;
   doc.setDrawColor(120);
   doc.setLineWidth(0.3);

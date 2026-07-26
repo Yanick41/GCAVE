@@ -154,7 +154,7 @@ export function genererBonPDF(data: BonData, lang: Lang, action: "download" | "p
   // ── Total quantité ──
   // @ts-expect-error lastAutoTable ajouté par le plugin
   let y = doc.lastAutoTable.finalY + 8;
-  if (y > pageH - 60) {
+  if (y > pageH - 28) {
     doc.addPage();
     y = 20;
   }
