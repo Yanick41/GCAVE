@@ -57,6 +57,29 @@ export function OrderFormPage() {
   const [montantPaye, setMontantPaye] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
 
+  // Navigation clavier type tableur (Entrée = case suivante / nouvelle ligne)
+  const inputRefs = useRef<Map<string, HTMLInputElement | null>>(new Map());
+  const [focusCell, setFocusCell] = useState<{ row: number; col: number } | null>(null);
+  useEffect(() => {
+    if (!focusCell) return;
+    const el = inputRefs.current.get(`${focusCell.row}-${focusCell.col}`);
+    el?.focus();
+    el?.select?.();
+    setFocusCell(null);
+  }, [focusCell, lines]);
+
+  // Entrée : Produit(0) -> Qté(1) -> Prix(2) -> ligne suivante (nouvelle si dernière)
+  const onCellEnter = (row: number, col: number, e: React.KeyboardEvent) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (col < 2) {
+      setFocusCell({ row, col: col + 1 });
+    } else {
+      if (row === lines.length - 1) setLines((prev) => [...prev, emptyLine()]);
+      setFocusCell({ row: row + 1, col: 0 });
+    }
+  };
+
   const { data: clients } = useQuery({
     queryKey: ["clients", ""],
     queryFn: () => fetchClients(""),
@@ -258,25 +281,37 @@ export function OrderFormPage() {
           {lines.map((line, i) => (
             <div key={i} className="grid grid-cols-12 items-center gap-2">
               <input
+                ref={(el) => {
+                  inputRefs.current.set(`${i}-0`, el);
+                }}
                 className={`${field} col-span-12 md:col-span-5`}
                 placeholder={t("commandes:product")}
                 value={line.nomProduit}
                 onChange={(e) => updateLine(i, { nomProduit: e.target.value })}
+                onKeyDown={(e) => onCellEnter(i, 0, e)}
               />
               <input
+                ref={(el) => {
+                  inputRefs.current.set(`${i}-1`, el);
+                }}
                 type="number"
                 min="0"
                 className={`${field} col-span-4 md:col-span-2`}
                 value={line.quantite}
                 onChange={(e) => updateLine(i, { quantite: e.target.value })}
+                onKeyDown={(e) => onCellEnter(i, 1, e)}
               />
               <input
+                ref={(el) => {
+                  inputRefs.current.set(`${i}-2`, el);
+                }}
                 type="number"
                 min="0"
                 className={`${field} col-span-5 md:col-span-2`}
                 placeholder="0"
                 value={line.prixUnitaire}
                 onChange={(e) => updateLine(i, { prixUnitaire: e.target.value })}
+                onKeyDown={(e) => onCellEnter(i, 2, e)}
               />
               <span className="col-span-2 text-right text-sm font-semibold tabular-nums md:col-span-2">
                 {money(calc.lignes[i]?.totalLigne ?? 0)}

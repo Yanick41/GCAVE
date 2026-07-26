@@ -50,7 +50,7 @@
     "printBalance": "Print statement",
     "noOrders": "No orders for this client.",
     "noHistory": "No operations yet.",
-    "archiveConfirm": "Archive this client? Their orders and payments will be kept.",
+    "archiveConfirm": "Permanently delete this client? All their orders, purchase orders and payments will also be deleted. This cannot be undone.",
     "bilan": {
       "subtitle": "Client statement",
       "clientSignature": "Client signature",

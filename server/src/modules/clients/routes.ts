@@ -227,16 +227,21 @@ clientsRouter.patch(
   }),
 );
 
-// F-A04 — suppression logique
+// F-A04 — suppression DÉFINITIVE du client et de toutes ses données.
+// Les commandes et bons (clientId optionnel) n'ont pas de cascade → on les
+// supprime d'abord (leurs lignes cascadent). Paiements et rappels cascadent
+// à la suppression du client.
 clientsRouter.delete(
   "/:id",
   ah(async (req, res) => {
-    const existing = await prisma.client.findUnique({ where: { id: req.params.id } });
+    const id = req.params.id;
+    const existing = await prisma.client.findUnique({ where: { id } });
     if (!existing) throw new AppError("NOT_FOUND", 404);
-    await prisma.client.update({
-      where: { id: req.params.id },
-      data: { archived: true },
-    });
+    await prisma.$transaction([
+      prisma.commande.deleteMany({ where: { clientId: id } }),
+      prisma.bonCommande.deleteMany({ where: { clientId: id } }),
+      prisma.client.delete({ where: { id } }),
+    ]);
     res.status(204).end();
   }),
 );

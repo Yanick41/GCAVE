@@ -1,9 +1,7 @@
 import { formatDate, type Lang } from "@gca/shared";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-
-const COMPANY = "LA GRANDE CAVE";
-const TAGLINE = "Vente et distribution de boissons";
+import { COMPANY, drawDocumentHeader } from "./company";
 
 export interface FactureLigne {
   nomProduit: string;
@@ -203,31 +201,15 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
   const pageH = doc.internal.pageSize.getHeight();
   const M = 14; // marge
 
-  // ── En-tête : société (gauche) + titre FACTURE (droite) ──
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.setTextColor(20);
-  doc.text(COMPANY, M, 20);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(110);
-  doc.text(TAGLINE, M, 26);
-
+  // ── En-tête : logo + identité (gauche) + titre FACTURE (droite) ──
   const isProforma = !data.numero;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.setTextColor(20);
   const title = isProforma ? t.proforma : t.invoice;
-  doc.text(title, pageW - M, 20, { align: "right" });
-
-  doc.setDrawColor(30, 41, 59);
-  doc.setLineWidth(0.6);
-  doc.line(M, 30, pageW - M, 30);
+  const lineY = drawDocumentHeader(doc, { pageW, margin: M, title });
 
   // ── Encadré client (droite) ──
   const boxX = 116;
   const boxW = pageW - M - boxX;
-  const boxY = 35;
+  const boxY = lineY + 5;
   const boxH = 26;
   doc.setDrawColor(120);
   doc.setLineWidth(0.3);
@@ -253,7 +235,7 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
 
   // ── Table méta : Type | N° Facture | Date | Téléphone ──
   autoTable(doc, {
-    startY: 66,
+    startY: boxY + boxH + 5,
     head: [[t.type, t.number, t.date, t.phone]],
     body: [
       [
@@ -381,7 +363,10 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(150);
-  doc.text(`${COMPANY} — ${TAGLINE}`, pageW / 2, pageH - 10, { align: "center" });
+  doc.text(`${COMPANY.name} — ${COMPANY.tagline}`, pageW / 2, pageH - 10, {
+    align: "center",
+    maxWidth: pageW - 2 * M,
+  });
 
   const safeName = (data.numero ?? data.clientNom).replace(/\s+/g, "_");
   if (action === "download") {

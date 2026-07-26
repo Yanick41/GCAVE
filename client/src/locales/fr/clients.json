@@ -50,7 +50,7 @@
     "printBalance": "Imprimer le bilan",
     "noOrders": "Aucune commande pour ce client.",
     "noHistory": "Aucune opération pour l'instant.",
-    "archiveConfirm": "Archiver ce client ? Ses commandes et paiements seront conservés.",
+    "archiveConfirm": "Supprimer définitivement ce client ? Toutes ses commandes, bons et paiements seront aussi supprimés. Cette action est irréversible.",
     "bilan": {
       "subtitle": "Bilan du client",
       "clientSignature": "Signature du client",

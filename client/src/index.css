@@ -41,4 +41,15 @@
   .dark textarea::placeholder {
     color: var(--color-slate-500);
   }
+
+  /* Retire les flèches (spinner) des champs numériques — saisie au clavier */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 }
