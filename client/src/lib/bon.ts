@@ -1,7 +1,7 @@
 import { formatDate, type Lang } from "@gca/shared";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { montantEnLettres, pdfNombre } from "./facture";
+import { pdfNombre } from "./facture";
 
 const COMPANY = "LA GRANDE CAVE";
 const TAGLINE = "Vente et distribution de boissons";
@@ -131,19 +131,11 @@ export function genererBonPDF(data: BonData, lang: Lang, action: "download" | "p
     });
   }
 
-  // ── Table méta : Type | N° Bon | Date | Téléphone | Statut ──
+  // ── Table méta : Type | N° Bon | Date | Téléphone ──
   autoTable(doc, {
     startY: 70,
-    head: [[t.type, t.number, t.date, t.phone, t.status]],
-    body: [
-      [
-        t.typeValue,
-        data.numero,
-        formatDate(data.date, lang),
-        data.telephone ?? "—",
-        data.statut ? t.statuses[data.statut] : "—",
-      ],
-    ],
+    head: [[t.type, t.number, t.date, t.phone]],
+    body: [[t.typeValue, data.numero, formatDate(data.date, lang), data.telephone ?? "—"]],
     theme: "grid",
     headStyles: { fillColor: [241, 245, 249], textColor: 40, fontSize: 8, fontStyle: "bold" },
     bodyStyles: { fontSize: 9, textColor: 20 },
@@ -177,11 +169,10 @@ export function genererBonPDF(data: BonData, lang: Lang, action: "download" | "p
     },
   });
 
-  // ── Total quantité + montant ──
+  // ── Total quantité ──
   // @ts-expect-error lastAutoTable ajouté par le plugin
   let y = doc.lastAutoTable.finalY + 8;
-  const montant = data.montant ?? 0;
-  if (y > pageH - 75) {
+  if (y > pageH - 60) {
     doc.addPage();
     y = 20;
   }
@@ -193,33 +184,6 @@ export function genererBonPDF(data: BonData, lang: Lang, action: "download" | "p
   const totalLbl = `${t.totalQty}: ${pdfNombre(data.totalQuantite)}`;
   doc.text(totalLbl, pageW - M, y, { align: "right" });
   y += 6;
-
-  // Montant à payer — encadré (si créance renseignée)
-  if (montant > 0) {
-    const boxNX = pageW - M - 90;
-    const boxNW = 90;
-    doc.setFillColor(30, 41, 59);
-    doc.rect(boxNX, y, boxNW, 12, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(255);
-    doc.text(t.amountToPay, boxNX + 3, y + 8);
-    doc.text(`${pdfNombre(montant)} F CFA`, boxNX + boxNW - 3, y + 8, { align: "right" });
-    y += 12;
-
-    // Montant en toutes lettres
-    y += 10;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(90);
-    doc.text(t.inWords, M, y);
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(11);
-    doc.setTextColor(20);
-    const lettres = `${montantEnLettres(montant, lang)} ${t.francs}.`;
-    doc.text(doc.splitTextToSize(lettres, pageW - 2 * M), M, y + 6);
-    y += 12;
-  }
 
   // ── Notes ──
   if (data.notes && data.notes.trim()) {
