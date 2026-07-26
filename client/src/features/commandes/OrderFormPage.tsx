@@ -178,7 +178,11 @@ export function OrderFormPage() {
   const facture = (action: "download" | "print") => {
     genererFacturePDF(
       {
+        numero: order?.numero,
         clientNom: selectedClientName ?? "—",
+        clientTelephone: selectedClient?.telephone,
+        clientAdresse: selectedClient?.adresse,
+        clientCode: clientId,
         date: new Date(),
         lignes: calc.lignes
           .filter((l) => l.nomProduit.trim() && l.quantite > 0)
@@ -194,22 +198,6 @@ export function OrderFormPage() {
         reste,
       },
       lang,
-      {
-        title: t("commandes:invoice"),
-        client: t("commandes:client"),
-        date: t("commandes:date"),
-        product: t("commandes:product"),
-        qty: t("commandes:qty"),
-        unitPrice: t("commandes:unitPrice"),
-        lineTotal: t("commandes:lineTotal"),
-        total: t("commandes:total"),
-        subtotal: t("commandes:subtotal"),
-        previousBalance: t("commandes:previousBalance"),
-        grandTotal: t("commandes:grandTotal"),
-        paid: t("commandes:paid"),
-        remaining: t("commandes:remaining"),
-        stamp: t("commandes:stamp"),
-      },
       action,
     );
   };

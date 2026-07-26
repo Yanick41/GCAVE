@@ -100,6 +100,9 @@ export function ClientDetailPage() {
         genererFacturePDF(
           {
             clientNom: client.nom,
+            clientTelephone: client.telephone,
+            clientAdresse: client.adresse,
+            clientCode: client.id,
             date: new Date(cmd.date),
             numero: cmd.numero,
             lignes: cmd.lignes.map((l) => ({
@@ -115,22 +118,6 @@ export function ClientDetailPage() {
               Number(cmd.totalTTC) + Number(cmd.ancienSolde) - Number(cmd.montantPaye),
           },
           lang,
-          {
-            title: t("commandes:invoice"),
-            client: t("paiements:columns.client"),
-            date: t("clients:detail.hist.date"),
-            product: t("commandes:product"),
-            qty: t("commandes:qty"),
-            unitPrice: t("commandes:unitPrice"),
-            lineTotal: t("commandes:lineTotal"),
-            total: t("commandes:total"),
-            subtotal: t("commandes:subtotal"),
-            previousBalance: t("commandes:previousBalance"),
-            grandTotal: t("commandes:grandTotal"),
-            paid: t("commandes:paid"),
-            remaining: t("commandes:remaining"),
-            stamp: t("commandes:stamp"),
-          },
           "print",
         );
       } else {
