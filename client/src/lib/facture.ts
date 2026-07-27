@@ -255,8 +255,8 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
   // Police/espacement réduits automatiquement quand la facture est longue,
   // pour faire tenir un maximum de lignes sur la page.
   const n = data.lignes.length;
-  const fs = n > 34 ? 6 : n > 26 ? 6.5 : n > 20 ? 7 : n > 14 ? 8 : 9;
-  const pad = n > 34 ? 0.9 : n > 26 ? 1.1 : n > 20 ? 1.4 : n > 14 ? 1.8 : 2.5;
+  const fs = n > 34 ? 6 : n > 26 ? 6.5 : n > 20 ? 7 : n > 14 ? 7.5 : 8.5;
+  const pad = n > 34 ? 0.6 : n > 26 ? 0.7 : n > 20 ? 0.9 : n > 14 ? 1.1 : 1.5;
 
   // @ts-expect-error lastAutoTable ajouté par le plugin
   const metaY = doc.lastAutoTable.finalY + 3;
@@ -287,58 +287,69 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
     },
   });
 
-  // ── Bloc de clôture : totaux + NET + montant en lettres + signatures ──
-  // On l'écoule juste après le tableau ; on ne bascule sur une nouvelle page
-  // QUE si l'ensemble ne tient pas (évite une 2ᵉ page à moitié vide).
+  // ── Bloc de clôture COMPACT : totaux (droite) + NET + lettres + cachet ──
+  // Écoulé juste après le tableau ; saut de page seulement si ça déborde.
   // @ts-expect-error lastAutoTable ajouté par le plugin
-  let y = doc.lastAutoTable.finalY + 8;
+  let y = doc.lastAutoTable.finalY + 4;
   const hasAncien = data.ancienSolde !== undefined && data.ancienSolde !== 0;
+  const hasPaye = data.paye !== undefined && data.paye > 0;
   const net = data.total + (data.ancienSolde ?? 0);
 
-  const totalsBody: [string, string][] = [];
-  if (hasAncien) {
-    totalsBody.push([t.subtotal, `${nombre(data.total)}`]);
-    totalsBody.push([t.previousBalance, `${nombre(data.ancienSolde ?? 0)}`]);
-  }
-  if (data.paye !== undefined && data.paye > 0) {
-    totalsBody.push([t.paid, `${nombre(data.paye)}`]);
-    totalsBody.push([t.remaining, `${nombre(data.reste ?? net - data.paye)}`]);
-  }
+  const colW = 84; // colonne étroite des totaux, alignée à droite
+  const totX = pageW - M - colW;
+  const labelW = colW - 32;
 
-  // Hauteur estimée du bloc : saut de page seulement si nécessaire
-  const tailH = totalsBody.length * 6 + 12 /*NET*/ + 18 /*lettres*/ + 24 /*signatures*/;
+  // Estimation de hauteur → nouvelle page uniquement si nécessaire
+  const tailH = ((hasAncien ? 2 : 0) + (hasPaye ? 2 : 0)) * 5 + 9 + 16 + 20;
   if (y + tailH > pageH - 12) {
     doc.addPage();
     y = 20;
   }
 
-  if (totalsBody.length > 0) {
+  // Mini-table de totaux, serrée, alignée à droite
+  const miniTotals = (rows: [string, string][]) => {
     autoTable(doc, {
       startY: y,
-      margin: { left: pageW - M - 90 },
-      body: totalsBody,
+      margin: { left: totX },
+      body: rows,
       theme: "plain",
-      styles: { fontSize: 10, cellPadding: 1.5 },
-      columnStyles: { 0: { cellWidth: 55, textColor: 90 }, 1: { halign: "right", cellWidth: 35 } },
+      styles: { fontSize: 9, cellPadding: 0.8, textColor: 20 },
+      columnStyles: {
+        0: { cellWidth: labelW, textColor: 90 },
+        1: { halign: "right", cellWidth: 32 },
+      },
     });
     // @ts-expect-error lastAutoTable ajouté par le plugin
-    y = doc.lastAutoTable.finalY + 2;
+    y = doc.lastAutoTable.finalY + 1;
+  };
+
+  if (hasAncien) {
+    miniTotals([
+      [t.subtotal, nombre(data.total)],
+      [t.previousBalance, nombre(data.ancienSolde ?? 0)],
+    ]);
   }
 
-  // NET À PAYER — encadré, mis en évidence
-  const netBoxX = pageW - M - 90;
-  const netBoxW = 90;
+  // NET À PAYER — encadré foncé compact
   doc.setFillColor(30, 41, 59);
-  doc.rect(netBoxX, y, netBoxW, 12, "F");
+  doc.rect(totX, y, colW, 8.5, "F");
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(255);
-  doc.text(t.netToPay, netBoxX + 3, y + 8);
-  doc.text(`${nombre(net)} F CFA`, netBoxX + netBoxW - 3, y + 8, { align: "right" });
-  y += 12;
+  doc.text(t.netToPay, totX + 2.5, y + 5.8);
+  doc.text(`${nombre(net)} F CFA`, totX + colW - 2.5, y + 5.8, { align: "right" });
+  y += 8.5;
 
-  // ── Montant en toutes lettres ──
-  y += 8;
+  if (hasPaye) {
+    y += 1;
+    miniTotals([
+      [t.paid, nombre(data.paye ?? 0)],
+      [t.remaining, nombre(data.reste ?? net - (data.paye ?? 0))],
+    ]);
+  }
+
+  // ── Montant en toutes lettres (gauche) ──
+  y += 6;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(90);
@@ -346,12 +357,11 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
   doc.setFont("helvetica", "italic");
   doc.setFontSize(11);
   doc.setTextColor(20);
-  const lettres = `${montantEnLettres(net, lang)} ${t.francs}.`;
-  doc.text(doc.splitTextToSize(lettres, pageW - 2 * M), M, y + 6);
-  y += 14;
+  doc.text(doc.splitTextToSize(`${montantEnLettres(net, lang)} ${t.francs}.`, pageW - 2 * M), M, y + 6);
+  y += 12;
 
-  // ── Cachet & signature (droite uniquement) — juste sous le contenu ──
-  const sigY = y + 12;
+  // ── Cachet & signature (droite uniquement) ──
+  const sigY = y + 8;
   const sigW = 72;
   const rx = pageW - M - sigW;
   doc.setDrawColor(120);
