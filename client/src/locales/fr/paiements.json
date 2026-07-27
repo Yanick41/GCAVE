@@ -3,6 +3,7 @@
   "receipt": "Reçu de paiement",
   "new": "Nouveau paiement",
   "newFor": "Nouveau paiement — {{name}}",
+  "deleteConfirm": "Supprimer ce paiement ? Le solde du client sera recalculé. Action irréversible.",
   "amount": "Montant",
   "mode": "Mode de paiement",
   "date": "Date",

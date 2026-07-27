@@ -26,10 +26,15 @@ export function PaymentModal({
   const [observation, setObservation] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  // Le FCFA n'a pas de centimes → montant en chiffres entiers uniquement.
+  // On ne garde que les chiffres (robuste aux espaces/virgules/collages).
+  const amount = parseInt(montant || "0", 10);
+  const amountDisplay = montant.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
   const mutation = useMutation({
     mutationFn: () =>
       createPaiement(clientId, {
-        montant: parseFloat(montant),
+        montant: amount,
         mode,
         date: date || undefined,
         observation: observation || undefined,
@@ -45,7 +50,7 @@ export function PaymentModal({
   });
 
   const field = "w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500";
-  const valid = parseFloat(montant) > 0;
+  const valid = amount > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -62,14 +67,20 @@ export function PaymentModal({
             <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
               {t("paiements:amount")}
             </label>
-            <input
-              type="number"
-              min="0"
-              autoFocus
-              value={montant}
-              onChange={(e) => setMontant(e.target.value)}
-              className={field}
-            />
+            <div className="relative">
+              <input
+                type="text"
+                inputMode="numeric"
+                autoFocus
+                value={amountDisplay}
+                onChange={(e) => setMontant(e.target.value.replace(/\D/g, ""))}
+                placeholder="0"
+                className={`${field} pr-14 text-right tabular-nums`}
+              />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+                FCFA
+              </span>
+            </div>
           </div>
 
           <div>

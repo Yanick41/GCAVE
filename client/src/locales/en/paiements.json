@@ -3,6 +3,7 @@
   "receipt": "Payment receipt",
   "new": "New payment",
   "newFor": "New payment — {{name}}",
+  "deleteConfirm": "Delete this payment? The customer's balance will be recalculated. This cannot be undone.",
   "amount": "Amount",
   "mode": "Payment method",
   "date": "Date",

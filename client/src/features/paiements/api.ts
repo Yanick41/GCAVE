@@ -14,3 +14,7 @@ export async function fetchPaiements(): Promise<PaiementListItem[]> {
   const { data } = await api.get<PaiementListItem[]>("/api/paiements");
   return data;
 }
+
+export async function deletePaiement(id: string): Promise<void> {
+  await api.delete(`/api/paiements/${id}`);
+}

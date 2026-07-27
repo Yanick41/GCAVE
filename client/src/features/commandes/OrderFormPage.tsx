@@ -27,7 +27,8 @@ interface BonPrefill {
 
 const emptyLine = (): LineDraft => ({ nomProduit: "", quantite: "1", prixUnitaire: "" });
 const num = (s: string) => {
-  const n = parseFloat(s.replace(",", "."));
+  // Robuste : retire les espaces (séparateurs de milliers) avant de parser
+  const n = parseFloat(s.replace(/\s/g, "").replace(",", "."));
   return Number.isFinite(n) ? n : 0;
 };
 

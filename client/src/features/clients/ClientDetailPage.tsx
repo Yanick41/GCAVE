@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
 import { bonStatusStyle } from "../bons/BonsListPage";
+import { deletePaiement } from "../paiements/api";
 import { avatarColor, initials } from "../../lib/avatar";
 import { genererBilanPDF } from "../../lib/bilan";
 import { genererFacturePDF } from "../../lib/facture";
@@ -57,6 +58,15 @@ export function ClientDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       navigate("/clients", { replace: true });
+    },
+  });
+
+  const deletePay = useMutation({
+    mutationFn: (paiementId: string) => deletePaiement(paiementId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client", id] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["paiements"] });
     },
   });
 
@@ -352,6 +362,19 @@ export function ClientDetailPage() {
                                     className="rounded-lg p-1.5 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-800"
                                   >
                                     <Pencil size={15} />
+                                  </button>
+                                )}
+                                {op.type === "PAIEMENT" && (
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(t("paiements:deleteConfirm", { ns: "paiements" })))
+                                        deletePay.mutate(op.id);
+                                    }}
+                                    disabled={deletePay.isPending}
+                                    title={t("common:actions.delete")}
+                                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40 dark:hover:bg-slate-800"
+                                  >
+                                    <Trash2 size={15} />
                                   </button>
                                 )}
                               </>
