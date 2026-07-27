@@ -1,6 +1,6 @@
 import { formatDate, type Lang } from "@gca/shared";
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import autoTable, { type CellHookData } from "jspdf-autotable";
 import { COMPANY, drawDocumentHeader } from "./company";
 
 export interface FactureLigne {
@@ -210,7 +210,7 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
   const boxX = 116;
   const boxW = pageW - M - boxX;
   const boxY = lineY + 5;
-  const boxH = 26;
+  const boxH = 30;
   doc.setDrawColor(120);
   doc.setLineWidth(0.3);
   doc.rect(boxX, boxY, boxW, boxH);
@@ -276,16 +276,36 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
       nombre(l.prixUnitaire),
       nombre(l.totalLigne),
     ]),
-    theme: "grid",
+    theme: "plain",
     headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: Math.max(fs, 7) },
-    styles: { fontSize: fs, cellPadding: pad, lineColor: [180, 180, 180], lineWidth: 0.2, textColor: 20 },
+    styles: { fontSize: fs, cellPadding: pad, textColor: 20 },
     columnStyles: {
       0: { cellWidth: "auto" },
       1: { halign: "right", cellWidth: 26 },
       2: { halign: "right", cellWidth: 34 },
       3: { halign: "right", cellWidth: 38 },
     },
+    // Séparateurs verticaux fins entre colonnes ; AUCUNE ligne horizontale
+    didDrawCell: (d: CellHookData) => {
+      if (d.section !== "head" && d.column.index < 3) {
+        doc.setDrawColor(215);
+        doc.setLineWidth(0.1);
+        doc.line(
+          d.cell.x + d.cell.width,
+          d.cell.y,
+          d.cell.x + d.cell.width,
+          d.cell.y + d.cell.height,
+        );
+      }
+    },
   });
+
+  // Cadre extérieur léger autour du tableau produits
+  // @ts-expect-error lastAutoTable ajouté par le plugin
+  const tableBottom = doc.lastAutoTable.finalY;
+  doc.setDrawColor(200);
+  doc.setLineWidth(0.2);
+  doc.rect(M, metaY, pageW - 2 * M, tableBottom - metaY);
 
   // ── Bloc de clôture COMPACT : totaux (droite) + NET + lettres + cachet ──
   // Écoulé juste après le tableau ; saut de page seulement si ça déborde.
