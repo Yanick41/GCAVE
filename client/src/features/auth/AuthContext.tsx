@@ -2,11 +2,15 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import { api, TOKEN_KEY } from "../../lib/api";
+
+// Déconnexion automatique après cette durée d'inactivité (poste partagé)
+const IDLE_LOGOUT_MS = 60 * 60 * 1000; // 60 minutes
 
 export interface AuthUser {
   email: string;
@@ -53,6 +57,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(USER_KEY);
     setUser(null);
   }, []);
+
+  // Déconnexion auto après inactivité prolongée (sécurité poste partagé).
+  // Le minuteur se réarme à chaque interaction ; nettoyé à la déconnexion.
+  useEffect(() => {
+    if (!user) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const reset = () => {
+      clearTimeout(timer);
+      timer = setTimeout(logout, IDLE_LOGOUT_MS);
+    };
+    const events: (keyof WindowEventMap)[] = [
+      "mousedown",
+      "keydown",
+      "touchstart",
+      "scroll",
+    ];
+    events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
+    reset();
+    return () => {
+      clearTimeout(timer);
+      events.forEach((e) => window.removeEventListener(e, reset));
+    };
+  }, [user, logout]);
 
   const value = useMemo(
     () => ({ user, isAuthenticated: Boolean(user), login, logout }),

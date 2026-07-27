@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { env } from "./lib/env.js";
 import { errorHandler, notFound } from "./middleware/error.js";
@@ -14,6 +15,9 @@ import { rappelsRouter } from "./modules/rappels/routes.js";
 import { rapportsRouter } from "./modules/rapports/routes.js";
 
 const app = express();
+
+// Derrière le proxy Render (1 saut) → req.ip = vraie IP client (pour rate-limit)
+app.set("trust proxy", 1);
 
 // Origines autorisées : celles configurées (liste séparée par des virgules)
 // + tous les domaines *.vercel.app (production ET previews).
@@ -41,8 +45,18 @@ app.use(
 );
 app.use(express.json({ limit: "1mb" }));
 
+// Limite globale anti-abus : large (n'impacte pas l'usage normal), bloque les
+// rafales. Le health check (enregistré avant) n'est pas concerné.
+const apiLimiter = rateLimit({
+  windowMs: 60_000, // 1 minute
+  max: 600, // 600 requêtes / minute / IP
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Routes
 app.use("/api/health", healthRouter);
+app.use("/api", apiLimiter);
 app.use("/api/auth", authRouter);
 app.use("/api/clients", clientsRouter);
 app.use("/api/commandes", commandesRouter);

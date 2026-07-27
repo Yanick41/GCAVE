@@ -1,0 +1,43 @@
+name: Sauvegarde base de données (Neon)
+
+# Sauvegarde quotidienne automatique de la base PostgreSQL (Neon).
+# - Se déclenche chaque jour à 02:00 UTC + manuellement (bouton "Run workflow").
+# - Fait un pg_dump complet, compressé, stocké en artefact GitHub (30 jours).
+#
+# ⚠️ Prérequis : ajouter le secret de dépôt "BACKUP_DATABASE_URL"
+#    (GitHub → Settings → Secrets and variables → Actions → New repository secret)
+#    avec l'URL de connexion NON-poolée de Neon (host SANS "-pooler"),
+#    ex: postgresql://user:pass@ep-xxx.eu-...neon.tech/neondb?sslmode=require
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Dump PostgreSQL (compressé)
+        env:
+          DB_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          if [ -z "$DB_URL" ]; then
+            echo "::error::Secret BACKUP_DATABASE_URL manquant. Ajoutez-le dans Settings > Secrets > Actions."
+            exit 1
+          fi
+          FILE="backup-$(date -u +%Y%m%d-%H%M).sql.gz"
+          # pg_dump via l'image officielle postgres:17 (version client à jour, TLS OK)
+          docker run --rm -e DB_URL="$DB_URL" postgres:17-alpine \
+            sh -c 'pg_dump --no-owner --no-privileges "$DB_URL"' | gzip > "$FILE"
+          echo "Sauvegarde créée : $FILE ($(du -h "$FILE" | cut -f1))"
+          echo "FILE=$FILE" >> "$GITHUB_ENV"
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: ${{ env.FILE }}
+          retention-days: 30
+          if-no-files-found: error
