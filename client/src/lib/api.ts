@@ -7,6 +7,9 @@ export const TOKEN_KEY = "sgc_token";
 export const api = axios.create({
   baseURL,
   withCredentials: true,
+  // L'API (Render free) peut mettre ~40-60 s à se réveiller après une pause :
+  // on laisse le temps à la requête d'aboutir plutôt que d'échouer trop tôt.
+  timeout: 60000,
 });
 
 api.interceptors.request.use((config) => {
