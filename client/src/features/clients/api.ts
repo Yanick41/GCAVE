@@ -35,11 +35,12 @@ export interface CommandeResume {
   montantPaye: string;
   statut: "BROUILLON" | "VALIDEE" | "ANNULEE";
   lignes: LigneResume[];
-  paiements: Paiement[];
-  /** false = commande de l'ancien suivi (montantPaye figé). */
-  utiliseNouveauSuiviPaiement: boolean;
-  /** État de règlement calculé par le serveur (payé / reste / statut). */
-  reglement: EtatPaiement;
+  /** Optionnels : absents d'une réponse servie par une API antérieure. */
+  paiements?: Paiement[];
+  /** false ou absent = commande de l'ancien suivi (montantPaye figé). */
+  utiliseNouveauSuiviPaiement?: boolean;
+  /** État de règlement calculé par le serveur — lire via `reglementDe()`. */
+  reglement?: EtatPaiement;
 }
 
 export interface Paiement {

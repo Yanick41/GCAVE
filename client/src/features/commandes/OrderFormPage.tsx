@@ -222,7 +222,7 @@ export function OrderFormPage() {
         // encaissés sur la commande (date + mode + montant).
         paiements:
           isEdit && order?.utiliseNouveauSuiviPaiement
-            ? order.paiements.map((p) => ({
+            ? (order.paiements ?? []).map((p) => ({
                 date: p.date,
                 montant: p.montant,
                 mode: t(`paiements:modes.${p.mode}`, { ns: "paiements" }),

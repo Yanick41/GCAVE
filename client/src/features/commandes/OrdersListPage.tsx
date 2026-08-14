@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useMoney } from "../privacy/mask";
 import { fetchCommandes } from "./api";
 import { paiementStatusStyle } from "./OrderDetailPage";
+import { reglementDe } from "./reglement";
 
 const statusStyle: Record<string, string> = {
   VALIDEE: "bg-emerald-100 text-emerald-700",
@@ -61,7 +62,9 @@ export function OrdersListPage() {
                 </td>
               </tr>
             ) : (
-              commandes.map((c) => (
+              commandes.map((c) => {
+                const reglement = reglementDe(c);
+                return (
                 <tr
                   key={c.id}
                   onClick={() => navigate(`/commandes/${c.id}`)}
@@ -74,18 +77,18 @@ export function OrdersListPage() {
                     {money(Number(c.totalTTC))}
                   </td>
                   <td className="px-5 py-3 text-right tabular-nums text-emerald-600">
-                    {money(c.reglement.totalPaye)}
+                    {money(reglement.totalPaye)}
                   </td>
                   <td
-                    className={`px-5 py-3 text-right tabular-nums ${c.reglement.reste > 0 ? "text-rose-600" : "text-slate-400"}`}
+                    className={`px-5 py-3 text-right tabular-nums ${reglement.reste > 0 ? "text-rose-600" : "text-slate-400"}`}
                   >
-                    {money(c.reglement.reste)}
+                    {money(reglement.reste)}
                   </td>
                   <td className="px-5 py-3 text-center">
                     <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${paiementStatusStyle[c.reglement.statut]}`}
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${paiementStatusStyle[reglement.statut]}`}
                     >
-                      {t(`commandes:paymentStatus.${c.reglement.statut}`)}
+                      {t(`commandes:paymentStatus.${reglement.statut}`)}
                     </span>
                   </td>
                   <td className="px-5 py-3 text-center">
@@ -94,7 +97,8 @@ export function OrdersListPage() {
                     </span>
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>

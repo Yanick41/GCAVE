@@ -24,6 +24,7 @@ import { genererFacturePDF } from "../../lib/facture";
 import { genererRecuPDF } from "../../lib/recu";
 import { fetchCommande } from "../commandes/api";
 import { paiementStatusStyle } from "../commandes/OrderDetailPage";
+import { reglementDe } from "../commandes/reglement";
 import { PaymentModal, type CommandeOption } from "../paiements/PaymentModal";
 import { useMoney } from "../privacy/mask";
 import { RappelItem } from "../rappels/RappelItem";
@@ -96,7 +97,7 @@ export function ClientDetailPage() {
   // reste l'acompte figé, un rattachement n'y changerait rien.
   const commandeOptions = client.commandes
     .filter((c) => c.statut !== "ANNULEE" && c.utiliseNouveauSuiviPaiement)
-    .map((c) => ({ id: c.id, numero: c.numero, date: c.date, reste: c.reglement.reste }))
+    .map((c) => ({ id: c.id, numero: c.numero, date: c.date, reste: reglementDe(c).reste }))
     .reverse();
 
 
@@ -152,14 +153,14 @@ export function ClientDetailPage() {
             // Commandes de l'ancien suivi : pas de détail, seul l'acompte figé
             // (`reglement`) est imprimé, comme avant.
             paiements: cmd.utiliseNouveauSuiviPaiement
-              ? cmd.paiements.map((p) => ({
+              ? (cmd.paiements ?? []).map((p) => ({
                   date: p.date,
                   montant: p.montant,
                   mode: t(`paiements:modes.${p.mode}`),
                 }))
               : undefined,
-            paye: cmd.reglement.totalPaye,
-            reste: cmd.reglement.reste,
+            paye: reglementDe(cmd).totalPaye,
+            reste: reglementDe(cmd).reste,
           },
           lang,
           "print",
@@ -451,9 +452,9 @@ export function ClientDetailPage() {
                             {/* État de règlement de la commande (payée / partielle / non payée) */}
                             {isOrder && cmd && (
                               <span
-                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${paiementStatusStyle[cmd.reglement.statut]}`}
+                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${paiementStatusStyle[reglementDe(cmd).statut]}`}
                               >
-                                {t(`commandes:paymentStatus.${cmd.reglement.statut}`, {
+                                {t(`commandes:paymentStatus.${reglementDe(cmd).statut}`, {
                                   ns: "commandes",
                                 })}
                               </span>

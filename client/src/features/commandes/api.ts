@@ -40,17 +40,24 @@ export interface Commande {
   montantPaye: string;
   /**
    * Régime de suivi des paiements, posé à la création de la commande.
-   * false = commande antérieure au déploiement du rattachement
+   * false ou absent = commande antérieure au déploiement du rattachement
    * paiement ↔ commande (comportement historique conservé).
    */
-  utiliseNouveauSuiviPaiement: boolean;
+  utiliseNouveauSuiviPaiement?: boolean;
   statut: "BROUILLON" | "VALIDEE" | "ANNULEE";
   date: string;
   lignes: LigneCommande[];
-  /** Paiements partiels/total rattachés à la commande, du plus ancien au plus récent. */
-  paiements: PaiementCommande[];
-  /** État de règlement calculé par le serveur (total dû, payé, reste, statut). */
-  reglement: EtatPaiement;
+  /**
+   * Paiements partiels/total rattachés à la commande, du plus ancien au plus
+   * récent. Optionnel : absent d'une réponse servie par une API antérieure.
+   */
+  paiements?: PaiementCommande[];
+  /**
+   * État de règlement calculé par le serveur (total dû, payé, reste, statut).
+   * Optionnel pour la même raison — passer par `reglementDe()` plutôt que d'y
+   * accéder directement, ce qui garantit une valeur dans tous les cas.
+   */
+  reglement?: EtatPaiement;
 }
 
 export async function fetchCommandes(clientId?: string): Promise<Commande[]> {

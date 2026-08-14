@@ -10,6 +10,7 @@ import { deletePaiement } from "../paiements/api";
 import { PaymentModal } from "../paiements/PaymentModal";
 import { useMoney } from "../privacy/mask";
 import { fetchCommande } from "./api";
+import { reglementDe } from "./reglement";
 
 /** Pastille d'état de règlement (non payée / partielle / payée). */
 export const paiementStatusStyle: Record<StatutPaiement, string> = {
@@ -46,11 +47,12 @@ export function OrderDetailPage() {
   if (isLoading || !c)
     return <p className="text-slate-400">{t("common:common.loading")}</p>;
 
-  const reglement = c.reglement;
+  const reglement = reglementDe(c);
+  const paiements = c.paiements ?? [];
   const clientNom = c.client?.nom ?? c.clientNomLibre ?? "—";
   // Commandes antérieures au déploiement : le « payé » reste l'acompte figé,
   // on n'affiche donc pas de détail de règlements qui contredirait les totaux.
-  const suiviDetaille = c.utiliseNouveauSuiviPaiement;
+  const suiviDetaille = c.utiliseNouveauSuiviPaiement ?? false;
 
   // Facture : le détail des règlements rattachés à la commande y figure,
   // avec le total payé et le reste à payer.
@@ -72,7 +74,7 @@ export function OrderDetailPage() {
         total: Number(c.totalTTC),
         ancienSolde: Number(c.ancienSolde),
         paiements: suiviDetaille
-          ? c.paiements.map((p) => ({
+          ? paiements.map((p) => ({
               date: p.date,
               montant: p.montant,
               mode: t(`paiements:modes.${p.mode}`),
@@ -213,7 +215,7 @@ export function OrderDetailPage() {
         <h2 className="mb-3 font-semibold">{t("commandes:payments")}</h2>
         {!suiviDetaille ? (
           <p className="text-sm text-slate-400">{t("commandes:legacyTracking")}</p>
-        ) : c.paiements.length === 0 ? (
+        ) : paiements.length === 0 ? (
           <p className="text-sm text-slate-400">{t("commandes:noPayments")}</p>
         ) : (
           <table className="w-full text-left text-sm">
@@ -227,7 +229,7 @@ export function OrderDetailPage() {
               </tr>
             </thead>
             <tbody>
-              {c.paiements.map((p) => (
+              {paiements.map((p) => (
                 <tr key={p.id} className="border-b last:border-0">
                   <td className="py-2 text-slate-500">{formatDate(p.date, lang)}</td>
                   <td className="py-2">{t(`paiements:modes.${p.mode}`)}</td>

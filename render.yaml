@@ -6,12 +6,21 @@ services:
     name: gcave-api
     runtime: node
     plan: free
-    buildCommand: npm install
+    # Les migrations sont appliquées AVANT le démarrage : le schéma est donc
+    # toujours en avance sur le code qui en dépend. Si une migration échoue, le
+    # build échoue et l'ancienne version continue de tourner — c'est voulu,
+    # mieux vaut ça que du code servi sans ses colonnes.
+    buildCommand: npm install && npm run migrate:deploy --workspace @gca/server
     startCommand: npm start --workspace @gca/server
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
+      # Les verrous consultatifs PostgreSQL ne traversent pas le pooler Neon
+      # (PgBouncer) : sans ceci, `migrate deploy` échoue en P1002.
+      # À retirer si DIRECT_URL pointe bien vers l'endpoint direct (sans -pooler).
+      - key: PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK
+        value: "true"
       - key: DATABASE_URL
         sync: false
       - key: DIRECT_URL
