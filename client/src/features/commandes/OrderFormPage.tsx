@@ -33,7 +33,7 @@ const num = (s: string) => {
 };
 
 export function OrderFormPage() {
-  const { t, i18n } = useTranslation(["commandes", "common"]);
+  const { t, i18n } = useTranslation(["commandes", "paiements", "common"]);
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
   const money = useMoney();
   const { id: clientIdParam, orderId } = useParams();
@@ -218,6 +218,16 @@ export function OrderFormPage() {
           })),
         total: sousTotal,
         ancienSolde: ancien,
+        // En édition, la facture reprend le détail des règlements déjà
+        // encaissés sur la commande (date + mode + montant).
+        paiements:
+          isEdit && order?.utiliseNouveauSuiviPaiement
+            ? order.paiements.map((p) => ({
+                date: p.date,
+                montant: p.montant,
+                mode: t(`paiements:modes.${p.mode}`, { ns: "paiements" }),
+              }))
+            : undefined,
         paye,
         reste,
       },

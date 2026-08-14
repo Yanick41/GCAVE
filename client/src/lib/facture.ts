@@ -10,6 +10,14 @@ export interface FactureLigne {
   totalLigne: number;
 }
 
+/** Un règlement encaissé sur la commande (relation Commande 1—N Paiement). */
+export interface FacturePaiement {
+  date: Date | string;
+  montant: number;
+  /** Libellé du mode déjà traduit (Espèces, Mobile Money, Virement). */
+  mode: string;
+}
+
 export interface FactureData {
   clientNom: string;
   clientTelephone?: string | null;
@@ -21,7 +29,15 @@ export interface FactureData {
   numero?: string;
   /** Ancien solde du client reporté sur la facture (optionnel). */
   ancienSolde?: number;
-  /** paye/reste : optionnels (affichés seulement lors de la saisie initiale). */
+  /**
+   * Détail des règlements rattachés à la commande (date + mode + montant).
+   * Chaque ligne est imprimée sous le NET À PAYER.
+   */
+  paiements?: FacturePaiement[];
+  /**
+   * Total payé. Si `paiements` est fourni, il prime et `paye` est recalculé
+   * depuis la liste (source de vérité unique).
+   */
   paye?: number;
   reste?: number;
 }
@@ -48,6 +64,11 @@ const L = {
     netToPay: "NET À PAYER",
     paid: "Acompte versé",
     remaining: "Reste à payer",
+    payments: "Règlements reçus",
+    paidOn: "Payé le",
+    totalPaid: "Total payé",
+    settled: "SOLDÉ — PAYÉ INTÉGRALEMENT",
+    overpaid: "Trop-perçu (avoir client)",
     inWords: "Arrêtée la présente facture à la somme de :",
     francs: "francs CFA",
     clientSignature: "Signature du client",
@@ -73,12 +94,25 @@ const L = {
     netToPay: "NET TO PAY",
     paid: "Amount paid",
     remaining: "Balance due",
+    payments: "Payments received",
+    paidOn: "Paid on",
+    totalPaid: "Total paid",
+    settled: "SETTLED — PAID IN FULL",
+    overpaid: "Overpayment (customer credit)",
     inWords: "This invoice is set at the sum of:",
     francs: "CFA francs",
     clientSignature: "Customer signature",
     stamp: "Stamp & signature",
   },
 } as const;
+
+/** Date compacte (sans heure) pour les lignes de règlement de la facture. */
+function dateCourte(date: Date | string, lang: Lang): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return new Intl.DateTimeFormat(lang === "en" ? "en-US" : "fr-FR", {
+    dateStyle: "short",
+  }).format(d);
+}
 
 /** Entier formaté avec séparateur d'espace (sans devise). */
 function nombre(n: number): string {
@@ -193,8 +227,24 @@ export function pdfNombre(n: number): string {
   return nombre(n);
 }
 
-/** Génère la facture d'une commande au format « relevé de prix » (sans TVA). */
+/**
+ * Génère la facture d'une commande au format « relevé de prix » (sans TVA)
+ * et déclenche le téléchargement ou l'impression.
+ */
 export function genererFacturePDF(data: FactureData, lang: Lang, action: "download" | "print") {
+  const doc = construireFacturePDF(data, lang);
+  const safeName = (data.numero ?? data.clientNom).replace(/\s+/g, "_");
+  if (action === "download") {
+    doc.save(`facture-${safeName}.pdf`);
+  } else {
+    doc.autoPrint();
+    const url = doc.output("bloburl");
+    window.open(url, "_blank");
+  }
+}
+
+/** Construit le document facture (sans effet de bord : ni impression, ni fichier). */
+export function construireFacturePDF(data: FactureData, lang: Lang): jsPDF {
   const t = L[lang === "en" ? "en" : "fr"];
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
@@ -312,30 +362,55 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
   // @ts-expect-error lastAutoTable ajouté par le plugin
   let y = doc.lastAutoTable.finalY + 4;
   const hasAncien = data.ancienSolde !== undefined && data.ancienSolde !== 0;
-  const hasPaye = data.paye !== undefined && data.paye > 0;
   const net = data.total + (data.ancienSolde ?? 0);
+
+  // Règlements rattachés à la commande : ils font foi. `paye` n'est utilisé
+  // qu'en repli (facture proforma saisie avant enregistrement).
+  const paiements = data.paiements ?? [];
+  const paye = paiements.length
+    ? paiements.reduce((s, p) => s + p.montant, 0)
+    : (data.paye ?? 0);
+  const hasPaye = paye > 0;
+  // Reste et trop-perçu : jamais négatifs, calculés sur le NET À PAYER
+  const reste = Math.max(net - paye, 0);
+  const tropPercu = Math.max(paye - net, 0);
+  const solde = hasPaye && reste <= 0; // payé intégralement
 
   const colW = 84; // colonne étroite des totaux, alignée à droite
   const totX = pageW - M - colW;
   const labelW = colW - 32;
 
   // Estimation de hauteur → nouvelle page uniquement si nécessaire
-  const tailH = ((hasAncien ? 2 : 0) + (hasPaye ? 2 : 0)) * 5 + 9 + 16 + 20;
+  const tailH =
+    ((hasAncien ? 2 : 0) + (hasPaye ? 2 : 0) + paiements.length + (tropPercu > 0 ? 1 : 0)) *
+      5 +
+    (solde ? 12 : 0) +
+    9 +
+    16 +
+    20;
   if (y + tailH > pageH - 12) {
     doc.addPage();
     y = 20;
   }
 
   // Mini-table de totaux, serrée, alignée à droite
-  const miniTotals = (rows: [string, string][]) => {
+  const miniTotals = (
+    rows: [string, string][],
+    opts: { fontSize?: number; bold?: boolean } = {},
+  ) => {
     autoTable(doc, {
       startY: y,
       margin: { left: totX },
       body: rows,
       theme: "plain",
-      styles: { fontSize: 9, cellPadding: 0.8, textColor: 20 },
+      styles: {
+        fontSize: opts.fontSize ?? 9,
+        cellPadding: 0.8,
+        textColor: 20,
+        fontStyle: opts.bold ? "bold" : "normal",
+      },
       columnStyles: {
-        0: { cellWidth: labelW, textColor: 90 },
+        0: { cellWidth: labelW, textColor: opts.bold ? 20 : 90 },
         1: { halign: "right", cellWidth: 32 },
       },
     });
@@ -360,12 +435,53 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
   doc.text(`${nombre(net)} F CFA`, totX + colW - 2.5, y + 5.8, { align: "right" });
   y += 8.5;
 
+  // ── Règlements reçus sur cette commande ──
+  // Détail daté de chaque versement (paiements partiels multiples), puis
+  // total payé et reste à payer — pour que le client lise sa situation.
   if (hasPaye) {
+    y += 2;
+
+    if (paiements.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(90);
+      doc.text(t.payments, totX, y + 3);
+      y += 5;
+      miniTotals(
+        paiements.map((p) => [
+          `${t.paidOn} ${dateCourte(p.date, lang)} · ${p.mode}`,
+          nombre(p.montant),
+        ]),
+        { fontSize: 8 },
+      );
+      // Filet de séparation avant le total payé
+      doc.setDrawColor(200);
+      doc.setLineWidth(0.2);
+      doc.line(totX, y, totX + colW, y);
+      y += 1.5;
+    }
+
+    miniTotals(
+      [
+        [paiements.length > 1 ? t.totalPaid : t.paid, nombre(paye)],
+        ...(tropPercu > 0
+          ? ([[t.overpaid, nombre(tropPercu)]] as [string, string][])
+          : ([[t.remaining, nombre(reste)]] as [string, string][])),
+      ],
+      { bold: true },
+    );
+  }
+
+  // Mention « SOLDÉ » quand le règlement couvre l'intégralité du net à payer
+  if (solde) {
     y += 1;
-    miniTotals([
-      [t.paid, nombre(data.paye ?? 0)],
-      [t.remaining, nombre(data.reste ?? net - (data.paye ?? 0))],
-    ]);
+    doc.setFillColor(16, 122, 87); // vert sombre, lisible en noir & blanc
+    doc.rect(totX, y, colW, 7, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(255);
+    doc.text(t.settled, totX + colW / 2, y + 4.8, { align: "center" });
+    y += 8;
   }
 
   // ── Montant en toutes lettres (gauche) ──
@@ -401,12 +517,5 @@ export function genererFacturePDF(data: FactureData, lang: Lang, action: "downlo
     maxWidth: pageW - 2 * M,
   });
 
-  const safeName = (data.numero ?? data.clientNom).replace(/\s+/g, "_");
-  if (action === "download") {
-    doc.save(`facture-${safeName}.pdf`);
-  } else {
-    doc.autoPrint();
-    const url = doc.output("bloburl");
-    window.open(url, "_blank");
-  }
+  return doc;
 }

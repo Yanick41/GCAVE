@@ -12,9 +12,18 @@
   "save": "Save payment",
   "saving": "Saving…",
   "empty": "No payments.",
+  "order": "Order paid",
+  "orderOptional": "optional",
+  "noOrder": "None — payment on the overall balance",
+  "remainingShort": "due",
+  "settledShort": "settled",
+  "orderSettled": "This order is already settled.",
+  "payRemaining": "Settle the order: {{amount}}",
+  "overpayWarning": "Overpayment of {{amount}}: the excess stays as a credit on the customer's balance.",
   "columns": {
     "date": "Date",
     "client": "Client",
+    "order": "Order",
     "amount": "Amount",
     "mode": "Method",
     "observation": "Note"

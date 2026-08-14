@@ -1,6 +1,11 @@
 import { clientSchema, paiementSchema, rappelSchema, soldeClient } from "@gca/shared";
 import { Router } from "express";
 import { ah } from "../../lib/async.js";
+import {
+  etatCommande,
+  resyncMontantPaye,
+  toPaiementResume,
+} from "../../lib/commande-paiements.js";
 import { prisma } from "../../lib/prisma.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { AppError } from "../../middleware/error.js";
@@ -89,8 +94,14 @@ clientsRouter.get(
     const client = await prisma.client.findUnique({
       where: { id: req.params.id },
       include: {
-        commandes: { include: { lignes: true }, orderBy: { date: "asc" } },
-        paiements: { orderBy: { date: "asc" } },
+        commandes: {
+          include: { lignes: true, paiements: { orderBy: { date: "asc" } } },
+          orderBy: { date: "asc" },
+        },
+        paiements: {
+          orderBy: { date: "asc" },
+          include: { commande: { select: { id: true, numero: true } } },
+        },
         rappels: { orderBy: [{ statut: "asc" }, { echeance: "asc" }] },
         bonsCommande: {
           include: { lignes: { orderBy: { ordre: "asc" } } },
@@ -110,7 +121,9 @@ clientsRouter.get(
     const solde =
       soldeClient(soldeInitial, totalCommandes, totalPaiements) + totalCreancesLivrees;
 
-    // Historique chronologique avec solde courant après chaque opération
+    // Historique chronologique avec solde courant après chaque opération.
+    // Un PAIEMENT rattaché à une commande porte la référence de celle-ci
+    // (`commandeId` / `ref`) : l'historique et la facture racontent la même chose.
     type Op = {
       id: string;
       type: "COMMANDE" | "PAIEMENT" | "BON";
@@ -119,6 +132,7 @@ clientsRouter.get(
       ref: string | null;
       mode: string | null;
       observation: string | null;
+      commandeId: string | null;
     };
     const ops: Op[] = [
       ...commandesActives.map((c) => ({
@@ -129,6 +143,7 @@ clientsRouter.get(
         ref: c.numero,
         mode: null,
         observation: null,
+        commandeId: c.id,
       })),
       ...bonsLivres.map((b) => ({
         id: b.id,
@@ -138,15 +153,17 @@ clientsRouter.get(
         ref: b.numero,
         mode: null,
         observation: null,
+        commandeId: null,
       })),
       ...client.paiements.map((p) => ({
         id: p.id,
         type: "PAIEMENT" as const,
         date: p.date,
         montant: Number(p.montant),
-        ref: null,
+        ref: p.commande?.numero ?? null,
         mode: p.mode,
         observation: p.observation,
+        commandeId: p.commandeId,
       })),
     ].sort((a, b) => a.date.getTime() - b.date.getTime());
 
@@ -169,7 +186,12 @@ clientsRouter.get(
       totalCommandes,
       totalPaiements,
       solde,
-      commandes: client.commandes,
+      // Chaque commande porte son état de règlement (payé / reste / statut) :
+      // même calcul que la facture, fait une seule fois côté serveur.
+      commandes: client.commandes.map((c) => {
+        const paiements = c.paiements.map(toPaiementResume);
+        return { ...c, paiements, reglement: etatCommande(c, paiements) };
+      }),
       paiements: client.paiements,
       rappels: client.rappels,
       bonsCommande: client.bonsCommande,
@@ -246,28 +268,45 @@ clientsRouter.delete(
   }),
 );
 
-// §5 — enregistrer un paiement pour le client (met à jour le solde automatiquement)
+// §5 — enregistrer un paiement pour le client (met à jour le solde automatiquement).
+// `commandeId` (optionnel) rattache le paiement à une commande précise : la
+// facture de cette commande affichera alors le payé et le reste à payer.
 clientsRouter.post(
   "/:id/paiements",
   validate(paiementSchema),
   ah(async (req, res) => {
     const client = await prisma.client.findUnique({ where: { id: req.params.id } });
     if (!client || client.archived) throw new AppError("NOT_FOUND", 404);
-    const { montant, mode, date, observation } = req.body as {
+    const { montant, mode, date, observation, commandeId } = req.body as {
       montant: number;
       mode: "ESPECES" | "MOBILE_MONEY" | "VIREMENT";
       date?: string;
       observation?: string;
+      commandeId?: string | null;
     };
+
+    // La commande visée doit exister ET appartenir à ce client
+    if (commandeId) {
+      const commande = await prisma.commande.findUnique({
+        where: { id: commandeId },
+        select: { clientId: true, statut: true },
+      });
+      if (!commande || commande.clientId !== req.params.id)
+        throw new AppError("COMMANDE_INTROUVABLE", 404);
+      if (commande.statut === "ANNULEE") throw new AppError("COMMANDE_ANNULEE", 400);
+    }
+
     const paiement = await prisma.paiement.create({
       data: {
         clientId: req.params.id,
+        commandeId: commandeId || null,
         montant,
         mode,
         date: date ? new Date(date) : undefined,
         observation: observation || null,
       },
     });
+    await resyncMontantPaye(paiement.commandeId);
     res.status(201).json(paiement);
   }),
 );

@@ -8,11 +8,22 @@ export interface PaiementListItem {
   date: string;
   observation: string | null;
   client: { id: string; nom: string } | null;
+  commandeId: string | null;
+  /** Commande réglée par ce paiement (null = paiement sur le solde global). */
+  commande: { id: string; numero: string } | null;
 }
 
 export async function fetchPaiements(): Promise<PaiementListItem[]> {
   const { data } = await api.get<PaiementListItem[]>("/api/paiements");
   return data;
+}
+
+/** Rattache un paiement existant à une commande (ou le détache avec null). */
+export async function lierPaiementCommande(
+  paiementId: string,
+  commandeId: string | null,
+): Promise<void> {
+  await api.patch(`/api/paiements/${paiementId}/commande`, { commandeId });
 }
 
 export async function deletePaiement(id: string): Promise<void> {

@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronRight,
   ClipboardList,
+  Link2,
   Pencil,
   Plus,
   Printer,
@@ -16,13 +17,14 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
 import { bonStatusStyle } from "../bons/BonsListPage";
-import { deletePaiement } from "../paiements/api";
+import { deletePaiement, lierPaiementCommande } from "../paiements/api";
 import { avatarColor, initials } from "../../lib/avatar";
 import { genererBilanPDF } from "../../lib/bilan";
 import { genererFacturePDF } from "../../lib/facture";
 import { genererRecuPDF } from "../../lib/recu";
 import { fetchCommande } from "../commandes/api";
-import { PaymentModal } from "../paiements/PaymentModal";
+import { paiementStatusStyle } from "../commandes/OrderDetailPage";
+import { PaymentModal, type CommandeOption } from "../paiements/PaymentModal";
 import { useMoney } from "../privacy/mask";
 import { RappelItem } from "../rappels/RappelItem";
 import { RappelModal } from "../rappels/RappelModal";
@@ -37,6 +39,8 @@ export function ClientDetailPage() {
   const queryClient = useQueryClient();
   const [showPayment, setShowPayment] = useState(false);
   const [showRappel, setShowRappel] = useState(false);
+  // Paiement libre en cours de rattachement à une commande (id du paiement)
+  const [linkingPaiement, setLinkingPaiement] = useState<string | null>(null);
   const [printingId, setPrintingId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -61,13 +65,24 @@ export function ClientDetailPage() {
     },
   });
 
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["client", id] });
+    queryClient.invalidateQueries({ queryKey: ["clients"] });
+    queryClient.invalidateQueries({ queryKey: ["paiements"] });
+    queryClient.invalidateQueries({ queryKey: ["commandes"] });
+  };
+
   const deletePay = useMutation({
     mutationFn: (paiementId: string) => deletePaiement(paiementId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["client", id] });
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
-      queryClient.invalidateQueries({ queryKey: ["paiements"] });
-    },
+    onSuccess: invalidateAll,
+  });
+
+  // Rattachement a posteriori d'un paiement libre à une commande (corrige les
+  // paiements saisis avant la mise en place du lien commande ↔ paiement).
+  const linkPay = useMutation({
+    mutationFn: ({ paiementId, commandeId }: { paiementId: string; commandeId: string }) =>
+      lierPaiementCommande(paiementId, commandeId),
+    onSuccess: invalidateAll,
   });
 
   if (isLoading) return <p className="text-slate-400">{t("common:common.loading")}</p>;
@@ -75,6 +90,15 @@ export function ClientDetailPage() {
 
   // Accès rapide aux lignes de produits d'une commande (pour l'affichage déplié)
   const commandeMap = new Map(client.commandes.map((c) => [c.id, c]));
+
+  // Commandes rattachables à un paiement, avec leur reste à payer (récentes
+  // d'abord). Les commandes de l'ancien suivi sont exclues : leur montant payé
+  // reste l'acompte figé, un rattachement n'y changerait rien.
+  const commandeOptions = client.commandes
+    .filter((c) => c.statut !== "ANNULEE" && c.utiliseNouveauSuiviPaiement)
+    .map((c) => ({ id: c.id, numero: c.numero, date: c.date, reste: c.reglement.reste }))
+    .reverse();
+
 
   const printBilan = () =>
     genererBilanPDF(client, lang, {
@@ -123,9 +147,19 @@ export function ClientDetailPage() {
             })),
             total: Number(cmd.totalTTC),
             ancienSolde: Number(cmd.ancienSolde),
-            paye: Number(cmd.montantPaye),
-            reste:
-              Number(cmd.totalTTC) + Number(cmd.ancienSolde) - Number(cmd.montantPaye),
+            // Détail des règlements rattachés à la commande : la facture
+            // affiche chaque versement, le total payé et le reste à payer.
+            // Commandes de l'ancien suivi : pas de détail, seul l'acompte figé
+            // (`reglement`) est imprimé, comme avant.
+            paiements: cmd.utiliseNouveauSuiviPaiement
+              ? cmd.paiements.map((p) => ({
+                  date: p.date,
+                  montant: p.montant,
+                  mode: t(`paiements:modes.${p.mode}`),
+                }))
+              : undefined,
+            paye: cmd.reglement.totalPaye,
+            reste: cmd.reglement.reste,
           },
           lang,
           "print",
@@ -364,6 +398,16 @@ export function ClientDetailPage() {
                                     <Pencil size={15} />
                                   </button>
                                 )}
+                                {op.type === "PAIEMENT" && !op.commandeId && (
+                                  <button
+                                    onClick={() => setLinkingPaiement(op.id)}
+                                    disabled={commandeOptions.length === 0}
+                                    title={t("clients:detail.hist.linkOrder")}
+                                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 disabled:opacity-30 dark:hover:bg-slate-800"
+                                  >
+                                    <Link2 size={15} />
+                                  </button>
+                                )}
                                 {op.type === "PAIEMENT" && (
                                   <button
                                     onClick={() => {
@@ -404,8 +448,27 @@ export function ClientDetailPage() {
                             >
                               {t(`clients:detail.hist.${op.type}`)}
                             </span>
-                            {op.ref && (
-                              <span className="text-xs text-slate-400">{op.ref}</span>
+                            {/* État de règlement de la commande (payée / partielle / non payée) */}
+                            {isOrder && cmd && (
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${paiementStatusStyle[cmd.reglement.statut]}`}
+                              >
+                                {t(`commandes:paymentStatus.${cmd.reglement.statut}`, {
+                                  ns: "commandes",
+                                })}
+                              </span>
+                            )}
+                            {/* Un paiement rattaché affiche la commande qu'il solde */}
+                            {op.type === "PAIEMENT" && op.commandeId && op.ref ? (
+                              <button
+                                onClick={() => navigate(`/commandes/${op.commandeId}`)}
+                                title={t("clients:detail.hist.paysOrder", { ref: op.ref })}
+                                className="text-xs font-medium text-slate-500 hover:text-slate-800 hover:underline dark:hover:text-slate-200"
+                              >
+                                ↳ {op.ref}
+                              </button>
+                            ) : (
+                              op.ref && <span className="text-xs text-slate-400">{op.ref}</span>
                             )}
                             {op.mode && (
                               <span className="text-xs text-slate-400">
@@ -480,7 +543,21 @@ export function ClientDetailPage() {
         <PaymentModal
           clientId={client.id}
           clientName={client.nom}
+          commandes={commandeOptions}
           onClose={() => setShowPayment(false)}
+        />
+      )}
+      {linkingPaiement && (
+        <LinkOrderModal
+          commandes={commandeOptions}
+          pending={linkPay.isPending}
+          onCancel={() => setLinkingPaiement(null)}
+          onConfirm={(commandeId) =>
+            linkPay.mutate(
+              { paiementId: linkingPaiement, commandeId },
+              { onSuccess: () => setLinkingPaiement(null) },
+            )
+          }
         />
       )}
       {showRappel && (
@@ -490,6 +567,66 @@ export function ClientDetailPage() {
           onClose={() => setShowRappel(false)}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * Rattache un paiement déjà enregistré à une commande du client.
+ * Utile pour les paiements saisis « à côté » de leur commande : une fois liés,
+ * ils apparaissent sur la facture de la commande (payé / reste à payer).
+ */
+function LinkOrderModal({
+  commandes,
+  pending,
+  onCancel,
+  onConfirm,
+}: {
+  commandes: CommandeOption[];
+  pending: boolean;
+  onCancel: () => void;
+  onConfirm: (commandeId: string) => void;
+}) {
+  const { t, i18n } = useTranslation(["clients", "paiements", "common"]);
+  const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
+  const money = useMoney();
+  const [commandeId, setCommandeId] = useState(commandes[0]?.id ?? "");
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl">
+        <h2 className="mb-1 text-lg font-bold">{t("clients:detail.hist.linkOrder")}</h2>
+        <p className="mb-4 text-sm text-slate-500">{t("clients:detail.hist.linkHelp")}</p>
+        <select
+          value={commandeId}
+          onChange={(e) => setCommandeId(e.target.value)}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500"
+        >
+          {commandes.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.numero} · {formatDate(c.date, lang)}
+              {c.reste > 0
+                ? ` · ${t("paiements:remainingShort")} ${money(c.reste)}`
+                : ` · ${t("paiements:settledShort")}`}
+            </option>
+          ))}
+        </select>
+        <div className="mt-5 flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="rounded-lg border border-slate-300 px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            {t("common:actions.cancel")}
+          </button>
+          <button
+            onClick={() => commandeId && onConfirm(commandeId)}
+            disabled={!commandeId || pending}
+            className="rounded-lg bg-slate-800 px-5 py-2 font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+          >
+            {t("common:actions.save")}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

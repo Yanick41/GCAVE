@@ -47,6 +47,92 @@ export function creditRestant(totalTTC: number, montantPaye: number): number {
   return round2(Math.max((totalTTC || 0) - (montantPaye || 0), 0));
 }
 
+// ── État de règlement d'une commande ─────────────────────────────────
+// Une commande peut recevoir PLUSIEURS paiements partiels (relation
+// Commande 1—N Paiement). L'état ci-dessous est la SOURCE DE VÉRITÉ
+// UNIQUE utilisée par l'API, l'interface et la facture PDF.
+
+export type StatutPaiement = "NON_PAYEE" | "PARTIELLE" | "PAYEE";
+
+export interface EtatPaiement {
+  /** Montant réclamé au client sur ce document = total TTC + ancien solde reporté. */
+  totalDu: number;
+  /** Somme des paiements rattachés à la commande. */
+  totalPaye: number;
+  /** Reste à payer (jamais négatif). */
+  reste: number;
+  /** Excédent encaissé au-delà du total dû (avoir client), sinon 0. */
+  tropPercu: number;
+  statut: StatutPaiement;
+}
+
+/**
+ * Total réclamé sur la facture d'une commande : le total de la commande
+ * plus l'ancien solde reporté (snapshot figé à la validation).
+ */
+export function totalDuCommande(totalTTC: number, ancienSolde = 0): number {
+  return round2((totalTTC || 0) + Math.max(ancienSolde || 0, 0));
+}
+
+/**
+ * Calcule l'état de règlement d'une commande à partir du total dû et de la
+ * somme des paiements rattachés. Tolère les centimes d'arrondi : un reste
+ * inférieur à 0,01 F est considéré comme soldé.
+ */
+export function etatPaiement(totalDu: number, totalPaye: number): EtatPaiement {
+  const du = round2(Math.max(totalDu || 0, 0));
+  const paye = round2(Math.max(totalPaye || 0, 0));
+  const delta = round2(du - paye);
+  const reste = delta > 0 ? delta : 0;
+  const tropPercu = delta < 0 ? round2(-delta) : 0;
+  const statut: StatutPaiement =
+    paye <= 0 ? "NON_PAYEE" : reste <= 0 ? "PAYEE" : "PARTIELLE";
+  return { totalDu: du, totalPaye: paye, reste, tropPercu, statut };
+}
+
+/** Raccourci : état de règlement à partir des champs bruts d'une commande. */
+export function etatPaiementCommande(
+  totalTTC: number,
+  ancienSolde: number,
+  totalPaye: number,
+): EtatPaiement {
+  return etatPaiement(totalDuCommande(totalTTC, ancienSolde), totalPaye);
+}
+
+/** Champs d'une commande nécessaires au calcul de son règlement. */
+export interface CommandeReglement {
+  totalTTC: number;
+  ancienSolde: number;
+  /** Acompte figé (ancien suivi) ou somme resynchronisée (nouveau suivi). */
+  montantPaye: number;
+  /** Régime de suivi, posé à la création de la commande. */
+  utiliseNouveauSuiviPaiement: boolean;
+}
+
+/**
+ * État de règlement d'une commande — POINT D'ENTRÉE UNIQUE (API, interface, PDF).
+ *
+ * Le régime de suivi est déterminé par le SEUL drapeau
+ * `utiliseNouveauSuiviPaiement`, jamais par la présence ou l'absence de
+ * paiements rattachés : une commande de l'ancien système sans paiement
+ * rattaché n'est pas une commande légitimement à zéro.
+ *
+ * • Drapeau à false (commandes antérieures au déploiement) : le montant payé
+ *   reste `montantPaye`, exactement comme avant. Un éventuel paiement rattaché
+ *   à la main est ignoré dans ce calcul.
+ * • Drapeau à true (commandes créées depuis) : le montant payé est la somme
+ *   des paiements rattachés.
+ */
+export function reglementCommande(
+  commande: CommandeReglement,
+  paiementsRattaches: { montant: number }[],
+): EtatPaiement {
+  const totalPaye = commande.utiliseNouveauSuiviPaiement
+    ? paiementsRattaches.reduce((s, p) => s + (p.montant || 0), 0)
+    : commande.montantPaye;
+  return etatPaiementCommande(commande.totalTTC, commande.ancienSolde, totalPaye);
+}
+
 /** Solde d'un compte client = solde initial (repris du papier) + total des
  *  commandes − total des paiements. Positif = le client doit de l'argent.
  *  SOURCE DE VÉRITÉ UNIQUE : utilisée partout (fiche, liste, dashboard). */

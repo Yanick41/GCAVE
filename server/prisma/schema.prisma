@@ -97,9 +97,15 @@ model Rappel {
 }
 
 model Paiement {
-  id          String       @id @default(cuid())
-  clientId    String
-  client      Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  // Commande réglée par ce paiement (une commande peut recevoir plusieurs
+  // paiements partiels). NULL = paiement libre sur le solde global du client.
+  // SetNull : supprimer une commande ne fait pas disparaître l'encaissement,
+  // il redevient un paiement sur le solde global.
+  commandeId  String?
+  commande    Commande?    @relation(fields: [commandeId], references: [id], onDelete: SetNull)
   montant     Decimal      @db.Decimal(12, 2)
   mode        ModePaiement @default(ESPECES)
   date        DateTime     @default(now())
@@ -107,6 +113,7 @@ model Paiement {
   createdAt   DateTime     @default(now())
 
   @@index([clientId])
+  @@index([commandeId])
   @@index([date])
 }
 
@@ -119,13 +126,24 @@ model Commande {
   utilisateurId  String?
   utilisateur    Utilisateur?    @relation(fields: [utilisateurId], references: [id])
   lignes         LigneCommande[]
+  paiements      Paiement[] // paiements partiels ou total rattachés à la commande
   remiseType     RemiseType      @default(AUCUNE)
   remiseValeur   Decimal         @default(0) @db.Decimal(12, 2)
   sousTotal      Decimal         @db.Decimal(12, 2)
   montantRemise  Decimal         @db.Decimal(12, 2)
   totalTTC       Decimal         @db.Decimal(12, 2)
   ancienSolde    Decimal         @default(0) @db.Decimal(12, 2) // solde reporté sur la facture
-  montantPaye    Decimal         @default(0) @db.Decimal(12, 2) // acompte à la commande
+  // Montant encaissé sur la commande.
+  // • Ancien suivi (utiliseNouveauSuiviPaiement = false) : acompte saisi à la
+  //   validation, figé — c'est la seule source du « payé » de la facture.
+  // • Nouveau suivi : colonne DÉRIVÉE, resynchronisée par le serveur à chaque
+  //   création/suppression de paiement rattaché (= somme des `paiements`).
+  montantPaye    Decimal         @default(0) @db.Decimal(12, 2)
+  // Drapeau explicite de régime de suivi des paiements, posé à la création.
+  // false = commandes antérieures au déploiement du rattachement
+  // paiement ↔ commande : comportement historique préservé, jamais basculé
+  // automatiquement. true = commandes créées après, suivi dérivé des paiements.
+  utiliseNouveauSuiviPaiement Boolean @default(false)
   statut         StatutCommande  @default(VALIDEE)
   date           DateTime        @default(now())
 

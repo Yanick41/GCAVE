@@ -1,7 +1,11 @@
-import { commandeSchema, computeCommande } from "@gca/shared";
-import { Prisma } from "@prisma/client";
+import { commandeSchema, computeCommande, paiementSchema } from "@gca/shared";
 import { Router } from "express";
 import { ah } from "../../lib/async.js";
+import {
+  etatCommande,
+  resyncMontantPaye,
+  toPaiementResume,
+} from "../../lib/commande-paiements.js";
 import { prisma } from "../../lib/prisma.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { AppError } from "../../middleware/error.js";
@@ -11,7 +15,7 @@ export const commandesRouter = Router();
 
 commandesRouter.use(requireAuth);
 
-// F-C01 — liste (récentes d'abord), avec client
+// F-C01 — liste (récentes d'abord), avec client et état de règlement
 commandesRouter.get(
   "/",
   ah(async (req, res) => {
@@ -20,22 +24,82 @@ commandesRouter.get(
       where: { ...(clientId ? { clientId } : {}) },
       orderBy: { date: "desc" },
       take: 200,
-      include: { client: { select: { id: true, nom: true } }, lignes: true },
+      include: {
+        client: { select: { id: true, nom: true } },
+        lignes: true,
+        paiements: { orderBy: { date: "asc" } },
+      },
     });
-    res.json(commandes);
+    res.json(
+      commandes.map(({ paiements, ...c }) => {
+        const resumes = paiements.map(toPaiementResume);
+        return { ...c, paiements: resumes, reglement: etatCommande(c, resumes) };
+      }),
+    );
   }),
 );
 
-// F-C02 — détail
+// F-C02 — détail : commande + paiements rattachés + état de règlement
 commandesRouter.get(
   "/:id",
   ah(async (req, res) => {
     const commande = await prisma.commande.findUnique({
       where: { id: req.params.id },
-      include: { client: true, lignes: true },
+      include: { client: true, lignes: true, paiements: { orderBy: { date: "asc" } } },
     });
     if (!commande) throw new AppError("NOT_FOUND", 404);
-    res.json(commande);
+    const paiements = commande.paiements.map(toPaiementResume);
+    res.json({ ...commande, paiements, reglement: etatCommande(commande, paiements) });
+  }),
+);
+
+// Paiement rattaché à une commande (acompte, versement partiel ou solde).
+// Une commande peut en recevoir plusieurs ; `montantPaye` est resynchronisé.
+commandesRouter.post(
+  "/:id/paiements",
+  validate(paiementSchema),
+  ah(async (req, res) => {
+    const commande = await prisma.commande.findUnique({
+      where: { id: req.params.id },
+      include: { paiements: true },
+    });
+    if (!commande) throw new AppError("NOT_FOUND", 404);
+    // Un paiement appartient toujours à un client : impossible sur une
+    // commande de client occasionnel (saisie libre, sans fiche client).
+    if (!commande.clientId) throw new AppError("CLIENT_REQUIRED", 400);
+    if (commande.statut === "ANNULEE") throw new AppError("COMMANDE_ANNULEE", 400);
+    // Commande de l'ancien suivi : son « payé » reste l'acompte figé. Encaisser
+    // ici n'aurait aucun effet sur sa facture → on refuse plutôt que d'induire
+    // en erreur. Le rattachement au cas par cas passe par
+    // PATCH /api/paiements/:id/commande, qui ne bascule aucun régime.
+    if (!commande.utiliseNouveauSuiviPaiement)
+      throw new AppError("COMMANDE_ANCIEN_SUIVI", 400);
+
+    const { montant, mode, date, observation } = req.body as {
+      montant: number;
+      mode: "ESPECES" | "MOBILE_MONEY" | "VIREMENT";
+      date?: string;
+      observation?: string;
+    };
+
+    const paiement = await prisma.paiement.create({
+      data: {
+        clientId: commande.clientId,
+        commandeId: commande.id,
+        montant,
+        mode,
+        date: date ? new Date(date) : undefined,
+        observation: observation || null,
+      },
+    });
+    await resyncMontantPaye(commande.id);
+
+    // Le trop-perçu n'est PAS refusé (le client peut payer d'avance) :
+    // il est signalé dans la réponse et reste porté par le solde global.
+    const paiements = [...commande.paiements, paiement].map(toPaiementResume);
+    res
+      .status(201)
+      .json({ ...toPaiementResume(paiement), reglement: etatCommande(commande, paiements) });
   }),
 );
 
@@ -79,7 +143,13 @@ commandesRouter.post(
     const lastSeq = last ? parseInt(last.numero.slice(-6), 10) : 0;
     const numero = `CMD-${year}-${String(lastSeq + 1).padStart(6, "0")}`;
 
-    const createCommande = prisma.commande.create({
+    // L'acompte saisi à la validation est créé comme un PAIEMENT RATTACHÉ à la
+    // commande (écriture imbriquée : le lien est posé dès la création, sans
+    // transaction séparée). Impossible pour un client occasionnel (pas de fiche
+    // client) : `montantPaye` reste alors le seul enregistrement de l'acompte.
+    const acompte = montantPaye > 0 && body.clientId ? montantPaye : 0;
+
+    const commande = await prisma.commande.create({
       data: {
         numero,
         clientId: body.clientId ?? null,
@@ -91,6 +161,9 @@ commandesRouter.post(
         totalTTC: calc.totalTTC,
         ancienSolde,
         montantPaye,
+        // Commande créée depuis le déploiement du rattachement
+        // paiement ↔ commande : elle suit le nouveau régime dès sa naissance.
+        utiliseNouveauSuiviPaiement: true,
         statut: body.statut ?? "VALIDEE",
         lignes: {
           create: calc.lignes.map((l) => ({
@@ -100,27 +173,26 @@ commandesRouter.post(
             totalLigne: l.totalLigne,
           })),
         },
+        ...(acompte > 0 && body.clientId
+          ? {
+              paiements: {
+                create: {
+                  clientId: body.clientId,
+                  montant: acompte,
+                  mode: "ESPECES",
+                  observation: `Paiement à la commande ${numero}`,
+                },
+              },
+            }
+          : {}),
       },
-      include: { client: true, lignes: true },
+      include: { client: true, lignes: true, paiements: { orderBy: { date: "asc" } } },
     });
 
-    // Transaction batch (compatible pooler) : commande (+ paiement initial si fourni)
-    const ops: Prisma.PrismaPromise<unknown>[] = [createCommande];
-    if (montantPaye > 0 && body.clientId) {
-      ops.push(
-        prisma.paiement.create({
-          data: {
-            clientId: body.clientId,
-            montant: montantPaye,
-            mode: "ESPECES",
-            observation: `Paiement à la commande ${numero}`,
-          },
-        }),
-      );
-    }
-    const [commande] = await prisma.$transaction(ops);
-
-    res.status(201).json(commande);
+    const paiements = commande.paiements.map(toPaiementResume);
+    res
+      .status(201)
+      .json({ ...commande, paiements, reglement: etatCommande(commande, paiements) });
   }),
 );
 
@@ -168,9 +240,11 @@ commandesRouter.patch(
 
     const updated = await prisma.commande.findUnique({
       where: { id: req.params.id },
-      include: { client: true, lignes: true },
+      include: { client: true, lignes: true, paiements: { orderBy: { date: "asc" } } },
     });
-    res.json(updated);
+    if (!updated) throw new AppError("NOT_FOUND", 404);
+    const paiements = updated.paiements.map(toPaiementResume);
+    res.json({ ...updated, paiements, reglement: etatCommande(updated, paiements) });
   }),
 );
 

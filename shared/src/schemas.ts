@@ -50,10 +50,18 @@ export const paiementSchema = z.object({
   mode: modePaiementSchema.default("ESPECES"),
   date: z.string().optional(),
   observation: z.string().trim().optional(),
+  /** Commande réglée (totalement ou partiellement) par ce paiement. */
+  commandeId: z.string().optional().nullable(),
+});
+
+/** Rattachement (ou détachement) d'un paiement existant à une commande. */
+export const paiementLienSchema = z.object({
+  commandeId: z.string().nullable(),
 });
 
 export type ModePaiement = z.infer<typeof modePaiementSchema>;
 export type PaiementInput = z.infer<typeof paiementSchema>;
+export type PaiementLienInput = z.infer<typeof paiementLienSchema>;
 
 // ── Rappels (module CRM) ─────────────────────────────────────────────
 export const prioriteRappelSchema = z.enum(["FAIBLE", "NORMALE", "URGENTE"]);

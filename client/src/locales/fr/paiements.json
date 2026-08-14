@@ -12,9 +12,18 @@
   "save": "Enregistrer le paiement",
   "saving": "Enregistrement…",
   "empty": "Aucun paiement.",
+  "order": "Commande réglée",
+  "orderOptional": "optionnel",
+  "noOrder": "Aucune — paiement sur le solde global",
+  "remainingShort": "reste",
+  "settledShort": "soldée",
+  "orderSettled": "Cette commande est déjà soldée.",
+  "payRemaining": "Solder la commande : {{amount}}",
+  "overpayWarning": "Trop-perçu de {{amount}} : l'excédent restera en avoir sur le solde du client.",
   "columns": {
     "date": "Date",
     "client": "Client",
+    "order": "Commande",
     "amount": "Montant",
     "mode": "Mode",
     "observation": "Observation"

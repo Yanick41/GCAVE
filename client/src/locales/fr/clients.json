@@ -63,7 +63,10 @@
       "balanceAfter": "Solde après",
       "COMMANDE": "Commande",
       "PAIEMENT": "Paiement",
-      "BON": "Livraison (A/R)"
+      "BON": "Livraison (A/R)",
+      "linkOrder": "Rattacher à une commande",
+      "linkHelp": "Choisissez la commande réglée par ce paiement. La facture de cette commande affichera alors le montant payé et le reste à payer.",
+      "paysOrder": "Règle la commande {{ref}}"
     }
   }
 }

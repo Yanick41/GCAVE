@@ -63,7 +63,10 @@
       "balanceAfter": "Balance after",
       "COMMANDE": "Order",
       "PAIEMENT": "Payment",
-      "BON": "Delivery (pay-on-delivery)"
+      "BON": "Delivery (pay-on-delivery)",
+      "linkOrder": "Link to an order",
+      "linkHelp": "Pick the order this payment settles. That order's invoice will then show the amount paid and the balance due.",
+      "paysOrder": "Settles order {{ref}}"
     }
   }
 }

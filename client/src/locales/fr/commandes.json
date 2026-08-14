@@ -25,6 +25,10 @@
   "optional": "optionnel",
   "remaining": "Reste à payer",
   "credit": "Crédit restant",
+  "overpaid": "Trop-perçu (avoir client)",
+  "payments": "Règlements de la commande",
+  "noPayments": "Aucun paiement enregistré sur cette commande.",
+  "addPayment": "Enregistrer un paiement",
   "validate": "Valider la commande",
   "saving": "Enregistrement…",
   "invoice": "Facture",
@@ -39,6 +43,8 @@
     "date": "Date",
     "total": "Total",
     "paid": "Payé",
+    "remaining": "Reste",
+    "payment": "Règlement",
     "credit": "Crédit",
     "status": "Statut"
   },
@@ -46,5 +52,11 @@
     "BROUILLON": "Brouillon",
     "VALIDEE": "Validée",
     "ANNULEE": "Annulée"
-  }
+  },
+  "paymentStatus": {
+    "NON_PAYEE": "Non payée",
+    "PARTIELLE": "Partiellement payée",
+    "PAYEE": "Payée"
+  },
+  "legacyTracking": "Commande antérieure au suivi des règlements par commande : seul l'acompte saisi à la validation figure sur la facture. Les paiements de ce client restent visibles dans son historique."
 }

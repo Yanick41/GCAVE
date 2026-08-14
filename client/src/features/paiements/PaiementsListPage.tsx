@@ -38,6 +38,7 @@ export function PaiementsListPage() {
             <tr>
               <th className="px-5 py-3">{t("paiements:columns.date")}</th>
               <th className="px-5 py-3">{t("paiements:columns.client")}</th>
+              <th className="px-5 py-3">{t("paiements:columns.order")}</th>
               <th className="px-5 py-3 text-right">{t("paiements:columns.amount")}</th>
               <th className="px-5 py-3 text-center">{t("paiements:columns.mode")}</th>
               <th className="px-5 py-3">{t("paiements:columns.observation")}</th>
@@ -46,13 +47,13 @@ export function PaiementsListPage() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={5} className="px-5 py-10 text-center text-slate-400">
+                <td colSpan={6} className="px-5 py-10 text-center text-slate-400">
                   {t("common:common.loading")}
                 </td>
               </tr>
             ) : !paiements || paiements.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-10 text-center text-slate-400">
+                <td colSpan={6} className="px-5 py-10 text-center text-slate-400">
                   {t("paiements:empty")}
                 </td>
               </tr>
@@ -65,6 +66,22 @@ export function PaiementsListPage() {
                 >
                   <td className="px-5 py-3 text-slate-500">{formatDate(p.date, lang)}</td>
                   <td className="px-5 py-3 font-medium">{p.client?.nom ?? "—"}</td>
+                  {/* Commande réglée par ce paiement (vide = solde global) */}
+                  <td className="px-5 py-3 text-slate-500">
+                    {p.commande ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/commandes/${p.commande!.id}`);
+                        }}
+                        className="font-medium hover:text-slate-800 hover:underline dark:hover:text-slate-200"
+                      >
+                        {p.commande.numero}
+                      </button>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td className="px-5 py-3 text-right font-semibold tabular-nums text-emerald-600">
                     {money(Number(p.montant))}
                   </td>

@@ -1,4 +1,4 @@
-import type { ClientInput, PaiementInput } from "@gca/shared";
+import type { ClientInput, EtatPaiement, PaiementInput } from "@gca/shared";
 import { api } from "../../lib/api";
 import type { Rappel } from "../rappels/api";
 
@@ -31,8 +31,15 @@ export interface CommandeResume {
   numero: string;
   date: string;
   totalTTC: string;
+  ancienSolde: string;
+  montantPaye: string;
   statut: "BROUILLON" | "VALIDEE" | "ANNULEE";
   lignes: LigneResume[];
+  paiements: Paiement[];
+  /** false = commande de l'ancien suivi (montantPaye figé). */
+  utiliseNouveauSuiviPaiement: boolean;
+  /** État de règlement calculé par le serveur (payé / reste / statut). */
+  reglement: EtatPaiement;
 }
 
 export interface Paiement {
@@ -41,6 +48,8 @@ export interface Paiement {
   mode: ModePaiement;
   date: string;
   observation: string | null;
+  /** Commande réglée par ce paiement (null = paiement sur le solde global). */
+  commandeId: string | null;
 }
 
 export interface BonResume {
@@ -57,10 +66,13 @@ export interface HistoriqueOp {
   type: "COMMANDE" | "PAIEMENT" | "BON";
   date: string;
   montant: number;
+  /** N° de la commande : la sienne (COMMANDE/BON) ou celle réglée (PAIEMENT). */
   ref: string | null;
   mode: ModePaiement | null;
   observation: string | null;
   soldeApres: number;
+  /** Commande liée à l'opération (null pour un paiement non rattaché). */
+  commandeId: string | null;
 }
 
 export interface ClientDetail {

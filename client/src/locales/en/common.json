@@ -64,6 +64,10 @@
     "NOT_FOUND": "Item not found.",
     "INTERNAL_ERROR": "Server error. Please try again later.",
     "NETWORK": "Cannot reach the server. Make sure the API is running.",
-    "UNKNOWN": "Something went wrong."
+    "UNKNOWN": "Something went wrong.",
+    "CLIENT_REQUIRED": "This order has no customer record: a payment cannot be recorded on it.",
+    "COMMANDE_INTROUVABLE": "Order not found for this customer.",
+    "COMMANDE_ANNULEE": "A payment cannot be recorded on a cancelled order.",
+    "COMMANDE_ANCIEN_SUIVI": "This order uses the previous payment tracking: its paid amount stays the one entered at confirmation."
   }
 }

@@ -25,6 +25,10 @@
   "optional": "optional",
   "remaining": "Remaining",
   "credit": "Credit due",
+  "overpaid": "Overpayment (customer credit)",
+  "payments": "Payments on this order",
+  "noPayments": "No payment recorded on this order.",
+  "addPayment": "Record a payment",
   "validate": "Confirm order",
   "saving": "Saving…",
   "invoice": "Invoice",
@@ -39,6 +43,8 @@
     "date": "Date",
     "total": "Total",
     "paid": "Paid",
+    "remaining": "Due",
+    "payment": "Payment",
     "credit": "Credit",
     "status": "Status"
   },
@@ -46,5 +52,11 @@
     "BROUILLON": "Draft",
     "VALIDEE": "Confirmed",
     "ANNULEE": "Cancelled"
-  }
+  },
+  "paymentStatus": {
+    "NON_PAYEE": "Unpaid",
+    "PARTIELLE": "Partially paid",
+    "PAYEE": "Paid"
+  },
+  "legacyTracking": "This order predates per-order payment tracking: only the deposit entered at confirmation appears on the invoice. This customer's payments remain visible in their history."
 }
