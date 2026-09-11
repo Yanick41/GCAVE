@@ -58,5 +58,13 @@
     "PARTIELLE": "Partially paid",
     "PAYEE": "Paid"
   },
-  "legacyTracking": "This order predates per-order payment tracking: only the deposit entered at confirmation appears on the invoice. This customer's payments remain visible in their history."
+  "legacyTracking": "This order predates per-order payment tracking: only the deposit entered at confirmation appears on the invoice. This customer's payments remain visible in their history.",
+  "amountHint": "Enter the line total: the unit price is recalculated automatically.",
+  "errProduct": "Enter the product name.",
+  "errQty": "Quantity must be greater than 0.",
+  "errPrice": "Price cannot be negative.",
+  "paidDerived": "Derived from payments — manage it from the order page.",
+  "convertToBon": "Convert to order form",
+  "convertToBonHint": "Generate a price-free order form from this invoice. The invoice is left untouched.",
+  "converting": "Converting…"
 }

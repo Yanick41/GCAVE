@@ -1,4 +1,9 @@
-import { computeCommande, type CommandeInput, type Lang } from "@gca/shared";
+import {
+  computeCommande,
+  prixUnitaireDepuisTotal,
+  type CommandeInput,
+  type Lang,
+} from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Plus, Printer, Trash2, User } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -16,6 +21,12 @@ interface LineDraft {
   nomProduit: string;
   quantite: string;
   prixUnitaire: string;
+  /**
+   * Saisie en cours dans la colonne Montant. Tampon volatil : le prix unitaire
+   * reste la donnée de référence (total = quantité × prix unitaire), on le
+   * recalcule à chaque frappe. Vidé au blur pour réafficher la valeur canonique.
+   */
+  montantSaisi?: string;
 }
 
 /** État de navigation lors d'une conversion depuis un bon de commande. */
@@ -26,6 +37,11 @@ interface BonPrefill {
 }
 
 const emptyLine = (): LineDraft => ({ nomProduit: "", quantite: "1", prixUnitaire: "" });
+/** Une ligne est « renseignée » dès qu'elle porte un produit ou un prix.
+ *  Les lignes encore vierges ne déclenchent aucune erreur de validation. */
+const ligneRenseignee = (l: LineDraft) =>
+  l.nomProduit.trim() !== "" || l.prixUnitaire.trim() !== "" || l.montantSaisi !== undefined;
+
 const num = (s: string) => {
   // Robuste : retire les espaces (séparateurs de milliers) avant de parser
   const n = parseFloat(s.replace(/\s/g, "").replace(",", "."));
@@ -69,11 +85,11 @@ export function OrderFormPage() {
     setFocusCell(null);
   }, [focusCell, lines]);
 
-  // Entrée : Produit(0) -> Qté(1) -> Prix(2) -> ligne suivante (nouvelle si dernière)
+  // Entrée : Produit(0) -> Qté(1) -> Prix(2) -> Montant(3) -> ligne suivante
   const onCellEnter = (row: number, col: number, e: React.KeyboardEvent) => {
     if (e.key !== "Enter") return;
     e.preventDefault();
-    if (col < 2) {
+    if (col < 3) {
       setFocusCell({ row, col: col + 1 });
     } else {
       if (row === lines.length - 1) setLines((prev) => [...prev, emptyLine()]);
@@ -106,6 +122,11 @@ export function OrderFormPage() {
             }))
           : [emptyLine()],
       );
+      // Ancien suivi : l'acompte est modifiable, on le charge dans le champ.
+      // Nouveau suivi : il est dérivé des paiements rattachés, pas saisissable.
+      if (!order.utiliseNouveauSuiviPaiement) {
+        setMontantPaye(String(Number(order.montantPaye)));
+      }
     }
   }, [order]);
 
@@ -132,9 +153,15 @@ export function OrderFormPage() {
     ? Number(order?.ancienSolde ?? 0)
     : Math.max(selectedClient?.solde ?? 0, 0);
   const grandTotal = sousTotal + ancien;
-  const paye = isEdit
-    ? Number(order?.montantPaye ?? 0)
-    : Math.min(num(montantPaye), grandTotal);
+
+  // Le montant payé n'est saisissable que là où il est la seule source de
+  // vérité : à la création, et en édition sur les commandes de l'ancien suivi.
+  // Sur les commandes du nouveau suivi il est dérivé des paiements rattachés —
+  // le saisir ici serait écrasé au prochain encaissement.
+  const payeModifiable = !isEdit || order?.utiliseNouveauSuiviPaiement === false;
+  const paye = payeModifiable
+    ? Math.min(Math.max(num(montantPaye), 0), grandTotal)
+    : Number(order?.montantPaye ?? 0);
   const reste = Math.max(grandTotal - paye, 0);
 
   const mutation = useMutation({
@@ -169,10 +196,39 @@ export function OrderFormPage() {
   });
 
   const validLines = lines.filter((l) => l.nomProduit.trim() && num(l.quantite) > 0);
-  const canSubmit = Boolean(clientId) && validLines.length > 0;
+
+  // Erreur par ligne (null = ligne correcte ou encore vierge). Bloque
+  // l'enregistrement AVANT l'aller-retour serveur, qui renverrait un 422 opaque.
+  const lineErrors = lines.map((l) => {
+    if (!ligneRenseignee(l)) return null;
+    if (!l.nomProduit.trim()) return t("commandes:errProduct");
+    if (num(l.quantite) <= 0) return t("commandes:errQty");
+    if (num(l.prixUnitaire) < 0) return t("commandes:errPrice");
+    return null;
+  });
+  const hasLineError = lineErrors.some(Boolean);
+
+  // Un client occasionnel (saisie libre) n'a pas de clientId : en édition, sa
+  // commande doit rester enregistrable — c'est son nom libre qui l'identifie.
+  const clientNomLibre = order?.clientNomLibre ?? null;
+  const clientRenseigne = Boolean(clientId) || Boolean(clientNomLibre);
+  const canSubmit = clientRenseigne && validLines.length > 0 && !hasLineError;
 
   const updateLine = (i: number, patch: Partial<LineDraft>) =>
     setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
+
+  /** Saisie directe du Montant d'une ligne : on remonte au prix unitaire.
+   *  Sans quantité valide la dérivation est impossible — on garde alors la
+   *  frappe à l'écran et la ligne signale « quantité invalide ». */
+  const onMontantChange = (i: number, valeur: string) => {
+    const q = num(lines[i].quantite);
+    updateLine(i, {
+      montantSaisi: valeur,
+      ...(q > 0 ? { prixUnitaire: String(prixUnitaireDepuisTotal(num(valeur), q)) } : {}),
+    });
+  };
+  /** Fin de saisie : on relâche le tampon pour réafficher le montant calculé. */
+  const onMontantBlur = (i: number) => updateLine(i, { montantSaisi: undefined });
   const removeLine = (i: number) =>
     setLines((prev) => (prev.length === 1 ? prev : prev.filter((_, idx) => idx !== i)));
 
@@ -183,7 +239,8 @@ export function OrderFormPage() {
       return;
     }
     mutation.mutate({
-      clientId,
+      clientId: clientId || undefined,
+      clientNomLibre: clientId ? undefined : (clientNomLibre ?? undefined),
       lignes: validLines.map((l) => ({
         nomProduit: l.nomProduit.trim(),
         quantite: num(l.quantite),
@@ -192,7 +249,9 @@ export function OrderFormPage() {
       remiseType: "AUCUNE",
       remiseValeur: 0,
       ancienSolde: ancien > 0 ? ancien : undefined,
-      montantPaye: !isEdit && paye > 0 ? paye : undefined,
+      // Envoyé dès qu'il est modifiable — y compris à 0, pour permettre de
+      // corriger un acompte saisi par erreur sur une commande de l'ancien suivi.
+      montantPaye: payeModifiable ? paye : undefined,
     });
   };
 
@@ -324,9 +383,22 @@ export function OrderFormPage() {
                 onChange={(e) => updateLine(i, { prixUnitaire: e.target.value })}
                 onKeyDown={(e) => onCellEnter(i, 2, e)}
               />
-              <span className="col-span-2 text-right text-sm font-semibold tabular-nums md:col-span-2">
-                {money(calc.lignes[i]?.totalLigne ?? 0)}
-              </span>
+              {/* Montant éditable : saisir le total d'une ligne est souvent plus
+                  direct que d'en calculer le prix unitaire, qui est alors déduit. */}
+              <input
+                ref={(el) => {
+                  inputRefs.current.set(`${i}-3`, el);
+                }}
+                type="number"
+                min="0"
+                step="any"
+                title={t("commandes:amountHint")}
+                className={`${field} col-span-4 text-right font-semibold tabular-nums md:col-span-2`}
+                value={line.montantSaisi ?? String(calc.lignes[i]?.totalLigne ?? 0)}
+                onChange={(e) => onMontantChange(i, e.target.value)}
+                onBlur={() => onMontantBlur(i)}
+                onKeyDown={(e) => onCellEnter(i, 3, e)}
+              />
               <button
                 onClick={() => removeLine(i)}
                 className="col-span-1 flex justify-center text-slate-400 hover:text-red-600"
@@ -334,6 +406,11 @@ export function OrderFormPage() {
               >
                 <Trash2 size={16} />
               </button>
+              {lineErrors[i] && (
+                <p className="col-span-12 -mt-1 text-xs font-medium text-rose-600">
+                  {lineErrors[i]}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -359,22 +436,32 @@ export function OrderFormPage() {
             </span>
           </div>
 
-          {isEdit ? (
-            <Row label={t("commandes:paid")} value={money(paye)} />
-          ) : (
+          {payeModifiable ? (
             <div className="flex items-center justify-between gap-3">
               <span className="text-slate-500">
                 {t("commandes:paid")}{" "}
-                <span className="text-xs text-slate-400">({t("commandes:optional")})</span>
+                {!isEdit && (
+                  <span className="text-xs text-slate-400">({t("commandes:optional")})</span>
+                )}
               </span>
               <input
                 type="number"
                 min="0"
+                max={grandTotal}
                 value={montantPaye}
                 onChange={(e) => setMontantPaye(e.target.value)}
                 placeholder="0"
-                className={`${field} w-32 py-1 text-right`}
+                className={`${field} w-32 py-1 text-right tabular-nums`}
               />
+            </div>
+          ) : (
+            /* Nouveau suivi : le payé est la somme des règlements rattachés.
+               Il se pilote depuis la fiche commande, pas ici. */
+            <div>
+              <Row label={t("commandes:paid")} value={money(paye)} />
+              <p className="mt-1 text-right text-xs text-slate-400">
+                {t("commandes:paidDerived")}
+              </p>
             </div>
           )}
 

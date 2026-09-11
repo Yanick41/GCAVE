@@ -58,5 +58,13 @@
     "PARTIELLE": "Partiellement payée",
     "PAYEE": "Payée"
   },
-  "legacyTracking": "Commande antérieure au suivi des règlements par commande : seul l'acompte saisi à la validation figure sur la facture. Les paiements de ce client restent visibles dans son historique."
+  "legacyTracking": "Commande antérieure au suivi des règlements par commande : seul l'acompte saisi à la validation figure sur la facture. Les paiements de ce client restent visibles dans son historique.",
+  "amountHint": "Saisir le montant total de la ligne : le prix unitaire est recalculé automatiquement.",
+  "errProduct": "Indiquez le nom du produit.",
+  "errQty": "La quantité doit être supérieure à 0.",
+  "errPrice": "Le prix ne peut pas être négatif.",
+  "paidDerived": "Calculé à partir des règlements — modifiable depuis la fiche commande.",
+  "convertToBon": "Convertir en bon",
+  "convertToBonHint": "Générer un bon de commande sans prix à partir de cette facture. La facture n'est pas modifiée.",
+  "converting": "Conversion…"
 }

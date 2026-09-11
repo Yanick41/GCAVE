@@ -68,6 +68,7 @@
     "CLIENT_REQUIRED": "Cette commande n'est pas rattachée à une fiche client : impossible d'y enregistrer un paiement.",
     "COMMANDE_INTROUVABLE": "Commande introuvable pour ce client.",
     "COMMANDE_ANNULEE": "Impossible d'enregistrer un paiement sur une commande annulée.",
-    "COMMANDE_ANCIEN_SUIVI": "Cette commande utilise l'ancien suivi des paiements : son montant payé reste celui saisi à la validation."
+    "COMMANDE_ANCIEN_SUIVI": "Cette commande utilise l'ancien suivi des paiements : son montant payé reste celui saisi à la validation.",
+    "COMMANDE_SANS_LIGNE": "Cette commande ne contient aucune ligne à convertir."
   }
 }

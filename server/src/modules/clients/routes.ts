@@ -145,16 +145,22 @@ clientsRouter.get(
         observation: null,
         commandeId: c.id,
       })),
-      ...bonsLivres.map((b) => ({
-        id: b.id,
-        type: "BON" as const,
-        date: b.date,
-        montant: Number(b.montant),
-        ref: b.numero,
-        mode: null,
-        observation: null,
-        commandeId: null,
-      })),
+      // Un bon sans créance (montant 0) ne déplace pas le solde : l'inscrire
+      // dans l'historique des mouvements n'apporterait qu'une ligne à 0 F.
+      // C'est le cas des bons générés depuis une facture, dont la créance est
+      // déjà portée par la commande.
+      ...bonsLivres
+        .filter((b) => Number(b.montant) > 0)
+        .map((b) => ({
+          id: b.id,
+          type: "BON" as const,
+          date: b.date,
+          montant: Number(b.montant),
+          ref: b.numero,
+          mode: null,
+          observation: null,
+          commandeId: null,
+        })),
       ...client.paiements.map((p) => ({
         id: p.id,
         type: "PAIEMENT" as const,

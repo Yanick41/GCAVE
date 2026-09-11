@@ -1,4 +1,9 @@
-import { commandeSchema, computeCommande, paiementSchema } from "@gca/shared";
+import {
+  commandeSchema,
+  computeCommande,
+  paiementSchema,
+  totalDuCommande,
+} from "@gca/shared";
 import { Router } from "express";
 import { ah } from "../../lib/async.js";
 import {
@@ -6,6 +11,7 @@ import {
   resyncMontantPaye,
   toPaiementResume,
 } from "../../lib/commande-paiements.js";
+import { prochainNumeroBon } from "../../lib/numerotation.js";
 import { prisma } from "../../lib/prisma.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { AppError } from "../../middleware/error.js";
@@ -209,12 +215,26 @@ commandesRouter.patch(
       lignes: { nomProduit: string; quantite: number; prixUnitaire: number }[];
       remiseType: "AUCUNE" | "POURCENTAGE" | "MONTANT";
       remiseValeur: number;
+      montantPaye?: number;
     };
     const calc = computeCommande({
       lignes: body.lignes,
       remiseType: body.remiseType,
       remiseValeur: body.remiseValeur,
     });
+
+    // Montant payé : modifiable UNIQUEMENT pour les commandes de l'ancien suivi,
+    // où il est la seule trace de l'encaissement. Pour les commandes du nouveau
+    // suivi il est dérivé des paiements rattachés (resync) : une valeur saisie
+    // ici serait écrasée au prochain paiement, on l'ignore donc silencieusement.
+    // Borné au total dû pour ne jamais enregistrer un payé négatif ou aberrant.
+    const montantPayeCorrige =
+      !existing.utiliseNouveauSuiviPaiement && body.montantPaye !== undefined
+        ? Math.min(
+            Math.max(body.montantPaye, 0),
+            totalDuCommande(calc.totalTTC, Number(existing.ancienSolde)),
+          )
+        : undefined;
 
     // Transaction batch (compatible pooler) : remplace les lignes + met à jour les totaux
     await prisma.$transaction([
@@ -234,6 +254,7 @@ commandesRouter.patch(
           sousTotal: calc.sousTotal,
           montantRemise: calc.montantRemise,
           totalTTC: calc.totalTTC,
+          ...(montantPayeCorrige !== undefined ? { montantPaye: montantPayeCorrige } : {}),
         },
       }),
     ]);
@@ -256,5 +277,54 @@ commandesRouter.delete(
     if (!existing) throw new AppError("NOT_FOUND", 404);
     await prisma.commande.delete({ where: { id: req.params.id } });
     res.status(204).end();
+  }),
+);
+
+// Conversion facture → bon de commande : génère un DOCUMENT SÉPARÉ reprenant
+// client, date et lignes (désignation + quantité), SANS aucun prix.
+// La commande d'origine n'est ni modifiée ni supprimée : elle reste la pièce
+// comptable, le bon n'est qu'un document de préparation/livraison.
+commandesRouter.post(
+  "/:id/bon",
+  ah(async (req, res) => {
+    const commande = await prisma.commande.findUnique({
+      where: { id: req.params.id },
+      include: { client: true, lignes: true },
+    });
+    if (!commande) throw new AppError("NOT_FOUND", 404);
+    if (commande.lignes.length === 0) throw new AppError("COMMANDE_SANS_LIGNE", 400);
+
+    const numero = await prochainNumeroBon();
+
+    const bon = await prisma.bonCommande.create({
+      data: {
+        numero,
+        // Même client et même date que la facture d'origine
+        clientId: commande.clientId,
+        clientNomLibre: commande.clientNomLibre,
+        telephone: commande.client?.telephone ?? null,
+        adresseLivraison: commande.client?.adresse ?? null,
+        date: commande.date,
+        // Traçabilité : le bon référence la commande dont il est issu
+        commandeId: commande.id,
+        notes: `Établi d'après la facture ${commande.numero}`,
+        statut: "LIVRE",
+        allerRetour: false,
+        // 0 impératif : la créance est déjà portée par la commande. Un montant
+        // ici la compterait une seconde fois dans le solde du client.
+        montant: 0,
+        lignes: {
+          create: commande.lignes.map((l, i) => ({
+            designation: l.nomProduit,
+            quantite: l.quantite,
+            servi: null,
+            ordre: i,
+          })),
+        },
+      },
+      include: { client: true, lignes: { orderBy: { ordre: "asc" } } },
+    });
+
+    res.status(201).json(bon);
   }),
 );

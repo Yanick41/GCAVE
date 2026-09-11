@@ -1,6 +1,7 @@
 import { bonCommandeSchema } from "@gca/shared";
 import { Router } from "express";
 import { ah } from "../../lib/async.js";
+import { prochainNumeroBon } from "../../lib/numerotation.js";
 import { prisma } from "../../lib/prisma.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { AppError } from "../../middleware/error.js";
@@ -63,14 +64,7 @@ bonsRouter.post(
   ah(async (req, res) => {
     const body = req.body as BonBody;
 
-    const year = new Date().getFullYear();
-    const last = await prisma.bonCommande.findFirst({
-      where: { numero: { startsWith: `BC-${year}-` } },
-      orderBy: { numero: "desc" },
-      select: { numero: true },
-    });
-    const lastSeq = last ? parseInt(last.numero.slice(-6), 10) : 0;
-    const numero = `BC-${year}-${String(lastSeq + 1).padStart(6, "0")}`;
+    const numero = await prochainNumeroBon();
 
     const bon = await prisma.bonCommande.create({
       data: {

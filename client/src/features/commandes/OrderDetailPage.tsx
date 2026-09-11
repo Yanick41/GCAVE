@@ -1,15 +1,15 @@
 import { formatDate, type Lang, type StatutPaiement } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Pencil, Printer, Trash2, Wallet } from "lucide-react";
+import { ClipboardList, Download, Pencil, Printer, Trash2, Wallet } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
 import { genererFacturePDF } from "../../lib/facture";
 import { deletePaiement } from "../paiements/api";
 import { PaymentModal } from "../paiements/PaymentModal";
 import { useMoney } from "../privacy/mask";
-import { fetchCommande } from "./api";
+import { convertirEnBon, fetchCommande } from "./api";
 import { reglementDe } from "./reglement";
 
 /** Pastille d'état de règlement (non payée / partielle / payée). */
@@ -24,6 +24,7 @@ export function OrderDetailPage() {
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
   const money = useMoney();
   const { id } = useParams();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showPayment, setShowPayment] = useState(false);
 
@@ -41,6 +42,17 @@ export function OrderDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       if (c?.clientId) queryClient.invalidateQueries({ queryKey: ["client", c.clientId] });
       queryClient.invalidateQueries({ queryKey: ["paiements"] });
+    },
+  });
+
+  // Conversion en bon de commande : document séparé, sans prix. La commande
+  // reste intacte ; on ouvre le bon généré, prêt à imprimer.
+  const enBon = useMutation({
+    mutationFn: () => convertirEnBon(id!),
+    onSuccess: (bon) => {
+      queryClient.invalidateQueries({ queryKey: ["bons"] });
+      if (bon.clientId) queryClient.invalidateQueries({ queryKey: ["client", bon.clientId] });
+      navigate(`/bons/${bon.id}`);
     },
   });
 
@@ -100,6 +112,15 @@ export function OrderDetailPage() {
               <Wallet size={16} /> {t("commandes:addPayment")}
             </button>
           )}
+          <button
+            onClick={() => enBon.mutate()}
+            disabled={enBon.isPending}
+            title={t("commandes:convertToBonHint")}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            <ClipboardList size={16} />{" "}
+            {enBon.isPending ? t("commandes:converting") : t("commandes:convertToBon")}
+          </button>
           <button
             onClick={() => facture("print")}
             className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"

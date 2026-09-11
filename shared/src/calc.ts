@@ -174,3 +174,18 @@ export function computeCommande(input: CommandeCalcInput): CommandeCalculee {
 
   return { lignes, sousTotal, montantRemise, totalTTC };
 }
+
+/**
+ * Prix unitaire déduit d'un montant de ligne saisi à la main.
+ *
+ * Saisir directement le « Montant » d'une ligne est plus rapide que de calculer
+ * le prix unitaire de tête ; on remonte donc au prix unitaire, qui reste la
+ * donnée stockée (total_ligne = quantité × prix_unitaire, CDC §5.3).
+ * Quantité nulle ou invalide → 0, plutôt qu'une division par zéro.
+ */
+export function prixUnitaireDepuisTotal(totalLigne: number, quantite: number): number {
+  const t = Number.isFinite(totalLigne) ? Math.max(totalLigne, 0) : 0;
+  const q = Number.isFinite(quantite) ? quantite : 0;
+  if (q <= 0) return 0;
+  return round2(t / q);
+}

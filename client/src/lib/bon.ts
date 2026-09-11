@@ -73,8 +73,24 @@ const L = {
   },
 } as const;
 
-/** Génère le PDF d'un bon de commande, même format que la facture (sans prix). */
+/**
+ * Génère le PDF d'un bon de commande (même mise en page que la facture,
+ * SANS aucun prix) et déclenche le téléchargement ou l'impression.
+ */
 export function genererBonPDF(data: BonData, lang: Lang, action: "download" | "print") {
+  const doc = construireBonPDF(data, lang);
+  const safeName = `${data.numero}-${data.clientNom.replace(/\s+/g, "_")}`;
+  if (action === "download") {
+    doc.save(`bon-${safeName}.pdf`);
+  } else {
+    doc.autoPrint();
+    const url = doc.output("bloburl");
+    window.open(url, "_blank");
+  }
+}
+
+/** Construit le document (sans effet de bord : ni impression, ni fichier). */
+export function construireBonPDF(data: BonData, lang: Lang): jsPDF {
   const t = L[lang === "en" ? "en" : "fr"];
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
@@ -202,12 +218,5 @@ export function genererBonPDF(data: BonData, lang: Lang, action: "download" | "p
     maxWidth: pageW - 2 * M,
   });
 
-  const safeName = `${data.numero}-${data.clientNom.replace(/\s+/g, "_")}`;
-  if (action === "download") {
-    doc.save(`bon-${safeName}.pdf`);
-  } else {
-    doc.autoPrint();
-    const url = doc.output("bloburl");
-    window.open(url, "_blank");
-  }
+  return doc;
 }

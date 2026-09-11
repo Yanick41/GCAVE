@@ -1,6 +1,7 @@
 import type { EtatPaiement, PaiementInput } from "@gca/shared";
 import type { CommandeInput } from "@gca/shared";
 import { api } from "../../lib/api";
+import type { BonCommande } from "../bons/api";
 import type { ModePaiement } from "../clients/api";
 
 export interface LigneCommande {
@@ -91,5 +92,15 @@ export async function createPaiementCommande(
     `/api/commandes/${commandeId}/paiements`,
     input,
   );
+  return data;
+}
+
+/**
+ * Convertit une commande en bon de commande : crée un DOCUMENT SÉPARÉ, sans
+ * prix, reprenant client / date / désignations / quantités. La commande
+ * d'origine n'est ni modifiée ni supprimée.
+ */
+export async function convertirEnBon(commandeId: string): Promise<BonCommande> {
+  const { data } = await api.post<BonCommande>(`/api/commandes/${commandeId}/bon`);
   return data;
 }
