@@ -43,6 +43,8 @@
     "forOrder": "Payment for order",
     "thanks": "Thank you for your trust!",
     "noPrice": "Document with no commercial value",
-    "served": "Served"
+    "served": "Served",
+    "number": "No.",
+    "date": "Date"
   }
 }

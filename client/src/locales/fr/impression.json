@@ -43,6 +43,8 @@
     "forOrder": "Règlement de la commande",
     "thanks": "Merci de votre confiance !",
     "noPrice": "Document sans valeur commerciale",
-    "served": "Servi"
+    "served": "Servi",
+    "number": "N°",
+    "date": "Date"
   }
 }
