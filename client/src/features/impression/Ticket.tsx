@@ -50,6 +50,8 @@ export function ticketCss(largeur: LargeurTicket): string {
 .tk-article { margin-bottom: 1.2mm; }
 .tk-article-nom { word-break: break-word; }
 .tk-article-detail { display: flex; justify-content: space-between; gap: 2mm; padding-left: 2mm; }
+.tk-servi { display: flex; align-items: flex-end; gap: 1.5mm; padding-left: 2mm; }
+.tk-servi-trait { flex: 1; border-bottom: 1px dotted #000; height: ${police}pt; }
 .tk-total { display: flex; justify-content: space-between; gap: 2mm; }
 .tk-total-fort { font-weight: 700; font-size: ${police + 1}pt; }
 .tk-note { margin-top: 2mm; text-align: center; font-weight: 700; }
@@ -123,6 +125,18 @@ export function Ticket({ modele }: { modele: TicketModel }) {
                 </span>
                 {prix && <span className="tk-bold">{montantTicket(l.total ?? 0)}</span>}
               </div>
+              {/* Bon de commande : emplacement « Servi », renseigné ou laissé
+                  libre pour l'annotation à la main, comme sur le bon A4. */}
+              {modele.type === "BON" && (
+                <div className="tk-servi">
+                  <span>{t("impression:ticket.served")} :</span>
+                  {l.servi ? (
+                    <span className="tk-bold">{l.servi}</span>
+                  ) : (
+                    <span className="tk-servi-trait" />
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </>

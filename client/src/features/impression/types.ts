@@ -36,6 +36,11 @@ export interface TicketLigne {
   /** Omis sur un bon de commande : aucun prix ne doit y figurer. */
   prixUnitaire?: number;
   total?: number;
+  /**
+   * Quantité réellement servie (bon de commande). Vide = emplacement laissé
+   * libre pour l'annotation manuelle, comme sur le bon A4.
+   */
+  servi?: string | null;
 }
 
 export interface TicketTotal {

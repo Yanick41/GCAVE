@@ -42,6 +42,7 @@
     "totalQty": "Total quantité",
     "forOrder": "Règlement de la commande",
     "thanks": "Merci de votre confiance !",
-    "noPrice": "Document sans valeur commerciale"
+    "noPrice": "Document sans valeur commerciale",
+    "served": "Servi"
   }
 }

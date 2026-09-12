@@ -42,6 +42,7 @@
     "totalQty": "Total quantity",
     "forOrder": "Payment for order",
     "thanks": "Thank you for your trust!",
-    "noPrice": "Document with no commercial value"
+    "noPrice": "Document with no commercial value",
+    "served": "Served"
   }
 }

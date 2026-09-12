@@ -12,7 +12,7 @@ const FORMATS: FormatImpression[] = ["58", "80", "A4"];
 const DEFAUTS: Record<TypeDocument, FormatImpression> = {
   FACTURE: "A4", // pièce comptable : A4 par défaut
   RECU: "80", // remis au client au comptoir : ticket
-  BON: "A4", // document de préparation, souvent annoté à la main
+  BON: "80", // petites commandes servies au comptoir : ticket
 };
 
 function lireTout(): Partial<Record<TypeDocument, FormatImpression>> {

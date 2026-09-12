@@ -112,7 +112,11 @@ export function bonVersTicket(data: BonData, t: Traduire): TicketModel {
     date: data.date,
     clientNom: data.clientNom,
     clientTelephone: data.telephone,
-    lignes: data.lignes.map((l) => ({ designation: l.designation, quantite: l.quantite })),
+    lignes: data.lignes.map((l) => ({
+      designation: l.designation,
+      quantite: l.quantite,
+      servi: l.servi,
+    })),
     afficherPrix: false,
     totaux: [
       {
