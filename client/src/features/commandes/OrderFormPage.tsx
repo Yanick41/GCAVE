@@ -122,11 +122,8 @@ export function OrderFormPage() {
             }))
           : [emptyLine()],
       );
-      // Ancien suivi : l'acompte est modifiable, on le charge dans le champ.
-      // Nouveau suivi : il est dérivé des paiements rattachés, pas saisissable.
-      if (!order.utiliseNouveauSuiviPaiement) {
-        setMontantPaye(String(Number(order.montantPaye)));
-      }
+      // Le montant déjà encaissé alimente le champ, qui reste modifiable.
+      setMontantPaye(String(Number(order.montantPaye)));
     }
   }, [order]);
 
@@ -154,14 +151,12 @@ export function OrderFormPage() {
     : Math.max(selectedClient?.solde ?? 0, 0);
   const grandTotal = sousTotal + ancien;
 
-  // Le montant payé n'est saisissable que là où il est la seule source de
-  // vérité : à la création, et en édition sur les commandes de l'ancien suivi.
-  // Sur les commandes du nouveau suivi il est dérivé des paiements rattachés —
-  // le saisir ici serait écrasé au prochain encaissement.
-  const payeModifiable = !isEdit || order?.utiliseNouveauSuiviPaiement === false;
-  const paye = payeModifiable
-    ? Math.min(Math.max(num(montantPaye), 0), grandTotal)
-    : Number(order?.montantPaye ?? 0);
+  // Le montant payé est saisissable partout. Sur une commande dont le suivi
+  // est dérivé des règlements, le serveur répercute la saisie sur les
+  // règlements rattachés eux-mêmes, pour que facture et solde client restent
+  // d'accord (voir reconcilierPaiements côté serveur).
+  const suiviParReglements = isEdit && order?.utiliseNouveauSuiviPaiement === true;
+  const paye = Math.min(Math.max(num(montantPaye), 0), grandTotal);
   const reste = Math.max(grandTotal - paye, 0);
 
   const mutation = useMutation({
@@ -249,9 +244,9 @@ export function OrderFormPage() {
       remiseType: "AUCUNE",
       remiseValeur: 0,
       ancienSolde: ancien > 0 ? ancien : undefined,
-      // Envoyé dès qu'il est modifiable — y compris à 0, pour permettre de
-      // corriger un acompte saisi par erreur sur une commande de l'ancien suivi.
-      montantPaye: payeModifiable ? paye : undefined,
+      // Toujours envoyé, y compris à 0 : c'est ainsi qu'on corrige un montant
+      // saisi par erreur.
+      montantPaye: paye,
     });
   };
 
@@ -436,7 +431,7 @@ export function OrderFormPage() {
             </span>
           </div>
 
-          {payeModifiable ? (
+          <div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-slate-500">
                 {t("commandes:paid")}{" "}
@@ -454,16 +449,14 @@ export function OrderFormPage() {
                 className={`${field} w-32 py-1 text-right tabular-nums`}
               />
             </div>
-          ) : (
-            /* Nouveau suivi : le payé est la somme des règlements rattachés.
-               Il se pilote depuis la fiche commande, pas ici. */
-            <div>
-              <Row label={t("commandes:paid")} value={money(paye)} />
+            {/* La saisie agit sur les règlements de la commande : on le dit,
+                plutôt que de laisser croire à une simple retouche d'affichage. */}
+            {suiviParReglements && (
               <p className="mt-1 text-right text-xs text-slate-400">
-                {t("commandes:paidDerived")}
+                {t("commandes:paidAdjusts")}
               </p>
-            </div>
-          )}
+            )}
+          </div>
 
           <Row
             label={t("commandes:remaining")}

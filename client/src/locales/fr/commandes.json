@@ -63,8 +63,8 @@
   "errProduct": "Indiquez le nom du produit.",
   "errQty": "La quantité doit être supérieure à 0.",
   "errPrice": "Le prix ne peut pas être négatif.",
-  "paidDerived": "Calculé à partir des règlements — modifiable depuis la fiche commande.",
   "convertToBon": "Convertir en bon",
   "convertToBonHint": "Générer un bon de commande sans prix à partir de cette facture. La facture n'est pas modifiée.",
-  "converting": "Conversion…"
+  "converting": "Conversion…",
+  "paidAdjusts": "La saisie ajuste les règlements rattachés à cette commande."
 }

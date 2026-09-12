@@ -63,8 +63,8 @@
   "errProduct": "Enter the product name.",
   "errQty": "Quantity must be greater than 0.",
   "errPrice": "Price cannot be negative.",
-  "paidDerived": "Derived from payments — manage it from the order page.",
   "convertToBon": "Convert to order form",
   "convertToBonHint": "Generate a price-free order form from this invoice. The invoice is left untouched.",
-  "converting": "Converting…"
+  "converting": "Converting…",
+  "paidAdjusts": "Editing this adjusts the payments attached to this order."
 }

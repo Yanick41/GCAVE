@@ -8,6 +8,7 @@ import { Router } from "express";
 import { ah } from "../../lib/async.js";
 import {
   etatCommande,
+  reconcilierPaiements,
   resyncMontantPaye,
   toPaiementResume,
 } from "../../lib/commande-paiements.js";
@@ -223,18 +224,25 @@ commandesRouter.patch(
       remiseValeur: body.remiseValeur,
     });
 
-    // Montant payé : modifiable UNIQUEMENT pour les commandes de l'ancien suivi,
-    // où il est la seule trace de l'encaissement. Pour les commandes du nouveau
-    // suivi il est dérivé des paiements rattachés (resync) : une valeur saisie
-    // ici serait écrasée au prochain paiement, on l'ignore donc silencieusement.
-    // Borné au total dû pour ne jamais enregistrer un payé négatif ou aberrant.
-    const montantPayeCorrige =
-      !existing.utiliseNouveauSuiviPaiement && body.montantPaye !== undefined
+    // Montant payé saisi à la main, borné au total dû (ni négatif, ni aberrant).
+    const montantPayeVise =
+      body.montantPaye !== undefined
         ? Math.min(
             Math.max(body.montantPaye, 0),
             totalDuCommande(calc.totalTTC, Number(existing.ancienSolde)),
           )
         : undefined;
+
+    // Une commande du nouveau suivi rattachée à un client tient son « payé » de
+    // ses règlements : la saisie est répercutée sur EUX (voir reconcilierPaiements),
+    // sinon la facture afficherait un montant que le solde du client ignore.
+    // Dans les autres cas — ancien suivi, ou client occasionnel sans fiche donc
+    // sans écriture de paiement possible — le montant est la seule trace et
+    // s'écrit directement sur la commande.
+    const viaReglements =
+      montantPayeVise !== undefined &&
+      existing.utiliseNouveauSuiviPaiement &&
+      Boolean(existing.clientId);
 
     // Transaction batch (compatible pooler) : remplace les lignes + met à jour les totaux
     await prisma.$transaction([
@@ -254,10 +262,23 @@ commandesRouter.patch(
           sousTotal: calc.sousTotal,
           montantRemise: calc.montantRemise,
           totalTTC: calc.totalTTC,
-          ...(montantPayeCorrige !== undefined ? { montantPaye: montantPayeCorrige } : {}),
+          ...(montantPayeVise !== undefined && !viaReglements
+            ? { montantPaye: montantPayeVise }
+            : {}),
         },
       }),
     ]);
+
+    if (viaReglements) {
+      await reconcilierPaiements(
+        req.params.id,
+        existing.clientId as string,
+        montantPayeVise as number,
+        `Règlement saisi sur la commande ${existing.numero}`,
+      );
+      // montantPaye redevient la somme exacte des règlements rattachés
+      await resyncMontantPaye(req.params.id);
+    }
 
     const updated = await prisma.commande.findUnique({
       where: { id: req.params.id },
