@@ -23,12 +23,12 @@ export interface RecuLabels {
 }
 
 /** Génère le reçu d'un paiement (téléchargement ou impression). */
-export function genererRecuPDF(
+/** Construit le reçu (sans effet de bord : ni impression, ni fichier). */
+export function construireRecuPDF(
   data: RecuData,
   lang: Lang,
   labels: RecuLabels,
-  action: "download" | "print",
-) {
+): jsPDF {
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
 
@@ -65,6 +65,17 @@ export function genererRecuPDF(
     },
   });
 
+  return doc;
+}
+
+/** Génère le reçu d'un paiement (téléchargement ou impression). */
+export function genererRecuPDF(
+  data: RecuData,
+  lang: Lang,
+  labels: RecuLabels,
+  action: "download" | "print",
+) {
+  const doc = construireRecuPDF(data, lang, labels);
   const safeName = data.clientNom.replace(/\s+/g, "_");
   if (action === "download") {
     doc.save(`recu-${safeName}.pdf`);

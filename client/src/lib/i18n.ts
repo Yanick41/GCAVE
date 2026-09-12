@@ -8,6 +8,7 @@ import enClients from "../locales/en/clients.json";
 import enCommandes from "../locales/en/commandes.json";
 import enCommon from "../locales/en/common.json";
 import enDashboard from "../locales/en/dashboard.json";
+import enImpression from "../locales/en/impression.json";
 import enPaiements from "../locales/en/paiements.json";
 import enRappels from "../locales/en/rappels.json";
 import enRapports from "../locales/en/rapports.json";
@@ -17,6 +18,7 @@ import frClients from "../locales/fr/clients.json";
 import frCommandes from "../locales/fr/commandes.json";
 import frCommon from "../locales/fr/common.json";
 import frDashboard from "../locales/fr/dashboard.json";
+import frImpression from "../locales/fr/impression.json";
 import frPaiements from "../locales/fr/paiements.json";
 import frRappels from "../locales/fr/rappels.json";
 import frRapports from "../locales/fr/rapports.json";
@@ -29,6 +31,7 @@ export const resources = {
     clients: frClients,
     commandes: frCommandes,
     dashboard: frDashboard,
+    impression: frImpression,
     paiements: frPaiements,
     rappels: frRappels,
     rapports: frRapports,
@@ -40,6 +43,7 @@ export const resources = {
     clients: enClients,
     commandes: enCommandes,
     dashboard: enDashboard,
+    impression: enImpression,
     paiements: enPaiements,
     rappels: enRappels,
     rapports: enRapports,
@@ -60,6 +64,7 @@ i18n
       "clients",
       "commandes",
       "dashboard",
+      "impression",
       "paiements",
       "rappels",
       "rapports",

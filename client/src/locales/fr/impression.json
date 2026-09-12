@@ -1,0 +1,47 @@
+{
+  "previewOf": {
+    "FACTURE": "Aperçu de la facture",
+    "RECU": "Aperçu du ticket",
+    "BON": "Aperçu du bon de commande"
+  },
+  "docName": {
+    "FACTURE": "la facture",
+    "RECU": "le ticket",
+    "BON": "le bon"
+  },
+  "docTitle": {
+    "FACTURE": "FACTURE",
+    "RECU": "REÇU DE PAIEMENT",
+    "BON": "BON DE COMMANDE"
+  },
+  "a4Button": {
+    "FACTURE": "Facture A4",
+    "RECU": "Reçu A4",
+    "BON": "Bon de commande A4"
+  },
+  "print": "Imprimer {{doc}} ({{format}})",
+  "printing": "Impression…",
+  "widths": {
+    "58": "58 mm",
+    "80": "80 mm",
+    "A4": "A4"
+  },
+  "backToTicket": "Revenir au ticket",
+  "ticket": {
+    "client": "Client",
+    "phone": "Tél",
+    "qty": "Qté",
+    "subtotal": "Sous-total",
+    "previousBalance": "Ancien solde",
+    "total": "TOTAL",
+    "paid": "Payé",
+    "remaining": "Reste à payer",
+    "overpaid": "Trop-perçu",
+    "settled": "SOLDÉ",
+    "mode": "Mode",
+    "totalQty": "Total quantité",
+    "forOrder": "Règlement de la commande",
+    "thanks": "Merci de votre confiance !",
+    "noPrice": "Document sans valeur commerciale"
+  }
+}

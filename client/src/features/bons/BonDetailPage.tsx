@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { formatDate, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRightLeft, Check, Download, Pencil, Printer, Trash2, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
-import { genererBonPDF } from "../../lib/bon";
+import { genererBonPDF, type BonData } from "../../lib/bon";
+import { ApercuImpression } from "../impression/ApercuImpression";
 import { useMoney } from "../privacy/mask";
 import { bonStatusStyle } from "./BonsListPage";
 import { deleteBon, fetchBon, setBonStatut } from "./api";
@@ -16,6 +18,7 @@ export function BonDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [apercu, setApercu] = useState(false);
 
   const { data: bon, isLoading } = useQuery({
     queryKey: ["bon", id],
@@ -52,27 +55,25 @@ export function BonDetailPage() {
   const montant = Number(bon.montant);
   const canMarkPaid = bon.statut === "LIVRE"; // "Marquer payé" dès la livraison
 
-  const pdf = (action: "download" | "print") =>
-    genererBonPDF(
-      {
-        numero: bon.numero,
-        clientNom,
-        date: new Date(bon.date),
-        telephone: bon.telephone,
-        adresseLivraison: bon.adresseLivraison,
-        lignes: bon.lignes.map((l) => ({
-          designation: l.designation,
-          quantite: Number(l.quantite),
-          servi: l.servi,
-        })),
-        totalQuantite,
-        montant,
-        statut: bon.statut,
-        notes: bon.notes,
-      },
-      lang,
-      action,
-    );
+  // Données du bon, partagées par l'aperçu et l'impression directe.
+  const donneesBon: BonData = {
+    numero: bon.numero,
+    clientNom,
+    date: new Date(bon.date),
+    telephone: bon.telephone,
+    adresseLivraison: bon.adresseLivraison,
+    lignes: bon.lignes.map((l) => ({
+      designation: l.designation,
+      quantite: Number(l.quantite),
+      servi: l.servi,
+    })),
+    totalQuantite,
+    montant,
+    statut: bon.statut,
+    notes: bon.notes,
+  };
+
+  const pdf = (action: "download" | "print") => genererBonPDF(donneesBon, lang, action);
 
   // Conversion : pré-remplit une commande avec désignations + quantités (prix saisis là-bas)
   const convert = () =>
@@ -113,7 +114,7 @@ export function BonDetailPage() {
             <Download size={16} /> {t("bons:download")}
           </button>
           <button
-            onClick={() => pdf("print")}
+            onClick={() => setApercu(true)}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             <Printer size={16} /> {t("bons:print")}
@@ -242,6 +243,12 @@ export function BonDetailPage() {
             {bon.notes}
           </p>
         </section>
+      )}
+      {apercu && (
+        <ApercuImpression
+          document={{ type: "BON", data: donneesBon }}
+          onClose={() => setApercu(false)}
+        />
       )}
     </div>
   );

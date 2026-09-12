@@ -5,7 +5,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
-import { genererFacturePDF } from "../../lib/facture";
+import { genererFacturePDF, type FactureData } from "../../lib/facture";
+import { ApercuImpression } from "../impression/ApercuImpression";
 import { deletePaiement } from "../paiements/api";
 import { PaymentModal } from "../paiements/PaymentModal";
 import { useMoney } from "../privacy/mask";
@@ -27,6 +28,7 @@ export function OrderDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showPayment, setShowPayment] = useState(false);
+  const [apercu, setApercu] = useState(false);
 
   const { data: c, isLoading } = useQuery({
     queryKey: ["commande", id],
@@ -68,36 +70,35 @@ export function OrderDetailPage() {
 
   // Facture : le détail des règlements rattachés à la commande y figure,
   // avec le total payé et le reste à payer.
+  // Données de la facture, partagées par l'aperçu et l'impression directe.
+  const donneesFacture: FactureData = {
+    clientNom,
+    clientTelephone: c.client?.telephone,
+    clientAdresse: c.client?.adresse,
+    clientCode: c.clientId,
+    date: new Date(c.date),
+    numero: c.numero,
+    lignes: c.lignes.map((l) => ({
+      nomProduit: l.nomProduit,
+      quantite: Number(l.quantite),
+      prixUnitaire: Number(l.prixUnitaire),
+      totalLigne: Number(l.totalLigne),
+    })),
+    total: Number(c.totalTTC),
+    ancienSolde: Number(c.ancienSolde),
+    paiements: suiviDetaille
+      ? paiements.map((p) => ({
+          date: p.date,
+          montant: p.montant,
+          mode: t(`paiements:modes.${p.mode}`),
+        }))
+      : undefined,
+    paye: reglement.totalPaye,
+    reste: reglement.reste,
+  };
+
   const facture = (action: "download" | "print") =>
-    genererFacturePDF(
-      {
-        clientNom,
-        clientTelephone: c.client?.telephone,
-        clientAdresse: c.client?.adresse,
-        clientCode: c.clientId,
-        date: new Date(c.date),
-        numero: c.numero,
-        lignes: c.lignes.map((l) => ({
-          nomProduit: l.nomProduit,
-          quantite: Number(l.quantite),
-          prixUnitaire: Number(l.prixUnitaire),
-          totalLigne: Number(l.totalLigne),
-        })),
-        total: Number(c.totalTTC),
-        ancienSolde: Number(c.ancienSolde),
-        paiements: suiviDetaille
-          ? paiements.map((p) => ({
-              date: p.date,
-              montant: p.montant,
-              mode: t(`paiements:modes.${p.mode}`),
-            }))
-          : undefined,
-        paye: reglement.totalPaye,
-        reste: reglement.reste,
-      },
-      lang,
-      action,
-    );
+    genererFacturePDF(donneesFacture, lang, action);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -277,6 +278,12 @@ export function OrderDetailPage() {
         )}
       </section>
 
+      {apercu && (
+        <ApercuImpression
+          document={{ type: "FACTURE", data: donneesFacture }}
+          onClose={() => setApercu(false)}
+        />
+      )}
       {showPayment && c.clientId && (
         <PaymentModal
           clientId={c.clientId}

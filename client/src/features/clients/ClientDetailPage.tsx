@@ -20,9 +20,12 @@ import { bonStatusStyle } from "../bons/BonsListPage";
 import { deletePaiement, lierPaiementCommande } from "../paiements/api";
 import { avatarColor, initials } from "../../lib/avatar";
 import { genererBilanPDF } from "../../lib/bilan";
-import { genererFacturePDF } from "../../lib/facture";
-import { genererRecuPDF } from "../../lib/recu";
 import { fetchCommande } from "../commandes/api";
+import {
+  ApercuImpression,
+  type DocumentImprimable,
+} from "../impression/ApercuImpression";
+import type { RecuTicketData } from "../impression/types";
 import { paiementStatusStyle } from "../commandes/OrderDetailPage";
 import { reglementDe } from "../commandes/reglement";
 import { PaymentModal, type CommandeOption } from "../paiements/PaymentModal";
@@ -43,6 +46,8 @@ export function ClientDetailPage() {
   // Paiement libre en cours de rattachement à une commande (id du paiement)
   const [linkingPaiement, setLinkingPaiement] = useState<string | null>(null);
   const [printingId, setPrintingId] = useState<string | null>(null);
+  // Document dont l'aperçu d'impression est ouvert (facture ou reçu)
+  const [apercu, setApercu] = useState<DocumentImprimable | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const toggleExpand = (id: string) =>
@@ -100,7 +105,6 @@ export function ClientDetailPage() {
     .map((c) => ({ id: c.id, numero: c.numero, date: c.date, reste: reglementDe(c).reste }))
     .reverse();
 
-
   const printBilan = () =>
     genererBilanPDF(client, lang, {
       subtitle: t("clients:detail.bilan.subtitle"),
@@ -126,14 +130,17 @@ export function ClientDetailPage() {
       },
     });
 
-  // Imprimer une opération de l'historique : facture (commande) ou reçu (paiement)
+  // Ouvre l'aperçu d'impression d'une opération de l'historique : facture pour
+  // une commande, ticket de reçu pour un paiement. Le choix du format (58/80/A4)
+  // se fait dans le modal.
   const printOperation = async (op: HistoriqueOp) => {
     setPrintingId(op.id);
     try {
       if (op.type === "COMMANDE") {
         const cmd = await fetchCommande(op.id);
-        genererFacturePDF(
-          {
+        setApercu({
+          type: "FACTURE",
+          data: {
             clientNom: client.nom,
             clientTelephone: client.telephone,
             clientAdresse: client.adresse,
@@ -162,29 +169,38 @@ export function ClientDetailPage() {
             paye: reglementDe(cmd).totalPaye,
             reste: reglementDe(cmd).reste,
           },
-          lang,
-          "print",
-        );
+        });
       } else {
-        genererRecuPDF(
-          {
+        // Paiement rattaché à une commande : le ticket en reprend les articles
+        // et rappelle le reste à payer. Paiement libre : montant seul.
+        let commande: RecuTicketData["commande"] = null;
+        if (op.commandeId) {
+          const cmd = await fetchCommande(op.commandeId);
+          const etat = reglementDe(cmd);
+          commande = {
+            numero: cmd.numero,
+            lignes: cmd.lignes.map((l) => ({
+              nomProduit: l.nomProduit,
+              quantite: Number(l.quantite),
+              prixUnitaire: Number(l.prixUnitaire),
+              totalLigne: Number(l.totalLigne),
+            })),
+            totalDu: etat.totalDu,
+            totalPaye: etat.totalPaye,
+            reste: etat.reste,
+          };
+        }
+        setApercu({
+          type: "RECU",
+          data: {
             clientNom: client.nom,
             date: new Date(op.date),
             montant: op.montant,
             mode: t(`paiements:modes.${op.mode}`),
             observation: op.observation,
+            commande,
           },
-          lang,
-          {
-            title: t("paiements:receipt"),
-            client: t("paiements:columns.client"),
-            date: t("paiements:date"),
-            amount: t("paiements:amount"),
-            mode: t("paiements:mode"),
-            observation: t("paiements:observation"),
-          },
-          "print",
-        );
+        });
       }
     } finally {
       setPrintingId(null);
@@ -540,6 +556,9 @@ export function ClientDetailPage() {
         )}
       </section>
 
+      {apercu && (
+        <ApercuImpression document={apercu} onClose={() => setApercu(null)} />
+      )}
       {showPayment && (
         <PaymentModal
           clientId={client.id}

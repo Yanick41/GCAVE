@@ -1,0 +1,47 @@
+{
+  "previewOf": {
+    "FACTURE": "Invoice preview",
+    "RECU": "Receipt preview",
+    "BON": "Order form preview"
+  },
+  "docName": {
+    "FACTURE": "invoice",
+    "RECU": "receipt",
+    "BON": "order form"
+  },
+  "docTitle": {
+    "FACTURE": "INVOICE",
+    "RECU": "PAYMENT RECEIPT",
+    "BON": "ORDER FORM"
+  },
+  "a4Button": {
+    "FACTURE": "A4 invoice",
+    "RECU": "A4 receipt",
+    "BON": "A4 order form"
+  },
+  "print": "Print {{doc}} ({{format}})",
+  "printing": "Printing…",
+  "widths": {
+    "58": "58 mm",
+    "80": "80 mm",
+    "A4": "A4"
+  },
+  "backToTicket": "Back to ticket",
+  "ticket": {
+    "client": "Customer",
+    "phone": "Tel",
+    "qty": "Qty",
+    "subtotal": "Subtotal",
+    "previousBalance": "Previous balance",
+    "total": "TOTAL",
+    "paid": "Paid",
+    "remaining": "Balance due",
+    "overpaid": "Overpayment",
+    "settled": "SETTLED",
+    "mode": "Method",
+    "totalQty": "Total quantity",
+    "forOrder": "Payment for order",
+    "thanks": "Thank you for your trust!",
+    "noPrice": "Document with no commercial value"
+  }
+}
