@@ -22,20 +22,14 @@ export function montantTicket(n: number): string {
 }
 
 export function factureVersTicket(data: FactureData, t: Traduire): TicketModel {
-  const net = data.total + (data.ancienSolde ?? 0);
+  // Facture indépendante : son propre total, sans report.
+  const net = data.total;
   const paye = data.paiements?.length
     ? data.paiements.reduce((s, p) => s + p.montant, 0)
     : (data.paye ?? 0);
   const etat = etatPaiement(net, paye);
 
   const totaux: TicketTotal[] = [];
-  if (data.ancienSolde) {
-    totaux.push({ label: t("impression:ticket.subtotal"), valeur: montantTicket(data.total) });
-    totaux.push({
-      label: t("impression:ticket.previousBalance"),
-      valeur: montantTicket(data.ancienSolde),
-    });
-  }
   totaux.push({ label: t("impression:ticket.total"), valeur: montantTicket(net), fort: true });
   if (etat.totalPaye > 0) {
     totaux.push({ label: t("impression:ticket.paid"), valeur: montantTicket(etat.totalPaye) });

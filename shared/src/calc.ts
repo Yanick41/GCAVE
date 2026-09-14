@@ -55,7 +55,7 @@ export function creditRestant(totalTTC: number, montantPaye: number): number {
 export type StatutPaiement = "NON_PAYEE" | "PARTIELLE" | "PAYEE";
 
 export interface EtatPaiement {
-  /** Montant réclamé au client sur ce document = total TTC + ancien solde reporté. */
+  /** Montant réclamé sur CETTE facture = son propre total TTC, sans aucun report. */
   totalDu: number;
   /** Somme des paiements rattachés à la commande. */
   totalPaye: number;
@@ -64,14 +64,6 @@ export interface EtatPaiement {
   /** Excédent encaissé au-delà du total dû (avoir client), sinon 0. */
   tropPercu: number;
   statut: StatutPaiement;
-}
-
-/**
- * Total réclamé sur la facture d'une commande : le total de la commande
- * plus l'ancien solde reporté (snapshot figé à la validation).
- */
-export function totalDuCommande(totalTTC: number, ancienSolde = 0): number {
-  return round2((totalTTC || 0) + Math.max(ancienSolde || 0, 0));
 }
 
 /**
@@ -90,19 +82,20 @@ export function etatPaiement(totalDu: number, totalPaye: number): EtatPaiement {
   return { totalDu: du, totalPaye: paye, reste, tropPercu, statut };
 }
 
-/** Raccourci : état de règlement à partir des champs bruts d'une commande. */
-export function etatPaiementCommande(
-  totalTTC: number,
-  ancienSolde: number,
-  totalPaye: number,
-): EtatPaiement {
-  return etatPaiement(totalDuCommande(totalTTC, ancienSolde), totalPaye);
+/**
+ * Raccourci : état de règlement d'une commande.
+ *
+ * CHAQUE FACTURE EST INDÉPENDANTE : le montant dû est le total de la commande
+ * elle-même. Aucun solde antérieur, aucune autre commande du client n'entre
+ * dans ce calcul — seuls comptent ses propres lignes et ses propres règlements.
+ */
+export function etatPaiementCommande(totalTTC: number, totalPaye: number): EtatPaiement {
+  return etatPaiement(round2(totalTTC), totalPaye);
 }
 
 /** Champs d'une commande nécessaires au calcul de son règlement. */
 export interface CommandeReglement {
   totalTTC: number;
-  ancienSolde: number;
   /** Acompte figé (ancien suivi) ou somme resynchronisée (nouveau suivi). */
   montantPaye: number;
   /** Régime de suivi, posé à la création de la commande. */
@@ -130,7 +123,7 @@ export function reglementCommande(
   const totalPaye = commande.utiliseNouveauSuiviPaiement
     ? paiementsRattaches.reduce((s, p) => s + (p.montant || 0), 0)
     : commande.montantPaye;
-  return etatPaiementCommande(commande.totalTTC, commande.ancienSolde, totalPaye);
+  return etatPaiementCommande(commande.totalTTC, totalPaye);
 }
 
 /** Solde d'un compte client = solde initial (repris du papier) + total des

@@ -18,8 +18,6 @@
   "discountPct": "Pourcentage (%)",
   "discountAmount": "Montant (FCFA)",
   "total": "TOTAL",
-  "previousBalance": "Ancien solde",
-  "grandTotal": "TOTAL GÉNÉRAL",
   "stamp": "Signature & cachet",
   "paid": "Montant payé",
   "optional": "optionnel",
@@ -66,5 +64,6 @@
   "convertToBon": "Convertir en bon",
   "convertToBonHint": "Générer un bon de commande sans prix à partir de cette facture. La facture n'est pas modifiée.",
   "converting": "Conversion…",
-  "paidAdjusts": "La saisie ajuste les règlements rattachés à cette commande."
+  "paidAdjusts": "La saisie ajuste les règlements rattachés à cette commande.",
+  "netToPay": "NET À PAYER"
 }

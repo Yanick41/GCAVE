@@ -1,9 +1,4 @@
-import {
-  commandeSchema,
-  computeCommande,
-  paiementSchema,
-  totalDuCommande,
-} from "@gca/shared";
+import { commandeSchema, computeCommande, paiementSchema } from "@gca/shared";
 import { Router } from "express";
 import { ah } from "../../lib/async.js";
 import {
@@ -121,7 +116,6 @@ commandesRouter.post(
       lignes: { nomProduit: string; quantite: number; prixUnitaire: number }[];
       remiseType: "AUCUNE" | "POURCENTAGE" | "MONTANT";
       remiseValeur: number;
-      ancienSolde?: number;
       montantPaye?: number;
       statut?: "BROUILLON" | "VALIDEE" | "ANNULEE";
     };
@@ -133,10 +127,10 @@ commandesRouter.post(
       remiseValeur: body.remiseValeur,
     });
 
-    // Ancien solde reporté (info facture) + paiement initial éventuel, bornés
-    const ancienSolde = Math.max(body.ancienSolde ?? 0, 0);
-    const grandTotal = calc.totalTTC + ancienSolde;
-    const montantPaye = Math.min(Math.max(body.montantPaye ?? 0, 0), grandTotal);
+    // CHAQUE FACTURE EST INDÉPENDANTE : aucun solde d'une autre commande n'est
+    // reporté. Le montant réclamé est le total de cette commande, et l'acompte
+    // éventuel s'y borne.
+    const montantPaye = Math.min(Math.max(body.montantPaye ?? 0, 0), calc.totalTTC);
 
     // Numéro séquentiel basé sur le MAX existant + 1 (robuste aux suppressions ;
     // un count+1 collisionnerait avec un numéro déjà attribué). Zéro-padding 6
@@ -166,7 +160,7 @@ commandesRouter.post(
         sousTotal: calc.sousTotal,
         montantRemise: calc.montantRemise,
         totalTTC: calc.totalTTC,
-        ancienSolde,
+        ancienSolde: 0, // plus aucun report : la facture ne réclame que son propre total
         montantPaye,
         // Commande créée depuis le déploiement du rattachement
         // paiement ↔ commande : elle suit le nouveau régime dès sa naissance.
@@ -227,10 +221,7 @@ commandesRouter.patch(
     // Montant payé saisi à la main, borné au total dû (ni négatif, ni aberrant).
     const montantPayeVise =
       body.montantPaye !== undefined
-        ? Math.min(
-            Math.max(body.montantPaye, 0),
-            totalDuCommande(calc.totalTTC, Number(existing.ancienSolde)),
-          )
+        ? Math.min(Math.max(body.montantPaye, 0), calc.totalTTC)
         : undefined;
 
     // Une commande du nouveau suivi rattachée à un client tient son « payé » de

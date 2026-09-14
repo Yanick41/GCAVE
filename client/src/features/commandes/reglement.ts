@@ -7,7 +7,6 @@ import { reglementCommande, type EtatPaiement } from "@gca/shared";
  */
 export interface CommandeBrute {
   totalTTC: string | number;
-  ancienSolde?: string | number | null;
   montantPaye?: string | number | null;
   utiliseNouveauSuiviPaiement?: boolean;
   paiements?: { montant: string | number }[];
@@ -29,7 +28,6 @@ export function reglementDe(commande: CommandeBrute): EtatPaiement {
   return reglementCommande(
     {
       totalTTC: Number(commande.totalTTC ?? 0),
-      ancienSolde: Number(commande.ancienSolde ?? 0),
       montantPaye: Number(commande.montantPaye ?? 0),
       utiliseNouveauSuiviPaiement: commande.utiliseNouveauSuiviPaiement ?? false,
     },

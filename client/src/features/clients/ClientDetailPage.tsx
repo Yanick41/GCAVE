@@ -154,7 +154,7 @@ export function ClientDetailPage() {
               totalLigne: Number(l.totalLigne),
             })),
             total: Number(cmd.totalTTC),
-            ancienSolde: Number(cmd.ancienSolde),
+
             // Détail des règlements rattachés à la commande : la facture
             // affiche chaque versement, le total payé et le reste à payer.
             // Commandes de l'ancien suivi : pas de détail, seul l'acompte figé

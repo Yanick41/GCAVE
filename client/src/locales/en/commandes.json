@@ -18,8 +18,6 @@
   "discountPct": "Percentage (%)",
   "discountAmount": "Amount (FCFA)",
   "total": "TOTAL",
-  "previousBalance": "Previous balance",
-  "grandTotal": "GRAND TOTAL",
   "stamp": "Signature & stamp",
   "paid": "Amount paid",
   "optional": "optional",
@@ -66,5 +64,6 @@
   "convertToBon": "Convert to order form",
   "convertToBonHint": "Generate a price-free order form from this invoice. The invoice is left untouched.",
   "converting": "Converting…",
-  "paidAdjusts": "Editing this adjusts the payments attached to this order."
+  "paidAdjusts": "Editing this adjusts the payments attached to this order.",
+  "netToPay": "NET TO PAY"
 }

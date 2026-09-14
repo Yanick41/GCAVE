@@ -27,8 +27,6 @@ export interface FactureData {
   lignes: FactureLigne[];
   total: number;
   numero?: string;
-  /** Ancien solde du client reporté sur la facture (optionnel). */
-  ancienSolde?: number;
   /**
    * Détail des règlements rattachés à la commande (date + mode + montant).
    * Chaque ligne est imprimée sous le NET À PAYER.
@@ -59,8 +57,6 @@ const L = {
     qty: "Quantité",
     unitPrice: "Prix unitaire TTC",
     amount: "Montant TTC",
-    subtotal: "Total facture",
-    previousBalance: "Ancien solde",
     netToPay: "NET À PAYER",
     paid: "Acompte versé",
     remaining: "Reste à payer",
@@ -89,8 +85,6 @@ const L = {
     qty: "Quantity",
     unitPrice: "Unit price",
     amount: "Amount",
-    subtotal: "Invoice total",
-    previousBalance: "Previous balance",
     netToPay: "NET TO PAY",
     paid: "Amount paid",
     remaining: "Balance due",
@@ -361,8 +355,9 @@ export function construireFacturePDF(data: FactureData, lang: Lang): jsPDF {
   // Écoulé juste après le tableau ; saut de page seulement si ça déborde.
   // @ts-expect-error lastAutoTable ajouté par le plugin
   let y = doc.lastAutoTable.finalY + 4;
-  const hasAncien = data.ancienSolde !== undefined && data.ancienSolde !== 0;
-  const net = data.total + (data.ancienSolde ?? 0);
+  // CHAQUE FACTURE EST INDÉPENDANTE : le net à payer est le total de cette
+  // facture, sans report d'aucune autre commande du client.
+  const net = data.total;
 
   // Règlements rattachés à la commande : ils font foi. `paye` n'est utilisé
   // qu'en repli (facture proforma saisie avant enregistrement).
@@ -382,7 +377,7 @@ export function construireFacturePDF(data: FactureData, lang: Lang): jsPDF {
 
   // Estimation de hauteur → nouvelle page uniquement si nécessaire
   const tailH =
-    ((hasAncien ? 2 : 0) + (hasPaye ? 2 : 0) + paiements.length + (tropPercu > 0 ? 1 : 0)) *
+    ((hasPaye ? 2 : 0) + paiements.length + (tropPercu > 0 ? 1 : 0)) *
       5 +
     (solde ? 12 : 0) +
     9 +
@@ -417,13 +412,6 @@ export function construireFacturePDF(data: FactureData, lang: Lang): jsPDF {
     // @ts-expect-error lastAutoTable ajouté par le plugin
     y = doc.lastAutoTable.finalY + 1;
   };
-
-  if (hasAncien) {
-    miniTotals([
-      [t.subtotal, nombre(data.total)],
-      [t.previousBalance, nombre(data.ancienSolde ?? 0)],
-    ]);
-  }
 
   // NET À PAYER — encadré foncé compact
   doc.setFillColor(30, 41, 59);

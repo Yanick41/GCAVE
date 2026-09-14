@@ -144,20 +144,19 @@ export function OrderFormPage() {
     [lines],
   );
 
-  // Ancien solde = solde RÉEL du client (création) OU snapshot figé (édition)
+  // CHAQUE FACTURE EST INDÉPENDANTE : le net à payer est le total de ses
+  // propres lignes. Le solde du client n'est plus lu ni reporté ici — il reste
+  // consultable sur sa fiche et dans le bilan imprimable.
   const sousTotal = calc.totalTTC;
-  const ancien = isEdit
-    ? Number(order?.ancienSolde ?? 0)
-    : Math.max(selectedClient?.solde ?? 0, 0);
-  const grandTotal = sousTotal + ancien;
+  const netAPayer = sousTotal;
 
   // Le montant payé est saisissable partout. Sur une commande dont le suivi
   // est dérivé des règlements, le serveur répercute la saisie sur les
   // règlements rattachés eux-mêmes, pour que facture et solde client restent
   // d'accord (voir reconcilierPaiements côté serveur).
   const suiviParReglements = isEdit && order?.utiliseNouveauSuiviPaiement === true;
-  const paye = Math.min(Math.max(num(montantPaye), 0), grandTotal);
-  const reste = Math.max(grandTotal - paye, 0);
+  const paye = Math.min(Math.max(num(montantPaye), 0), netAPayer);
+  const reste = Math.max(netAPayer - paye, 0);
 
   const mutation = useMutation({
     mutationFn: (input: CommandeInput) =>
@@ -243,7 +242,6 @@ export function OrderFormPage() {
       })),
       remiseType: "AUCUNE",
       remiseValeur: 0,
-      ancienSolde: ancien > 0 ? ancien : undefined,
       // Toujours envoyé, y compris à 0 : c'est ainsi qu'on corrige un montant
       // saisi par erreur.
       montantPaye: paye,
@@ -271,7 +269,6 @@ export function OrderFormPage() {
             totalLigne: l.totalLigne,
           })),
         total: sousTotal,
-        ancienSolde: ancien,
         // En édition, la facture reprend le détail des règlements déjà
         // encaissés sur la commande (date + mode + montant).
         paiements:
@@ -422,13 +419,9 @@ export function OrderFormPage() {
         <div className="ml-auto max-w-sm space-y-3 text-sm">
           <Row label={t("commandes:subtotal")} value={money(sousTotal)} />
 
-          <Row label={t("commandes:previousBalance")} value={money(ancien)} />
-
           <div className="flex items-center justify-between border-y py-3">
-            <span className="text-base font-semibold">{t("commandes:grandTotal")}</span>
-            <span className="text-2xl font-bold text-green-600">
-              {money(grandTotal)}
-            </span>
+            <span className="text-base font-semibold">{t("commandes:netToPay")}</span>
+            <span className="text-2xl font-bold text-green-600">{money(netAPayer)}</span>
           </div>
 
           <div>
@@ -442,7 +435,7 @@ export function OrderFormPage() {
               <input
                 type="number"
                 min="0"
-                max={grandTotal}
+                max={netAPayer}
                 value={montantPaye}
                 onChange={(e) => setMontantPaye(e.target.value)}
                 placeholder="0"

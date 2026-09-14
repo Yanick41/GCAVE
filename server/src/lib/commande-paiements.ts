@@ -58,9 +58,9 @@ export async function resyncMontantPaye(commandeId: string | null | undefined) {
 
 /**
  * État de règlement d'une commande (conversion des Decimal Prisma + délégation
- * au moteur partagé). Le total dû inclut l'ancien solde reporté : c'est le
- * « NET À PAYER » imprimé sur la facture, donc la référence pour
- * « soldé / reste à payer ».
+ * au moteur partagé). CHAQUE FACTURE EST INDÉPENDANTE : le total dû est le
+ * total de la commande elle-même — c'est le « NET À PAYER » imprimé, donc la
+ * référence pour « soldé / reste à payer ». Aucun report d'une autre commande.
  *
  * Le choix ancien / nouveau suivi revient entièrement à
  * `reglementCommande` (shared), sur la base du drapeau de la commande.
@@ -68,7 +68,6 @@ export async function resyncMontantPaye(commandeId: string | null | undefined) {
 export function etatCommande(
   commande: {
     totalTTC: unknown;
-    ancienSolde: unknown;
     montantPaye: unknown;
     utiliseNouveauSuiviPaiement: boolean;
   },
@@ -77,7 +76,6 @@ export function etatCommande(
   return reglementCommande(
     {
       totalTTC: Number(commande.totalTTC),
-      ancienSolde: Number(commande.ancienSolde),
       montantPaye: Number(commande.montantPaye),
       utiliseNouveauSuiviPaiement: commande.utiliseNouveauSuiviPaiement,
     },

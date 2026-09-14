@@ -85,7 +85,6 @@ export function OrderDetailPage() {
       totalLigne: Number(l.totalLigne),
     })),
     total: Number(c.totalTTC),
-    ancienSolde: Number(c.ancienSolde),
     paiements: suiviDetaille
       ? paiements.map((p) => ({
           date: p.date,
@@ -200,24 +199,16 @@ export function OrderDetailPage() {
             {money(Number(c.totalTTC))}
           </span>
         </div>
-        {Number(c.ancienSolde) > 0 && (
-          <>
-            <Line
-              label={t("commandes:previousBalance")}
-              value={money(Number(c.ancienSolde))}
-            />
-            <div className="flex justify-between border-t pt-2">
-              <span className="font-semibold">{t("commandes:grandTotal")}</span>
-              <span className="font-bold tabular-nums">{money(reglement.totalDu)}</span>
-            </div>
-          </>
+        {/* Sans acompte, la facture se résume à son net à payer : afficher
+            « Payé 0 » et « Reste = total » n'apporterait rien. */}
+        {reglement.totalPaye > 0 && (
+          <Line
+            label={t("commandes:paid")}
+            value={money(reglement.totalPaye)}
+            valueClass="text-emerald-600 font-semibold"
+          />
         )}
-        <Line
-          label={t("commandes:paid")}
-          value={money(reglement.totalPaye)}
-          valueClass="text-emerald-600 font-semibold"
-        />
-        {reglement.tropPercu > 0 ? (
+        {reglement.totalPaye <= 0 ? null : reglement.tropPercu > 0 ? (
           <Line
             label={t("commandes:overpaid")}
             value={money(reglement.tropPercu)}

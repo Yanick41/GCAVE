@@ -34,7 +34,6 @@ export const commandeSchema = z
     lignes: z.array(ligneSchema).min(1),
     remiseType: remiseTypeSchema.default("AUCUNE"),
     remiseValeur: z.number().nonnegative().default(0),
-    ancienSolde: z.number().nonnegative().optional(),
     montantPaye: z.number().nonnegative().optional(),
     statut: statutCommandeSchema.optional(),
   })

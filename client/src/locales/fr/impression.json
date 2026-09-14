@@ -31,8 +31,6 @@
     "client": "Client",
     "phone": "Tél",
     "qty": "Qté",
-    "subtotal": "Sous-total",
-    "previousBalance": "Ancien solde",
     "total": "TOTAL",
     "paid": "Payé",
     "remaining": "Reste à payer",

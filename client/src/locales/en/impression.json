@@ -31,8 +31,6 @@
     "client": "Customer",
     "phone": "Tel",
     "qty": "Qty",
-    "subtotal": "Subtotal",
-    "previousBalance": "Previous balance",
     "total": "TOTAL",
     "paid": "Paid",
     "remaining": "Balance due",
