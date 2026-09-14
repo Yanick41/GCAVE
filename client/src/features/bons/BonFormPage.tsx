@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
+import { SelecteurClient } from "../../components/SelecteurClient";
 import type { BonData } from "../../lib/bon";
 import { ApercuImpression } from "../impression/ApercuImpression";
 import { errorCode } from "../../lib/errors";
@@ -41,9 +42,21 @@ export function BonFormPage() {
   const [montant, setMontant] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
 
-  // Gestion du focus type tableur (Entrée -> ligne suivante / nouvelle ligne)
-  const inputRefs = useRef<Map<string, HTMLInputElement | null>>(new Map());
-  const [focusCell, setFocusCell] = useState<{ row: number; col: number } | null>(null);
+  // Registre de focus : en-tête ("tel", "adresse"…), cases du tableau
+  // ("ligne-colonne") et pied ("montant", "notes") partagent la même mécanique,
+  // ce qui permet à Entrée de parcourir TOUT le formulaire.
+  const champs = useRef<Map<string, HTMLElement | null>>(new Map());
+  const [focusCle, setFocusCle] = useState<string | null>(null);
+  /** Enregistre un champ sous une clé, pour pouvoir lui rendre le focus. */
+  const refChamp = (cle: string) => (el: HTMLElement | null) => {
+    champs.current.set(cle, el);
+  };
+  /** Entrée dans un champ simple : passe au champ suivant, sans envoyer. */
+  const entreeVers = (cle: string) => (e: React.KeyboardEvent) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    setFocusCle(cle);
+  };
 
   const { data: clients } = useQuery({
     queryKey: ["clients", ""],
@@ -80,18 +93,21 @@ export function BonFormPage() {
 
   // Applique le focus demandé après le rendu (nouvelle ligne insérée notamment)
   useEffect(() => {
-    if (!focusCell) return;
-    const el = inputRefs.current.get(`${focusCell.row}-${focusCell.col}`);
+    if (!focusCle) return;
+    const el = champs.current.get(focusCle);
     el?.focus();
-    el?.select?.();
-    setFocusCell(null);
-  }, [focusCell, lines]);
+    (el as HTMLInputElement | null)?.select?.();
+    setFocusCle(null);
+  }, [focusCle, lines]);
 
   const selectedClient = clients?.find((c) => c.id === clientId);
 
   // Sélection d'un client existant -> pré-remplir tél. + adresse de livraison
   const onSelectClient = (id: string) => {
     setClientId(id);
+    // Client ponctuel : on enchaîne sur son nom ; client existant : sur le
+    // téléphone, déjà pré-rempli mais souvent à ajuster.
+    setFocusCle(id ? "tel" : "nomLibre");
     if (id) {
       const c = clients?.find((cl) => cl.id === id);
       setTelephone(c?.telephone ?? "");
@@ -111,19 +127,30 @@ export function BonFormPage() {
     setLines((prev) => (prev.length === 1 ? prev : prev.filter((_, idx) => idx !== i)));
   const addLine = () => {
     setLines((prev) => [...prev, emptyLine()]);
-    setFocusCell({ row: lines.length, col: 0 });
+    setFocusCle(`${lines.length}-0`);
   };
 
-  // Comportement tableur : Entrée dans la dernière ligne -> nouvelle ligne + focus ;
-  // Entrée sur une ligne intermédiaire -> ligne suivante (même colonne).
+  // Entrée dans le tableau : Désignation -> Quantité -> Servi, puis ligne
+  // suivante. Une nouvelle ligne n'est créée que depuis la DERNIÈRE ligne, et
+  // seulement si elle est renseignée — sinon Entrée sort vers « Montant »,
+  // faute de quoi on ne pourrait jamais atteindre la fin du formulaire.
   const onCellEnter = (row: number, col: number, e: React.KeyboardEvent) => {
     if (e.key !== "Enter") return;
     e.preventDefault();
-    if (row === lines.length - 1) {
+    if (col < 2) {
+      setFocusCle(`${row}-${col + 1}`);
+      return;
+    }
+    if (row < lines.length - 1) {
+      setFocusCle(`${row + 1}-0`);
+      return;
+    }
+    const ligne = lines[row];
+    if (ligne.designation.trim() !== "") {
       setLines((prev) => [...prev, emptyLine()]);
-      setFocusCell({ row: row + 1, col: 0 });
+      setFocusCle(`${row + 1}-0`);
     } else {
-      setFocusCell({ row: row + 1, col });
+      setFocusCle("montant");
     }
   };
 
@@ -223,18 +250,15 @@ export function BonFormPage() {
               <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
                 {t("bons:client")}
               </label>
-              <select
-                value={clientId}
-                onChange={(e) => onSelectClient(e.target.value)}
-                className={`${field} w-full`}
-              >
-                <option value="">{t("bons:occasionalClient")}</option>
-                {clients?.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nom} · {c.telephone}
-                  </option>
-                ))}
-              </select>
+              <SelecteurClient
+                clients={clients ?? []}
+                valeur={clientId}
+                onChange={onSelectClient}
+                libelleLibre={t("bons:occasionalClient")}
+                placeholder={t("common:clientSearch.placeholder")}
+                aucunResultat={t("common:clientSearch.empty")}
+                champRef={refChamp("client")}
+              />
             </div>
           )}
 
@@ -245,8 +269,10 @@ export function BonFormPage() {
                 {t("bons:clientNameFree")}
               </label>
               <input
+                ref={refChamp("nomLibre")}
                 value={clientNomLibre}
                 onChange={(e) => setClientNomLibre(e.target.value)}
+                onKeyDown={entreeVers("tel")}
                 className={`${field} w-full`}
                 placeholder={t("bons:clientNameFree")}
               />
@@ -258,8 +284,10 @@ export function BonFormPage() {
               {t("bons:phone")}
             </label>
             <input
+              ref={refChamp("tel")}
               value={telephone}
               onChange={(e) => setTelephone(e.target.value)}
+              onKeyDown={entreeVers("adresse")}
               className={`${field} w-full`}
             />
           </div>
@@ -268,8 +296,10 @@ export function BonFormPage() {
               {t("bons:deliveryAddress")}
             </label>
             <input
+              ref={refChamp("adresse")}
               value={adresseLivraison}
               onChange={(e) => setAdresseLivraison(e.target.value)}
+              onKeyDown={entreeVers("0-0")}
               className={`${field} w-full`}
             />
           </div>
@@ -290,9 +320,7 @@ export function BonFormPage() {
           {lines.map((line, i) => (
             <div key={i} className="grid grid-cols-12 items-center gap-2">
               <input
-                ref={(el) => {
-                  inputRefs.current.set(`${i}-0`, el);
-                }}
+                ref={refChamp(`${i}-0`)}
                 className={`${field} col-span-12 md:col-span-6`}
                 placeholder={t("bons:designation")}
                 value={line.designation}
@@ -300,9 +328,7 @@ export function BonFormPage() {
                 onKeyDown={(e) => onCellEnter(i, 0, e)}
               />
               <input
-                ref={(el) => {
-                  inputRefs.current.set(`${i}-1`, el);
-                }}
+                ref={refChamp(`${i}-1`)}
                 type="number"
                 min="0"
                 className={`${field} col-span-6 md:col-span-3`}
@@ -311,9 +337,7 @@ export function BonFormPage() {
                 onKeyDown={(e) => onCellEnter(i, 1, e)}
               />
               <input
-                ref={(el) => {
-                  inputRefs.current.set(`${i}-2`, el);
-                }}
+                ref={refChamp(`${i}-2`)}
                 className={`${field} col-span-5 md:col-span-2`}
                 placeholder="—"
                 value={line.servi}
@@ -346,10 +370,12 @@ export function BonFormPage() {
               {t("bons:montant")}
             </label>
             <input
+              ref={refChamp("montant")}
               type="number"
               min="0"
               value={montant}
               onChange={(e) => setMontant(e.target.value)}
+              onKeyDown={entreeVers("notes")}
               placeholder="0"
               className={`${field} w-44 text-right`}
             />
@@ -365,7 +391,9 @@ export function BonFormPage() {
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
             {t("bons:notes")}
           </label>
+          {/* Fin de la chaîne : Entrée insère un retour à la ligne. */}
           <textarea
+            ref={refChamp("notes")}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}

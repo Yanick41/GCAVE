@@ -70,5 +70,9 @@
     "COMMANDE_ANNULEE": "A payment cannot be recorded on a cancelled order.",
     "COMMANDE_ANCIEN_SUIVI": "This order uses the previous payment tracking: its paid amount stays the one entered at confirmation.",
     "COMMANDE_SANS_LIGNE": "This order has no line to convert."
+  },
+  "clientSearch": {
+    "placeholder": "Search a customer by name or phone…",
+    "empty": "No matching customer"
   }
 }

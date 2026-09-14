@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
+import { SelecteurClient } from "../../components/SelecteurClient";
 import { marquerConverti } from "../bons/api";
 import { errorCode } from "../../lib/errors";
 import type { FactureData } from "../../lib/facture";
@@ -74,26 +75,41 @@ export function OrderFormPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [apercu, setApercu] = useState(false);
 
-  // Navigation clavier type tableur (Entrée = case suivante / nouvelle ligne)
-  const inputRefs = useRef<Map<string, HTMLInputElement | null>>(new Map());
-  const [focusCell, setFocusCell] = useState<{ row: number; col: number } | null>(null);
+  // Registre de focus : client, cases du tableau ("ligne-colonne") et pied
+  // ("paye") partagent la même mécanique, ce qui permet à Entrée de parcourir
+  // TOUT le formulaire sans passer à la souris.
+  const champs = useRef<Map<string, HTMLElement | null>>(new Map());
+  const [focusCle, setFocusCle] = useState<string | null>(null);
+  const refChamp = (cle: string) => (el: HTMLElement | null) => {
+    champs.current.set(cle, el);
+  };
   useEffect(() => {
-    if (!focusCell) return;
-    const el = inputRefs.current.get(`${focusCell.row}-${focusCell.col}`);
+    if (!focusCle) return;
+    const el = champs.current.get(focusCle);
     el?.focus();
-    el?.select?.();
-    setFocusCell(null);
-  }, [focusCell, lines]);
+    (el as HTMLInputElement | null)?.select?.();
+    setFocusCle(null);
+  }, [focusCle, lines]);
 
-  // Entrée : Produit(0) -> Qté(1) -> Prix(2) -> Montant(3) -> ligne suivante
+  // Entrée : Produit -> Qté -> Prix -> Montant, puis ligne suivante. Une
+  // nouvelle ligne n'est créée que depuis la DERNIÈRE ligne, et seulement si
+  // elle est renseignée — sinon Entrée sort vers « Montant payé ».
   const onCellEnter = (row: number, col: number, e: React.KeyboardEvent) => {
     if (e.key !== "Enter") return;
     e.preventDefault();
     if (col < 3) {
-      setFocusCell({ row, col: col + 1 });
+      setFocusCle(`${row}-${col + 1}`);
+      return;
+    }
+    if (row < lines.length - 1) {
+      setFocusCle(`${row + 1}-0`);
+      return;
+    }
+    if (lines[row].nomProduit.trim() !== "") {
+      setLines((prev) => [...prev, emptyLine()]);
+      setFocusCle(`${row + 1}-0`);
     } else {
-      if (row === lines.length - 1) setLines((prev) => [...prev, emptyLine()]);
-      setFocusCell({ row: row + 1, col: 0 });
+      setFocusCle("paye");
     }
   };
 
@@ -311,18 +327,19 @@ export function OrderFormPage() {
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
             {t("commandes:client")}
           </label>
-          <select
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
-            className={`${field} w-full max-w-md`}
-          >
-            <option value="">{t("commandes:selectClient")}</option>
-            {clients?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nom} · {c.telephone}
-              </option>
-            ))}
-          </select>
+          <SelecteurClient
+            className="max-w-md"
+            clients={clients ?? []}
+            valeur={clientId}
+            onChange={(id) => {
+              setClientId(id);
+              setFocusCle("0-0");
+            }}
+            libelleLibre={t("commandes:selectClient")}
+            placeholder={t("common:clientSearch.placeholder")}
+            aucunResultat={t("common:clientSearch.empty")}
+            champRef={refChamp("client")}
+          />
         </div>
       )}
 
@@ -339,9 +356,7 @@ export function OrderFormPage() {
           {lines.map((line, i) => (
             <div key={i} className="grid grid-cols-12 items-center gap-2">
               <input
-                ref={(el) => {
-                  inputRefs.current.set(`${i}-0`, el);
-                }}
+                ref={refChamp(`${i}-0`)}
                 className={`${field} col-span-12 md:col-span-5`}
                 placeholder={t("commandes:product")}
                 value={line.nomProduit}
@@ -349,9 +364,7 @@ export function OrderFormPage() {
                 onKeyDown={(e) => onCellEnter(i, 0, e)}
               />
               <input
-                ref={(el) => {
-                  inputRefs.current.set(`${i}-1`, el);
-                }}
+                ref={refChamp(`${i}-1`)}
                 type="number"
                 min="0"
                 className={`${field} col-span-4 md:col-span-2`}
@@ -360,9 +373,7 @@ export function OrderFormPage() {
                 onKeyDown={(e) => onCellEnter(i, 1, e)}
               />
               <input
-                ref={(el) => {
-                  inputRefs.current.set(`${i}-2`, el);
-                }}
+                ref={refChamp(`${i}-2`)}
                 type="number"
                 min="0"
                 className={`${field} col-span-5 md:col-span-2`}
@@ -374,9 +385,7 @@ export function OrderFormPage() {
               {/* Montant éditable : saisir le total d'une ligne est souvent plus
                   direct que d'en calculer le prix unitaire, qui est alors déduit. */}
               <input
-                ref={(el) => {
-                  inputRefs.current.set(`${i}-3`, el);
-                }}
+                ref={refChamp(`${i}-3`)}
                 type="number"
                 min="0"
                 step="any"
@@ -431,9 +440,11 @@ export function OrderFormPage() {
               <input
                 type="number"
                 min="0"
+                ref={refChamp("paye")}
                 max={netAPayer}
                 value={montantPaye}
                 onChange={(e) => setMontantPaye(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
                 placeholder="0"
                 className={`${field} w-32 py-1 text-right tabular-nums`}
               />

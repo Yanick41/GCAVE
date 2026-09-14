@@ -70,5 +70,9 @@
     "COMMANDE_ANNULEE": "Impossible d'enregistrer un paiement sur une commande annulée.",
     "COMMANDE_ANCIEN_SUIVI": "Cette commande utilise l'ancien suivi des paiements : son montant payé reste celui saisi à la validation.",
     "COMMANDE_SANS_LIGNE": "Cette commande ne contient aucune ligne à convertir."
+  },
+  "clientSearch": {
+    "placeholder": "Rechercher un client par nom ou téléphone…",
+    "empty": "Aucun client ne correspond"
   }
 }
