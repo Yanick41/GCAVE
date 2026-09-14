@@ -2,8 +2,7 @@ import { formatDate, type Lang } from "@gca/shared";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { ClientDetail } from "../features/clients/api";
-
-const COMPANY = "LA GRANDE CAVE";
+import { drawDocumentHeader } from "./company";
 
 export interface BilanLabels {
   subtitle: string;
@@ -43,25 +42,18 @@ export function construireBilanPDF(
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
-  // En-tête : nom de l'entreprise
-  doc.setFontSize(22);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(20);
-  doc.text(COMPANY, 14, 20);
-  doc.setDrawColor(30, 41, 59);
-  doc.setLineWidth(0.6);
-  doc.line(14, 24, pageW - 14, 24);
+  // En-tête : logo + coordonnées de la société, identique à la facture
+  const lineY = drawDocumentHeader(doc, { pageW, margin: 14, title: labels.subtitle });
 
+  // Infos client, sous le filet de l'en-tête
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(12);
-  doc.setTextColor(90);
-  doc.text(labels.subtitle, 14, 33);
-
-  // Infos client
   doc.setFontSize(11);
-  doc.text(`${labels.client}: ${client.nom}`, 14, 43);
-  doc.text(`${labels.phone}: ${client.telephone}`, 14, 49);
-  let infoY = 55;
+  doc.setTextColor(90);
+  let infoY = lineY + 9;
+  doc.text(`${labels.client}: ${client.nom}`, 14, infoY);
+  infoY += 6;
+  doc.text(`${labels.phone}: ${client.telephone}`, 14, infoY);
+  infoY += 6;
   if (client.adresse) {
     doc.text(`${labels.address}: ${client.adresse}`, 14, infoY);
     infoY += 6;

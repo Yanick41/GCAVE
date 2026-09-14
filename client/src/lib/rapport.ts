@@ -2,8 +2,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { RapportJour } from "../features/rapports/api";
 import { pdfMoney } from "./bilan";
-
-const COMPANY = "LA GRANDE CAVE";
+import { drawDocumentHeader } from "./company";
 
 export interface RapportLabels {
   title: string;
@@ -24,22 +23,12 @@ export function construireRapportPDF(data: RapportJour, labels: RapportLabels): 
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
 
-  doc.setFontSize(22);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(20);
-  doc.text(COMPANY, 14, 20);
-  doc.setDrawColor(30, 41, 59);
-  doc.setLineWidth(0.6);
-  doc.line(14, 24, pageW - 14, 24);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(14);
-  doc.setTextColor(90);
-  doc.text(`${labels.title} — ${data.date}`, 14, 33);
+  // En-tête : logo + coordonnées de la société, identique à la facture
+  const lineY = drawDocumentHeader(doc, { pageW, margin: 14, title: `${labels.title} — ${data.date}` });
 
   // Synthèse
   autoTable(doc, {
-    startY: 40,
+    startY: lineY + 9,
     body: [
       [labels.orders, String(data.nbCommandes)],
       [labels.revenue, pdfMoney(data.totalCommandes)],

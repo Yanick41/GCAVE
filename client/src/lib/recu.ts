@@ -2,8 +2,7 @@ import { formatDate, type Lang } from "@gca/shared";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { pdfMoney } from "./bilan";
-
-const COMPANY = "LA GRANDE CAVE";
+import { drawDocumentHeader } from "./company";
 
 export interface RecuData {
   clientNom: string;
@@ -32,19 +31,8 @@ export function construireRecuPDF(
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
 
-  // En-tête
-  doc.setFontSize(22);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(20);
-  doc.text(COMPANY, 14, 20);
-  doc.setDrawColor(30, 41, 59);
-  doc.setLineWidth(0.6);
-  doc.line(14, 24, pageW - 14, 24);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(14);
-  doc.setTextColor(90);
-  doc.text(labels.title, 14, 33);
+  // En-tête : logo + coordonnées de la société, identique à la facture
+  const lineY = drawDocumentHeader(doc, { pageW, margin: 14, title: labels.title });
 
   const rows: string[][] = [
     [labels.client, data.clientNom],
@@ -55,7 +43,7 @@ export function construireRecuPDF(
   if (data.observation) rows.push([labels.observation, data.observation]);
 
   autoTable(doc, {
-    startY: 42,
+    startY: lineY + 9,
     body: rows,
     theme: "plain",
     styles: { fontSize: 12 },
