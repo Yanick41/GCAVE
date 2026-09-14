@@ -14,6 +14,15 @@ services:
     startCommand: npm start --workspace @gca/server
     healthCheckPath: /api/health
     envVars:
+      # Version de Node FIGÉE, et identique à celle du poste de développement.
+      # Sans ceci, `engines.node: ">=20"` laisse Render prendre le dernier
+      # majeur disponible : il est passé seul à Node 26, sur lequel `tsx` (qui
+      # s'accroche au chargeur de modules) ne démarrait plus — déploiement
+      # bloqué au health check, sans qu'une seule ligne de code ait changé.
+      # Réglé ici plutôt que dans engines : Vercel lit aussi package.json et
+      # n'a pas forcément les mêmes versions disponibles.
+      - key: NODE_VERSION
+        value: "24.14.0"
       - key: NODE_ENV
         value: production
       # Les verrous consultatifs PostgreSQL ne traversent pas le pooler Neon
