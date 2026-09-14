@@ -21,6 +21,10 @@ healthRouter.get("/", async (_req, res) => {
     db,
     ts: new Date().toISOString(),
     commit: COMMIT || null,
+    // Runtime réellement servi : `engines` est une contrainte ouverte, l'hôte
+    // peut basculer de majeur sans prévenir. L'exposer évite de diagnostiquer
+    // à l'aveugle quand un déploiement se comporte mal.
+    node: process.version,
     // Capacités servies par cette version : le client peut s'y fier plutôt
     // que de deviner à partir de la forme des réponses.
     features: { paiementCommande: true },

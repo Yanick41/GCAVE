@@ -14,13 +14,12 @@ services:
     startCommand: npm start --workspace @gca/server
     healthCheckPath: /api/health
     envVars:
-      # Version de Node FIGÉE, et identique à celle du poste de développement.
-      # Sans ceci, `engines.node: ">=20"` laisse Render prendre le dernier
-      # majeur disponible : il est passé seul à Node 26, sur lequel `tsx` (qui
-      # s'accroche au chargeur de modules) ne démarrait plus — déploiement
-      # bloqué au health check, sans qu'une seule ligne de code ait changé.
-      # Réglé ici plutôt que dans engines : Vercel lit aussi package.json et
-      # n'a pas forcément les mêmes versions disponibles.
+      # Version de Node FIGÉE, identique à celle du poste de développement :
+      # `engines.node: ">=20"` est une contrainte ouverte, Render prend sinon le
+      # dernier majeur disponible (il est passé seul à Node 26) et la production
+      # tourne alors sur un runtime que personne n'a testé.
+      # Réglé ici plutôt que dans engines : Vercel lit aussi package.json pour
+      # le front et n'expose pas forcément les mêmes versions.
       - key: NODE_VERSION
         value: "24.14.0"
       - key: NODE_ENV
