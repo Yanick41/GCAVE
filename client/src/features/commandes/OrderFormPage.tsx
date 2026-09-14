@@ -2,7 +2,6 @@ import {
   computeCommande,
   prixUnitaireDepuisTotal,
   type CommandeInput,
-  type Lang,
 } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Plus, Printer, Trash2, User } from "lucide-react";
@@ -12,7 +11,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
 import { marquerConverti } from "../bons/api";
 import { errorCode } from "../../lib/errors";
-import { genererFacturePDF } from "../../lib/facture";
+import type { FactureData } from "../../lib/facture";
+import { ApercuImpression } from "../impression/ApercuImpression";
 import { fetchClients } from "../clients/api";
 import { useMoney } from "../privacy/mask";
 import { createCommande, fetchCommande, updateCommande } from "./api";
@@ -49,8 +49,7 @@ const num = (s: string) => {
 };
 
 export function OrderFormPage() {
-  const { t, i18n } = useTranslation(["commandes", "paiements", "common"]);
-  const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
+  const { t } = useTranslation(["commandes", "paiements", "common"]);
   const money = useMoney();
   const { id: clientIdParam, orderId } = useParams();
   const isEdit = Boolean(orderId);
@@ -73,6 +72,7 @@ export function OrderFormPage() {
   );
   const [montantPaye, setMontantPaye] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
+  const [apercu, setApercu] = useState(false);
 
   // Navigation clavier type tableur (Entrée = case suivante / nouvelle ligne)
   const inputRefs = useRef<Map<string, HTMLInputElement | null>>(new Map());
@@ -251,9 +251,9 @@ export function OrderFormPage() {
   const selectedClientName = selectedClient?.nom ?? order?.client?.nom;
   const field = "rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500";
 
-  const facture = (action: "download" | "print") => {
-    genererFacturePDF(
-      {
+  // Données de la facture — l'aperçu est le SEUL point de sortie : le choix
+  // du format se fait dans le modal, jamais par un PDF ouvert directement.
+  const donneesFacture: FactureData = {
         numero: order?.numero,
         clientNom: selectedClientName ?? "—",
         clientTelephone: selectedClient?.telephone,
@@ -279,12 +279,8 @@ export function OrderFormPage() {
                 mode: t(`paiements:modes.${p.mode}`, { ns: "paiements" }),
               }))
             : undefined,
-        paye,
-        reste,
-      },
-      lang,
-      action,
-    );
+    paye,
+    reste,
   };
 
   return (
@@ -466,14 +462,14 @@ export function OrderFormPage() {
 
         <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
           <button
-            onClick={() => facture("download")}
+            onClick={() => setApercu(true)}
             disabled={validLines.length === 0}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
           >
             <Download size={16} /> {t("commandes:downloadInvoice")}
           </button>
           <button
-            onClick={() => facture("print")}
+            onClick={() => setApercu(true)}
             disabled={validLines.length === 0}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
           >
@@ -492,6 +488,12 @@ export function OrderFormPage() {
           </button>
         </div>
       </div>
+      {apercu && (
+        <ApercuImpression
+          document={{ type: "FACTURE", data: donneesFacture }}
+          onClose={() => setApercu(false)}
+        />
+      )}
     </div>
   );
 }

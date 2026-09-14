@@ -104,6 +104,7 @@ export function ticketCss(largeur: LargeurTicket): string {
 .tk-champ-val { flex: 1; word-break: break-word; }
 
 /* Articles */
+.tk-groupe { font-weight: 700; letter-spacing: .5px; margin-bottom: 1.5mm; }
 .tk-article { margin-bottom: 2.5mm; }
 .tk-article-nom { font-weight: 700; word-break: break-word; }
 .tk-article-ligne {
@@ -173,24 +174,37 @@ export function Ticket({ modele }: { modele: TicketModel }) {
           <Champ label={t("impression:ticket.number")} valeur={modele.numero} fort />
         )}
         <Champ label={t("impression:ticket.date")} valeur={dateTicket(modele.date, lang)} />
-        <Champ label={t("impression:ticket.client")} valeur={modele.clientNom} />
+        {modele.clientNom && (
+          <Champ label={t("impression:ticket.client")} valeur={modele.clientNom} />
+        )}
         {modele.clientTelephone && (
           <Champ label={t("impression:ticket.phone")} valeur={modele.clientTelephone} />
         )}
       </div>
 
-      {/* Articles */}
-      {modele.lignes.length > 0 && (
-        <>
-          <div className="tk-sep" />
-          {modele.lignes.map((l, i) => (
+      {/* Lignes, groupées : un seul bloc sans titre pour une facture,
+          plusieurs blocs titrés pour un rapport (commandes, encaissements). */}
+      {modele.groupes.map((groupe, ig) =>
+        groupe.lignes.length === 0 ? null : (
+          <div key={ig}>
+            <div className="tk-sep" />
+            {groupe.titre && <div className="tk-groupe">{groupe.titre}</div>}
+            {groupe.lignes.map((l, i) => (
             <div className="tk-article" key={i}>
               <div className="tk-article-nom">{l.designation}</div>
 
-              {prix ? (
+              {l.detail !== undefined ? (
+                /* Relevé ou rapport : une date, un client… à la place du calcul */
+                <div className="tk-article-ligne">
+                  <span>{l.detail}</span>
+                  {l.total !== undefined && (
+                    <span className="tk-article-montant">{montantTicket(l.total)}</span>
+                  )}
+                </div>
+              ) : prix ? (
                 <div className="tk-article-ligne">
                   <span>
-                    {montantTicket(l.quantite)} × {montantTicket(l.prixUnitaire ?? 0)}
+                    {montantTicket(l.quantite ?? 0)} × {montantTicket(l.prixUnitaire ?? 0)}
                   </span>
                   <span className="tk-article-montant">{montantTicket(l.total ?? 0)}</span>
                 </div>
@@ -198,7 +212,7 @@ export function Ticket({ modele }: { modele: TicketModel }) {
                 /* Bon de commande : la quantité seule, jamais de prix */
                 <div className="tk-article-ligne">
                   <span className="tk-et">{t("impression:ticket.qty")} :</span>
-                  <span className="tk-bold">{montantTicket(l.quantite)}</span>
+                  <span className="tk-bold">{montantTicket(l.quantite ?? 0)}</span>
                 </div>
               )}
 
@@ -215,8 +229,9 @@ export function Ticket({ modele }: { modele: TicketModel }) {
                 </div>
               )}
             </div>
-          ))}
-        </>
+            ))}
+          </div>
+        ),
       )}
 
       {/* Totaux */}

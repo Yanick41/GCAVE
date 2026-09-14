@@ -13,6 +13,8 @@ const DEFAUTS: Record<TypeDocument, FormatImpression> = {
   FACTURE: "A4", // pièce comptable : A4 par défaut
   RECU: "80", // remis au client au comptoir : ticket
   BON: "80", // petites commandes servies au comptoir : ticket
+  BILAN: "A4", // relevé de compte : document de synthèse, souvent long
+  RAPPORT: "A4", // rapport d'activité : deux tableaux, A4 plus lisible
 };
 
 function lireTout(): Partial<Record<TypeDocument, FormatImpression>> {

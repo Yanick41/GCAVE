@@ -2,7 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { BarChart3, Download, Printer } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { genererRapportPDF } from "../../lib/rapport";
+import {
+  ApercuImpression,
+  type DocumentImprimable,
+} from "../impression/ApercuImpression";
 import { useMoney } from "../privacy/mask";
 import { fetchRapportJour } from "./api";
 
@@ -16,15 +19,22 @@ export function RapportsPage() {
   const { t } = useTranslation(["rapports", "paiements"]);
   const money = useMoney();
   const [date, setDate] = useState(todayISO());
+  // Document dont l'aperçu d'impression est ouvert
+  const [apercu, setApercu] = useState<DocumentImprimable | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["rapport", date],
     queryFn: () => fetchRapportJour(date),
   });
 
-  const pdf = (action: "download" | "print") => {
+  // Sortie unique par l'aperçu, comme tous les autres documents.
+  const ouvrirApercu = () => {
     if (!data) return;
-    genererRapportPDF(data, {
+    setApercu({
+      type: "RAPPORT",
+      data: {
+        rapport: data,
+        labels: {
       title: t("rapports:daily"),
       date: t("rapports:date"),
       orders: t("rapports:ordersTable"),
@@ -35,12 +45,14 @@ export function RapportsPage() {
       amount: t("rapports:columns.amount"),
       mode: t("rapports:columns.mode"),
       payments: t("rapports:paymentsTable"),
-      modes: {
-        ESPECES: t("paiements:modes.ESPECES"),
-        MOBILE_MONEY: t("paiements:modes.MOBILE_MONEY"),
-        VIREMENT: t("paiements:modes.VIREMENT"),
+          modes: {
+            ESPECES: t("paiements:modes.ESPECES"),
+            MOBILE_MONEY: t("paiements:modes.MOBILE_MONEY"),
+            VIREMENT: t("paiements:modes.VIREMENT"),
+          },
+        },
       },
-    }, action);
+    });
   };
 
   return (
@@ -63,14 +75,14 @@ export function RapportsPage() {
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500"
           />
           <button
-            onClick={() => pdf("download")}
+            onClick={ouvrirApercu}
             disabled={!data}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
           >
             <Download size={16} /> {t("rapports:download")}
           </button>
           <button
-            onClick={() => pdf("print")}
+            onClick={ouvrirApercu}
             disabled={!data}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
           >
@@ -175,6 +187,9 @@ export function RapportsPage() {
             </section>
           )}
         </>
+      )}
+      {apercu && (
+        <ApercuImpression document={apercu} onClose={() => setApercu(null)} />
       )}
     </div>
   );

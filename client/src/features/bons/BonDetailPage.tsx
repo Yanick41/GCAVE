@@ -5,7 +5,7 @@ import { ArrowRightLeft, Check, Download, Pencil, Printer, Trash2, User } from "
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
-import { genererBonPDF, type BonData } from "../../lib/bon";
+import type { BonData } from "../../lib/bon";
 import { ApercuImpression } from "../impression/ApercuImpression";
 import { useMoney } from "../privacy/mask";
 import { bonStatusStyle } from "./BonsListPage";
@@ -73,7 +73,6 @@ export function BonDetailPage() {
     notes: bon.notes,
   };
 
-  const pdf = (action: "download" | "print") => genererBonPDF(donneesBon, lang, action);
 
   // Conversion : pré-remplit une commande avec désignations + quantités (prix saisis là-bas)
   const convert = () =>
@@ -108,7 +107,7 @@ export function BonDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => pdf("download")}
+            onClick={() => setApercu(true)}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             <Download size={16} /> {t("bons:download")}

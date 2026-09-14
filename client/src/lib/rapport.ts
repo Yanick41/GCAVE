@@ -19,11 +19,8 @@ export interface RapportLabels {
   modes: Record<string, string>;
 }
 
-export function genererRapportPDF(
-  data: RapportJour,
-  labels: RapportLabels,
-  action: "download" | "print",
-) {
+/** Construit le rapport (sans effet de bord : ni impression, ni fichier). */
+export function construireRapportPDF(data: RapportJour, labels: RapportLabels): jsPDF {
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
 
@@ -86,6 +83,16 @@ export function genererRapportPDF(
     columnStyles: { 1: { halign: "right" } },
   });
 
+  return doc;
+}
+
+/** Génère le rapport du jour (téléchargement ou impression). */
+export function genererRapportPDF(
+  data: RapportJour,
+  labels: RapportLabels,
+  action: "download" | "print",
+) {
+  const doc = construireRapportPDF(data, labels);
   if (action === "download") {
     doc.save(`rapport-${data.date}.pdf`);
   } else {

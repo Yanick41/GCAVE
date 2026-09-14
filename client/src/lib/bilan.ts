@@ -5,7 +5,7 @@ import type { ClientDetail } from "../features/clients/api";
 
 const COMPANY = "LA GRANDE CAVE";
 
-interface Labels {
+export interface BilanLabels {
   subtitle: string;
   client: string;
   phone: string;
@@ -33,7 +33,12 @@ export function pdfMoney(n: number): string {
 }
 
 /** Génère et télécharge le bilan PDF d'un client (CDC §7). */
-export function genererBilanPDF(client: ClientDetail, lang: Lang, labels: Labels) {
+/** Construit le bilan (sans effet de bord : ni impression, ni fichier). */
+export function construireBilanPDF(
+  client: ClientDetail,
+  lang: Lang,
+  labels: BilanLabels,
+): jsPDF {
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -137,5 +142,21 @@ export function genererBilanPDF(client: ClientDetail, lang: Lang, labels: Labels
   doc.text(labels.managerSignature, mx, sy);
   doc.line(mx, sy + 2, mx + mw, sy + 2);
 
+  return doc;
+}
+
+/** Génère le bilan d'un client (téléchargement ou impression). */
+export function genererBilanPDF(
+  client: ClientDetail,
+  lang: Lang,
+  labels: BilanLabels,
+  action: "download" | "print" = "download",
+) {
+  const doc = construireBilanPDF(client, lang, labels);
+  if (action === "download") {
   doc.save(`bilan-${client.nom.replace(/\s+/g, "_")}.pdf`);
+  } else {
+    doc.autoPrint();
+    window.open(doc.output("bloburl"), "_blank");
+  }
 }

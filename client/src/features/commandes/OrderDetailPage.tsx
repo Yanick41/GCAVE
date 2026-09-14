@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
-import { genererFacturePDF, type FactureData } from "../../lib/facture";
+import type { FactureData } from "../../lib/facture";
 import { ApercuImpression } from "../impression/ApercuImpression";
 import { deletePaiement } from "../paiements/api";
 import { PaymentModal } from "../paiements/PaymentModal";
@@ -96,9 +96,6 @@ export function OrderDetailPage() {
     reste: reglement.reste,
   };
 
-  const facture = (action: "download" | "print") =>
-    genererFacturePDF(donneesFacture, lang, action);
-
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -122,13 +119,13 @@ export function OrderDetailPage() {
             {enBon.isPending ? t("commandes:converting") : t("commandes:convertToBon")}
           </button>
           <button
-            onClick={() => facture("print")}
+            onClick={() => setApercu(true)}
             className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             <Printer size={16} /> {t("commandes:print")}
           </button>
           <button
-            onClick={() => facture("download")}
+            onClick={() => setApercu(true)}
             title={t("commandes:downloadInvoice")}
             className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >

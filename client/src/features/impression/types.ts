@@ -1,17 +1,21 @@
 /**
  * Aperçu et impression des documents — types partagés.
  *
- * Un même modal sert la facture, le reçu et le bon de commande. Chaque
+ * Un même modal sert TOUS les documents imprimables de l'application. Chaque
  * document est d'abord normalisé en `TicketModel` (ci-dessous), ce qui
  * concentre en un seul endroit les règles d'affichage — notamment
  * l'interdiction des prix sur un bon de commande.
  */
+import type { BilanLabels } from "../../lib/bilan";
 import type { FactureLigne } from "../../lib/facture";
+import type { RapportLabels } from "../../lib/rapport";
+import type { ClientDetail } from "../clients/api";
+import type { RapportJour } from "../rapports/api";
 
 /** Largeur de papier thermique, ou mise en page A4 classique. */
 export type FormatImpression = "58" | "80" | "A4";
 
-export type TypeDocument = "FACTURE" | "RECU" | "BON";
+export type TypeDocument = "FACTURE" | "RECU" | "BON" | "BILAN" | "RAPPORT";
 
 /** Reçu de paiement enrichi des lignes de la commande réglée, si elle existe. */
 export interface RecuTicketData {
@@ -30,10 +34,28 @@ export interface RecuTicketData {
   } | null;
 }
 
+/** Relevé de compte d'un client : ses opérations et son solde. */
+export interface BilanTicketData {
+  client: ClientDetail;
+  labels: BilanLabels;
+}
+
+/** Rapport d'activité d'une journée : commandes puis encaissements. */
+export interface RapportTicketData {
+  rapport: RapportJour;
+  labels: RapportLabels;
+}
+
 export interface TicketLigne {
   designation: string;
-  quantite: number;
+  /**
+   * Ligne de détail sous la désignation. Renseignée, elle remplace le
+   * « quantité × prix unitaire » : c'est ainsi qu'un relevé affiche une date
+   * là où une facture affiche un calcul.
+   */
+  detail?: string;
   /** Omis sur un bon de commande : aucun prix ne doit y figurer. */
+  quantite?: number;
   prixUnitaire?: number;
   total?: number;
   /**
@@ -41,6 +63,15 @@ export interface TicketLigne {
    * libre pour l'annotation manuelle, comme sur le bon A4.
    */
   servi?: string | null;
+}
+
+/**
+ * Bloc de lignes. Un seul groupe sans titre pour une facture ; plusieurs
+ * groupes titrés pour un rapport (commandes, puis encaissements).
+ */
+export interface TicketGroupe {
+  titre?: string;
+  lignes: TicketLigne[];
 }
 
 export interface TicketTotal {
@@ -56,9 +87,9 @@ export interface TicketModel {
   titre: string;
   numero?: string | null;
   date: Date;
-  clientNom: string;
+  clientNom?: string | null;
   clientTelephone?: string | null;
-  lignes: TicketLigne[];
+  groupes: TicketGroupe[];
   /** false ⇒ ni prix unitaire, ni montant, ni total (bon de commande). */
   afficherPrix: boolean;
   totaux: TicketTotal[];

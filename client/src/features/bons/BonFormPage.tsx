@@ -1,11 +1,12 @@
-import type { BonCommandeInput, Lang } from "@gca/shared";
+import type { BonCommandeInput } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Plus, Printer, Trash2, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackButton } from "../../components/BackButton";
-import { genererBonPDF } from "../../lib/bon";
+import type { BonData } from "../../lib/bon";
+import { ApercuImpression } from "../impression/ApercuImpression";
 import { errorCode } from "../../lib/errors";
 import { fetchClients } from "../clients/api";
 import { createBon, fetchBon, updateBon } from "./api";
@@ -24,8 +25,7 @@ const num = (s: string) => {
 };
 
 export function BonFormPage() {
-  const { t, i18n } = useTranslation(["bons", "common"]);
-  const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
+  const { t } = useTranslation(["bons", "common"]);
   const { id: clientIdParam, bonId } = useParams();
   const isEdit = Boolean(bonId);
   const navigate = useNavigate();
@@ -37,6 +37,7 @@ export function BonFormPage() {
   const [adresseLivraison, setAdresseLivraison] = useState("");
   const [lines, setLines] = useState<LineDraft[]>([emptyLine()]);
   const [notes, setNotes] = useState("");
+  const [apercu, setApercu] = useState(false);
   const [montant, setMontant] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -169,9 +170,8 @@ export function BonFormPage() {
 
   const selectedClientName = selectedClient?.nom ?? bon?.client?.nom ?? clientNomLibre;
 
-  const pdf = (action: "download" | "print") => {
-    genererBonPDF(
-      {
+  // Données du bon — sortie unique par le modal d'aperçu.
+  const donneesBon: BonData = {
         numero: bon?.numero ?? "—",
         clientNom: selectedClientName || "—",
         date: bon ? new Date(bon.date) : new Date(),
@@ -185,11 +185,7 @@ export function BonFormPage() {
         totalQuantite,
         montant: num(montant),
         statut: bon?.statut ?? "LIVRE",
-        notes: notes || null,
-      },
-      lang,
-      action,
-    );
+    notes: notes || null,
   };
 
   const field =
@@ -384,14 +380,14 @@ export function BonFormPage() {
 
         <div className="flex flex-wrap items-center justify-end gap-3">
           <button
-            onClick={() => pdf("download")}
+            onClick={() => setApercu(true)}
             disabled={validLines.length === 0}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             <Download size={16} /> {t("bons:download")}
           </button>
           <button
-            onClick={() => pdf("print")}
+            onClick={() => setApercu(true)}
             disabled={validLines.length === 0}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
           >
@@ -406,6 +402,12 @@ export function BonFormPage() {
           </button>
         </div>
       </div>
+      {apercu && (
+        <ApercuImpression
+          document={{ type: "BON", data: donneesBon }}
+          onClose={() => setApercu(false)}
+        />
+      )}
     </div>
   );
 }

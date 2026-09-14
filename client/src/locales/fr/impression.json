@@ -2,22 +2,30 @@
   "previewOf": {
     "FACTURE": "Aperçu de la facture",
     "RECU": "Aperçu du ticket",
-    "BON": "Aperçu du bon de commande"
+    "BON": "Aperçu du bon de commande",
+    "BILAN": "Aperçu du bilan client",
+    "RAPPORT": "Aperçu du rapport"
   },
   "docName": {
     "FACTURE": "la facture",
     "RECU": "le ticket",
-    "BON": "le bon"
+    "BON": "le bon",
+    "BILAN": "le bilan",
+    "RAPPORT": "le rapport"
   },
   "docTitle": {
     "FACTURE": "FACTURE",
     "RECU": "REÇU DE PAIEMENT",
-    "BON": "BON DE COMMANDE"
+    "BON": "BON DE COMMANDE",
+    "BILAN": "RELEVÉ DE COMPTE",
+    "RAPPORT": "RAPPORT DU JOUR"
   },
   "a4Button": {
     "FACTURE": "Facture A4",
     "RECU": "Reçu A4",
-    "BON": "Bon de commande A4"
+    "BON": "Bon de commande A4",
+    "BILAN": "Bilan A4",
+    "RAPPORT": "Rapport A4"
   },
   "print": "Imprimer {{doc}} ({{format}})",
   "printing": "Impression…",
@@ -43,6 +51,12 @@
     "noPrice": "Document sans valeur commerciale",
     "served": "Servi",
     "number": "N°",
-    "date": "Date"
-  }
+    "date": "Date",
+    "op": {
+      "COMMANDE": "Commande",
+      "PAIEMENT": "Paiement",
+      "BON": "Livraison"
+    }
+  },
+  "download": "Télécharger le PDF"
 }

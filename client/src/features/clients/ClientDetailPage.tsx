@@ -19,7 +19,6 @@ import { BackButton } from "../../components/BackButton";
 import { bonStatusStyle } from "../bons/BonsListPage";
 import { deletePaiement, lierPaiementCommande } from "../paiements/api";
 import { avatarColor, initials } from "../../lib/avatar";
-import { genererBilanPDF } from "../../lib/bilan";
 import { fetchCommande } from "../commandes/api";
 import {
   ApercuImpression,
@@ -105,8 +104,14 @@ export function ClientDetailPage() {
     .map((c) => ({ id: c.id, numero: c.numero, date: c.date, reste: reglementDe(c).reste }))
     .reverse();
 
-  const printBilan = () =>
-    genererBilanPDF(client, lang, {
+  // Le bilan passe par le même aperçu que les autres documents : le choix
+  // du format s'y fait, aucun PDF n'est ouvert directement.
+  const ouvrirBilan = () =>
+    setApercu({
+      type: "BILAN",
+      data: {
+        client,
+        labels: {
       subtitle: t("clients:detail.bilan.subtitle"),
       client: t("paiements:columns.client"),
       phone: t("clients:columns.phone"),
@@ -123,10 +128,12 @@ export function ClientDetailPage() {
       balance: t("clients:detail.currentBalance"),
       clientSignature: t("clients:detail.bilan.clientSignature"),
       managerSignature: t("clients:detail.bilan.managerSignature"),
-      modes: {
-        ESPECES: t("paiements:modes.ESPECES"),
-        MOBILE_MONEY: t("paiements:modes.MOBILE_MONEY"),
-        VIREMENT: t("paiements:modes.VIREMENT"),
+          modes: {
+            ESPECES: t("paiements:modes.ESPECES"),
+            MOBILE_MONEY: t("paiements:modes.MOBILE_MONEY"),
+            VIREMENT: t("paiements:modes.VIREMENT"),
+          },
+        },
       },
     });
 
@@ -253,7 +260,7 @@ export function ClientDetailPage() {
             <BellRing size={16} /> {t("rappels:new", { ns: "rappels" })}
           </button>
           <button
-            onClick={printBilan}
+            onClick={ouvrirBilan}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <Printer size={16} /> {t("clients:detail.printBalance")}

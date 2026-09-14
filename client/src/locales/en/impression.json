@@ -2,22 +2,30 @@
   "previewOf": {
     "FACTURE": "Invoice preview",
     "RECU": "Receipt preview",
-    "BON": "Order form preview"
+    "BON": "Order form preview",
+    "BILAN": "Customer statement preview",
+    "RAPPORT": "Report preview"
   },
   "docName": {
     "FACTURE": "invoice",
     "RECU": "receipt",
-    "BON": "order form"
+    "BON": "order form",
+    "BILAN": "the statement",
+    "RAPPORT": "the report"
   },
   "docTitle": {
     "FACTURE": "INVOICE",
     "RECU": "PAYMENT RECEIPT",
-    "BON": "ORDER FORM"
+    "BON": "ORDER FORM",
+    "BILAN": "ACCOUNT STATEMENT",
+    "RAPPORT": "DAILY REPORT"
   },
   "a4Button": {
     "FACTURE": "A4 invoice",
     "RECU": "A4 receipt",
-    "BON": "A4 order form"
+    "BON": "A4 order form",
+    "BILAN": "A4 statement",
+    "RAPPORT": "A4 report"
   },
   "print": "Print {{doc}} ({{format}})",
   "printing": "Printing…",
@@ -43,6 +51,12 @@
     "noPrice": "Document with no commercial value",
     "served": "Served",
     "number": "No.",
-    "date": "Date"
-  }
+    "date": "Date",
+    "op": {
+      "COMMANDE": "Order",
+      "PAIEMENT": "Payment",
+      "BON": "Delivery"
+    }
+  },
+  "download": "Download PDF"
 }
