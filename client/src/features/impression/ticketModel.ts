@@ -68,6 +68,7 @@ export function factureVersTicket(data: FactureData, t: Traduire): TicketModel {
         lignes: data.lignes.map((l) => ({
           designation: l.nomProduit,
           quantite: l.quantite,
+          quantiteAffichee: l.quantiteAffichee,
           prixUnitaire: l.prixUnitaire,
           total: l.totalLigne,
         })),
@@ -107,6 +108,7 @@ export function recuVersTicket(data: RecuTicketData, t: Traduire): TicketModel {
         lignes: (cmd?.lignes ?? []).map((l) => ({
           designation: l.nomProduit,
           quantite: l.quantite,
+          quantiteAffichee: l.quantiteAffichee,
           prixUnitaire: l.prixUnitaire,
           total: l.totalLigne,
         })),
@@ -133,6 +135,7 @@ export function bonVersTicket(data: BonData, t: Traduire): TicketModel {
         lignes: data.lignes.map((l) => ({
           designation: l.designation,
           quantite: l.quantite,
+          quantiteAffichee: l.quantiteAffichee,
           servi: l.servi,
         })),
       },

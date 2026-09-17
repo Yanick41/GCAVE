@@ -8,6 +8,8 @@ export interface LigneCommande {
   id: string;
   nomProduit: string;
   quantite: string;
+  /** Écriture d'origine (« 1/2 ») ; null pour les lignes antérieures. */
+  quantiteSaisie?: string | null;
   prixUnitaire: string;
   totalLigne: string;
 }

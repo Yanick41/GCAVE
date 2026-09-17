@@ -1,4 +1,4 @@
-import { formatDate, type Lang } from "@gca/shared";
+import { formatDate, formatterQuantite, type Lang } from "@gca/shared";
 import { jsPDF } from "jspdf";
 import autoTable, { type CellHookData } from "jspdf-autotable";
 import { COMPANY, drawDocumentHeader } from "./company";
@@ -6,6 +6,8 @@ import { COMPANY, drawDocumentHeader } from "./company";
 export interface FactureLigne {
   nomProduit: string;
   quantite: number;
+  /** Quantité telle qu'elle doit être imprimée (« 1/2 »), sinon déduite. */
+  quantiteAffichee?: string;
   prixUnitaire: number;
   totalLigne: number;
 }
@@ -316,7 +318,9 @@ export function construireFacturePDF(data: FactureData, lang: Lang): jsPDF {
     ],
     body: data.lignes.map((l) => [
       l.nomProduit,
-      nombre(l.quantite),
+      // nombre() arrondit à l'entier : une quantité de 0,25 s'imprimerait
+      // « 0 ». Les quantités ont donc leur propre formatage.
+      l.quantiteAffichee ?? formatterQuantite(l.quantite),
       nombre(l.prixUnitaire),
       nombre(l.totalLigne),
     ]),

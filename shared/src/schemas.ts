@@ -24,6 +24,8 @@ export const clientSchema = z.object({
 export const ligneSchema = z.object({
   nomProduit: z.string().trim().min(1),
   quantite: z.number().positive(),
+  /** Écriture d'origine de la quantité (« 1/2 »), pour réaffichage fidèle. */
+  quantiteSaisie: z.string().trim().optional(),
   prixUnitaire: z.number().nonnegative(),
 });
 
@@ -93,6 +95,8 @@ export const statutBonSchema = z.enum([
 export const ligneBonSchema = z.object({
   designation: z.string().trim().min(1),
   quantite: z.number().positive(),
+  /** Écriture d'origine de la quantité (« 1/2 »), pour réaffichage fidèle. */
+  quantiteSaisie: z.string().trim().optional(),
   servi: z.string().trim().optional(), // saisie libre, non calculée
 });
 

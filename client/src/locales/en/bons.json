@@ -56,5 +56,9 @@
     "date": "Date",
     "items": "Items",
     "status": "Status"
-  }
+  },
+  "qtyPlaceholder": "1 or 1/2",
+  "errQtyZero": "Division by zero is not allowed.",
+  "errQtyFormat": "Invalid quantity: enter a number (2) or a fraction (1/2).",
+  "errQty": "Quantity must be greater than 0."
 }

@@ -1,4 +1,4 @@
-import { formatDate, type Lang } from "@gca/shared";
+import { formatDate, formatterQuantite, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BellRing,
@@ -157,6 +157,7 @@ export function ClientDetailPage() {
             lignes: cmd.lignes.map((l) => ({
               nomProduit: l.nomProduit,
               quantite: Number(l.quantite),
+              quantiteAffichee: formatterQuantite(Number(l.quantite), l.quantiteSaisie),
               prixUnitaire: Number(l.prixUnitaire),
               totalLigne: Number(l.totalLigne),
             })),
@@ -189,6 +190,7 @@ export function ClientDetailPage() {
             lignes: cmd.lignes.map((l) => ({
               nomProduit: l.nomProduit,
               quantite: Number(l.quantite),
+              quantiteAffichee: formatterQuantite(Number(l.quantite), l.quantiteSaisie),
               prixUnitaire: Number(l.prixUnitaire),
               totalLigne: Number(l.totalLigne),
             })),
@@ -529,7 +531,7 @@ export function ClientDetailPage() {
                                   <tr key={l.id}>
                                     <td className="py-1">{l.nomProduit}</td>
                                     <td className="py-1 text-right tabular-nums">
-                                      {Number(l.quantite)}
+                                      {formatterQuantite(Number(l.quantite), l.quantiteSaisie)}
                                     </td>
                                     <td className="py-1 text-right tabular-nums">
                                       {money(Number(l.prixUnitaire))}

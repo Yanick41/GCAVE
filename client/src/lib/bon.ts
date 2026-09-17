@@ -1,4 +1,4 @@
-import { formatDate, type Lang } from "@gca/shared";
+import { formatDate, formatterQuantite, type Lang } from "@gca/shared";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { COMPANY, drawDocumentHeader } from "./company";
@@ -9,6 +9,8 @@ export type StatutBon = "LIVRE" | "PAYE" | "CONVERTI";
 export interface BonLigne {
   designation: string;
   quantite: number;
+  /** Quantité telle qu'elle doit être imprimée (« 1/2 »), sinon déduite. */
+  quantiteAffichee?: string;
   servi: string | null;
 }
 
@@ -156,7 +158,11 @@ export function construireBonPDF(data: BonData, lang: Lang): jsPDF {
         { content: t.served, styles: { halign: "right" } },
       ],
     ],
-    body: data.lignes.map((l) => [l.designation, pdfNombre(l.quantite), l.servi ?? ""]),
+    body: data.lignes.map((l) => [
+      l.designation,
+      l.quantiteAffichee ?? formatterQuantite(l.quantite),
+      l.servi ?? "",
+    ]),
     theme: "grid",
     headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: Math.max(fs, 7) },
     styles: { fontSize: fs, cellPadding: pad, lineColor: [180, 180, 180], lineWidth: 0.2, textColor: 20 },

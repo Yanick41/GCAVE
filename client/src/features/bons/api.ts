@@ -9,6 +9,7 @@ export interface LigneBon {
   id: string;
   designation: string;
   quantite: string;
+  quantiteSaisie?: string | null;
   servi: string | null;
   ordre: number;
 }

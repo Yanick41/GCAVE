@@ -182,3 +182,76 @@ export function prixUnitaireDepuisTotal(totalLigne: number, quantite: number): n
   if (q <= 0) return 0;
   return round2(t / q);
 }
+
+// ── Quantités fractionnées ───────────────────────────────────────────
+// Certains articles se vendent en demi ou en quart. La saisie accepte donc
+// « 1/2 » autant que « 0.5 » ou « 3 ». Le CALCUL se fait toujours sur la
+// valeur décimale ; le texte saisi n'est conservé que pour l'AFFICHAGE, afin
+// que le client relise sur sa facture exactement ce qui a été tapé.
+//
+// Analyseur PARTAGÉ client/serveur : le navigateur guide la saisie, mais c'est
+// le serveur qui refuse pour de bon une division par zéro ou une quantité nulle.
+
+export type MotifQuantiteInvalide = "VIDE" | "FORMAT" | "DIVISION_ZERO" | "NON_POSITIF";
+
+export interface QuantiteAnalysee {
+  /** Valeur pour le calcul ; 0 si la saisie est invalide. */
+  valeur: number;
+  valide: boolean;
+  motif?: MotifQuantiteInvalide;
+}
+
+const NOMBRE = String.raw`\d+(?:[.,]\d+)?`;
+// String.raw impératif : dans un gabarit ordinaire, `\s` se réduirait à « s »
+// et le motif exigerait des lettres s autour de la barre de fraction.
+const RE_FRACTION = new RegExp(String.raw`^(${NOMBRE})\s*/\s*(${NOMBRE})$`);
+const RE_NOMBRE = new RegExp(`^${NOMBRE}$`);
+
+const versNombre = (s: string) => parseFloat(s.replace(",", "."));
+
+/**
+ * Analyse une quantité saisie : entier, décimal ou fraction « a/b ».
+ * Les signes et le texte libre sont refusés — une quantité est positive.
+ */
+export function analyserQuantite(texte: string): QuantiteAnalysee {
+  const t = (texte ?? "").trim().replace(/\s+/g, " ");
+  if (t === "") return { valeur: 0, valide: false, motif: "VIDE" };
+
+  const fraction = RE_FRACTION.exec(t);
+  if (fraction) {
+    const numerateur = versNombre(fraction[1]);
+    const denominateur = versNombre(fraction[2]);
+    // Refus explicite : une division par zéro donnerait Infinity et
+    // contaminerait silencieusement tous les totaux.
+    if (denominateur === 0) return { valeur: 0, valide: false, motif: "DIVISION_ZERO" };
+    const valeur = round2(numerateur / denominateur);
+    if (valeur <= 0) return { valeur: 0, valide: false, motif: "NON_POSITIF" };
+    return { valeur: Math.round((numerateur / denominateur) * 1000) / 1000, valide: true };
+  }
+
+  if (RE_NOMBRE.test(t)) {
+    const valeur = versNombre(t);
+    if (valeur <= 0) return { valeur: 0, valide: false, motif: "NON_POSITIF" };
+    return { valeur, valide: true };
+  }
+
+  return { valeur: 0, valide: false, motif: "FORMAT" };
+}
+
+/**
+ * Quantité telle qu'elle doit être imprimée ou affichée.
+ *
+ * On réaffiche le texte saisi (« 1/2 ») quand il correspond bien à la valeur
+ * stockée ; sinon on formate le décimal, sans JAMAIS arrondir à l'entier —
+ * une quantité de 0,25 affichée « 0 » rendrait le document incohérent.
+ */
+export function formatterQuantite(valeur: number, saisie?: string | null): string {
+  if (saisie && saisie.trim() !== "") {
+    const analyse = analyserQuantite(saisie);
+    // Le texte ne prime que s'il désigne bien la valeur enregistrée : une
+    // ligne modifiée depuis sa saisie ne doit pas afficher l'ancienne écriture.
+    if (analyse.valide && Math.abs(analyse.valeur - valeur) < 0.0005) return saisie.trim();
+  }
+  const n = Number.isFinite(valeur) ? valeur : 0;
+  return String(Math.round(n * 1000) / 1000);
+}

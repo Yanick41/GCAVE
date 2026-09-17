@@ -56,6 +56,8 @@ export interface TicketLigne {
   detail?: string;
   /** Omis sur un bon de commande : aucun prix ne doit y figurer. */
   quantite?: number;
+  /** Quantité telle qu'elle doit être imprimée (« 1/2 »), sinon déduite. */
+  quantiteAffichee?: string;
   prixUnitaire?: number;
   total?: number;
   /**

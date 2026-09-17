@@ -1,5 +1,6 @@
 import {
   computeCommande,
+  analyserQuantite,
   prixUnitaireDepuisTotal,
   type CommandeInput,
 } from "@gca/shared";
@@ -42,6 +43,9 @@ const emptyLine = (): LineDraft => ({ nomProduit: "", quantite: "1", prixUnitair
  *  Les lignes encore vierges ne déclenchent aucune erreur de validation. */
 const ligneRenseignee = (l: LineDraft) =>
   l.nomProduit.trim() !== "" || l.prixUnitaire.trim() !== "" || l.montantSaisi !== undefined;
+
+/** Quantité d'une ligne : accepte « 1/2 » autant qu'un entier. */
+const qte = (l: { quantite: string }) => analyserQuantite(l.quantite).valeur;
 
 const num = (s: string) => {
   // Robuste : retire les espaces (séparateurs de milliers) avant de parser
@@ -151,7 +155,7 @@ export function OrderFormPage() {
       computeCommande({
         lignes: lines.map((l) => ({
           nomProduit: l.nomProduit,
-          quantite: num(l.quantite),
+          quantite: qte(l),
           prixUnitaire: num(l.prixUnitaire),
         })),
         remiseType: "AUCUNE",
@@ -205,14 +209,21 @@ export function OrderFormPage() {
     onError: (err) => setServerError(t(`common:errors.${errorCode(err)}`)),
   });
 
-  const validLines = lines.filter((l) => l.nomProduit.trim() && num(l.quantite) > 0);
+  const validLines = lines.filter((l) => l.nomProduit.trim() && qte(l) > 0);
 
   // Erreur par ligne (null = ligne correcte ou encore vierge). Bloque
   // l'enregistrement AVANT l'aller-retour serveur, qui renverrait un 422 opaque.
   const lineErrors = lines.map((l) => {
     if (!ligneRenseignee(l)) return null;
     if (!l.nomProduit.trim()) return t("commandes:errProduct");
-    if (num(l.quantite) <= 0) return t("commandes:errQty");
+    const q = analyserQuantite(l.quantite);
+    if (!q.valide) {
+    // Message adapté : une division par zéro ne se corrige pas comme une
+    // quantité négative ou une saisie incompréhensible.
+    if (q.motif === "DIVISION_ZERO") return t("commandes:errQtyZero");
+    if (q.motif === "FORMAT") return t("commandes:errQtyFormat");
+    return t("commandes:errQty");
+    }
     if (num(l.prixUnitaire) < 0) return t("commandes:errPrice");
     return null;
   });
@@ -253,7 +264,8 @@ export function OrderFormPage() {
       clientNomLibre: clientId ? undefined : (clientNomLibre ?? undefined),
       lignes: validLines.map((l) => ({
         nomProduit: l.nomProduit.trim(),
-        quantite: num(l.quantite),
+        quantite: qte(l),
+        quantiteSaisie: l.quantite.trim() || undefined,
         prixUnitaire: num(l.prixUnitaire),
       })),
       remiseType: "AUCUNE",
@@ -365,8 +377,9 @@ export function OrderFormPage() {
               />
               <input
                 ref={refChamp(`${i}-1`)}
-                type="number"
-                min="0"
+                type="text"
+                inputMode="text"
+                placeholder={t("commandes:qtyPlaceholder")}
                 className={`${field} col-span-4 md:col-span-2`}
                 value={line.quantite}
                 onChange={(e) => updateLine(i, { quantite: e.target.value })}

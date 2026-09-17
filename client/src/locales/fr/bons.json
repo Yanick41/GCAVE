@@ -56,5 +56,9 @@
     "date": "Date",
     "items": "Articles",
     "status": "Statut"
-  }
+  },
+  "qtyPlaceholder": "1 ou 1/2",
+  "errQtyZero": "Division par zéro impossible.",
+  "errQtyFormat": "Quantité invalide : saisissez un nombre (2) ou une fraction (1/2).",
+  "errQty": "La quantité doit être supérieure à 0."
 }

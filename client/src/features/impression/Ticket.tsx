@@ -12,7 +12,7 @@
  * Les classes sont préfixées `tk-` et les styles volontairement autonomes
  * (pas de Tailwind) : l'iframe d'impression n'a pas accès aux styles de l'app.
  */
-import type { Lang } from "@gca/shared";
+import { formatterQuantite, type Lang } from "@gca/shared";
 import { useTranslation } from "react-i18next";
 import { COMPANY } from "../../lib/company";
 import { LOGO_DATA_URI } from "../../lib/logo";
@@ -204,7 +204,8 @@ export function Ticket({ modele }: { modele: TicketModel }) {
               ) : prix ? (
                 <div className="tk-article-ligne">
                   <span>
-                    {montantTicket(l.quantite ?? 0)} × {montantTicket(l.prixUnitaire ?? 0)}
+                    {l.quantiteAffichee ?? formatterQuantite(l.quantite ?? 0)} ×{" "}
+                    {montantTicket(l.prixUnitaire ?? 0)}
                   </span>
                   <span className="tk-article-montant">{montantTicket(l.total ?? 0)}</span>
                 </div>
@@ -212,7 +213,9 @@ export function Ticket({ modele }: { modele: TicketModel }) {
                 /* Bon de commande : la quantité seule, jamais de prix */
                 <div className="tk-article-ligne">
                   <span className="tk-et">{t("impression:ticket.qty")} :</span>
-                  <span className="tk-bold">{montantTicket(l.quantite ?? 0)}</span>
+                  <span className="tk-bold">
+                    {l.quantiteAffichee ?? formatterQuantite(l.quantite ?? 0)}
+                  </span>
                 </div>
               )}
 

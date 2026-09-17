@@ -18,7 +18,12 @@ type BonBody = {
   clientNomLibre?: string;
   telephone?: string;
   adresseLivraison?: string;
-  lignes: { designation: string; quantite: number; servi?: string }[];
+  lignes: {
+    designation: string;
+    quantite: number;
+    quantiteSaisie?: string;
+    servi?: string;
+  }[];
   notes?: string;
   statut?: StatutBonValue;
   allerRetour?: boolean;
@@ -81,6 +86,7 @@ bonsRouter.post(
           create: body.lignes.map((l, i) => ({
             designation: l.designation,
             quantite: l.quantite,
+            quantiteSaisie: l.quantiteSaisie || null,
             servi: l.servi || null,
             ordre: i,
           })),
@@ -110,6 +116,7 @@ bonsRouter.patch(
           bonId: req.params.id,
           designation: l.designation,
           quantite: l.quantite,
+          quantiteSaisie: l.quantiteSaisie || null,
           servi: l.servi || null,
           ordre: i,
         })),

@@ -1,4 +1,4 @@
-import type { BonCommandeInput } from "@gca/shared";
+import { analyserQuantite, type BonCommandeInput } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Plus, Printer, Trash2, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -19,6 +19,9 @@ interface LineDraft {
 }
 
 const emptyLine = (): LineDraft => ({ designation: "", quantite: "1", servi: "" });
+/** Quantité d'une ligne : accepte « 1/2 » autant qu'un entier. */
+const qte = (l: { quantite: string }) => analyserQuantite(l.quantite).valeur;
+
 const num = (s: string) => {
   // Robuste : retire les espaces (séparateurs de milliers) avant de parser
   const n = parseFloat(s.replace(/\s/g, "").replace(",", "."));
@@ -117,7 +120,7 @@ export function BonFormPage() {
   };
 
   const totalQuantite = lines.reduce(
-    (s, l) => (l.designation.trim() ? s + num(l.quantite) : s),
+    (s, l) => (l.designation.trim() ? s + qte(l) : s),
     0,
   );
 
@@ -154,9 +157,22 @@ export function BonFormPage() {
     }
   };
 
-  const validLines = lines.filter((l) => l.designation.trim() && num(l.quantite) > 0);
+  const validLines = lines.filter((l) => l.designation.trim() && qte(l) > 0);
+  
+  // Erreur par ligne : bloque l'enregistrement AVANT l'aller-retour serveur.
+  const lineErrors = lines.map((l) => {
+  if (l.designation.trim() === "" && l.quantite.trim() === "") return null;
+  const q = analyserQuantite(l.quantite);
+  if (!q.valide) {
+  if (q.motif === "DIVISION_ZERO") return t("bons:errQtyZero");
+  if (q.motif === "FORMAT") return t("bons:errQtyFormat");
+  return t("bons:errQty");
+  }
+  return null;
+  });
+  const hasLineError = lineErrors.some(Boolean);
   const hasClient = Boolean(clientId) || Boolean(clientNomLibre.trim());
-  const canSubmit = hasClient && validLines.length > 0;
+  const canSubmit = hasClient && validLines.length > 0 && !hasLineError;
 
   const mutation = useMutation({
     mutationFn: (input: BonCommandeInput) =>
@@ -181,7 +197,8 @@ export function BonFormPage() {
     montant: num(montant),
     lignes: validLines.map((l) => ({
       designation: l.designation.trim(),
-      quantite: num(l.quantite),
+      quantite: qte(l),
+      quantiteSaisie: l.quantite.trim() || undefined,
       servi: l.servi.trim() || undefined,
     })),
   });
@@ -206,7 +223,8 @@ export function BonFormPage() {
         adresseLivraison: adresseLivraison || null,
         lignes: validLines.map((l) => ({
           designation: l.designation.trim(),
-          quantite: num(l.quantite),
+          quantite: qte(l),
+          quantiteAffichee: l.quantite.trim() || undefined,
           servi: l.servi.trim() || null,
         })),
         totalQuantite,
@@ -329,8 +347,9 @@ export function BonFormPage() {
               />
               <input
                 ref={refChamp(`${i}-1`)}
-                type="number"
-                min="0"
+                type="text"
+                inputMode="text"
+                placeholder={t("bons:qtyPlaceholder")}
                 className={`${field} col-span-6 md:col-span-3`}
                 value={line.quantite}
                 onChange={(e) => updateLine(i, { quantite: e.target.value })}
@@ -351,6 +370,11 @@ export function BonFormPage() {
               >
                 <Trash2 size={16} />
               </button>
+              {lineErrors[i] && (
+                <p className="col-span-12 -mt-1 text-xs font-medium text-rose-600">
+                  {lineErrors[i]}
+                </p>
+              )}
             </div>
           ))}
         </div>

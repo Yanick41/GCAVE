@@ -22,6 +22,7 @@ export interface LigneResume {
   id: string;
   nomProduit: string;
   quantite: string;
+  quantiteSaisie?: string | null;
   prixUnitaire: string;
   totalLigne: string;
 }

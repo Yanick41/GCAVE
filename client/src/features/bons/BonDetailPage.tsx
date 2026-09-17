@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { formatDate, type Lang } from "@gca/shared";
+import { formatDate, formatterQuantite, type Lang } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRightLeft, Check, Download, Pencil, Printer, Trash2, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -65,6 +65,7 @@ export function BonDetailPage() {
     lignes: bon.lignes.map((l) => ({
       designation: l.designation,
       quantite: Number(l.quantite),
+      quantiteAffichee: formatterQuantite(Number(l.quantite), l.quantiteSaisie),
       servi: l.servi,
     })),
     totalQuantite,
@@ -214,7 +215,9 @@ export function BonDetailPage() {
               {bon.lignes.map((l) => (
                 <tr key={l.id} className="border-b last:border-0">
                   <td className="py-2">{l.designation}</td>
-                  <td className="py-2 text-right tabular-nums">{Number(l.quantite)}</td>
+                  <td className="py-2 text-right tabular-nums">
+                    {formatterQuantite(Number(l.quantite), l.quantiteSaisie)}
+                  </td>
                   <td className="py-2 text-right tabular-nums">{l.servi ?? "—"}</td>
                 </tr>
               ))}

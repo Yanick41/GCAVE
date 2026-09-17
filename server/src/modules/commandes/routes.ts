@@ -113,7 +113,12 @@ commandesRouter.post(
     const body = req.body as {
       clientId?: string;
       clientNomLibre?: string;
-      lignes: { nomProduit: string; quantite: number; prixUnitaire: number }[];
+      lignes: {
+        nomProduit: string;
+        quantite: number;
+        quantiteSaisie?: string;
+        prixUnitaire: number;
+      }[];
       remiseType: "AUCUNE" | "POURCENTAGE" | "MONTANT";
       remiseValeur: number;
       montantPaye?: number;
@@ -167,9 +172,12 @@ commandesRouter.post(
         utiliseNouveauSuiviPaiement: true,
         statut: body.statut ?? "VALIDEE",
         lignes: {
-          create: calc.lignes.map((l) => ({
+          create: calc.lignes.map((l, i) => ({
             nomProduit: l.nomProduit,
             quantite: l.quantite,
+            // Écriture d'origine : le moteur de calcul ne manipule que des
+            // nombres, on réapparie par position.
+            quantiteSaisie: body.lignes[i]?.quantiteSaisie || null,
             prixUnitaire: l.prixUnitaire,
             totalLigne: l.totalLigne,
           })),
@@ -207,7 +215,12 @@ commandesRouter.patch(
     if (!existing) throw new AppError("NOT_FOUND", 404);
 
     const body = req.body as {
-      lignes: { nomProduit: string; quantite: number; prixUnitaire: number }[];
+      lignes: {
+        nomProduit: string;
+        quantite: number;
+        quantiteSaisie?: string;
+        prixUnitaire: number;
+      }[];
       remiseType: "AUCUNE" | "POURCENTAGE" | "MONTANT";
       remiseValeur: number;
       montantPaye?: number;
@@ -239,10 +252,11 @@ commandesRouter.patch(
     await prisma.$transaction([
       prisma.ligneCommande.deleteMany({ where: { commandeId: req.params.id } }),
       prisma.ligneCommande.createMany({
-        data: calc.lignes.map((l) => ({
+        data: calc.lignes.map((l, i) => ({
           commandeId: req.params.id,
           nomProduit: l.nomProduit,
           quantite: l.quantite,
+          quantiteSaisie: body.lignes[i]?.quantiteSaisie || null,
           prixUnitaire: l.prixUnitaire,
           totalLigne: l.totalLigne,
         })),
@@ -329,6 +343,7 @@ commandesRouter.post(
           create: commande.lignes.map((l, i) => ({
             designation: l.nomProduit,
             quantite: l.quantite,
+            quantiteSaisie: l.quantiteSaisie,
             servi: null,
             ordre: i,
           })),

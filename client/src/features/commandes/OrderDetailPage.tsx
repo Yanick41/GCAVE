@@ -1,4 +1,4 @@
-import { formatDate, type Lang, type StatutPaiement } from "@gca/shared";
+import { formatDate, formatterQuantite, type Lang, type StatutPaiement } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, Download, Pencil, Printer, Trash2, Wallet } from "lucide-react";
 import { useState } from "react";
@@ -81,6 +81,7 @@ export function OrderDetailPage() {
     lignes: c.lignes.map((l) => ({
       nomProduit: l.nomProduit,
       quantite: Number(l.quantite),
+      quantiteAffichee: formatterQuantite(Number(l.quantite), l.quantiteSaisie),
       prixUnitaire: Number(l.prixUnitaire),
       totalLigne: Number(l.totalLigne),
     })),
@@ -169,7 +170,9 @@ export function OrderDetailPage() {
             {c.lignes.map((l) => (
               <tr key={l.id} className="border-b last:border-0">
                 <td className="px-4 py-2 font-medium">{l.nomProduit}</td>
-                <td className="px-4 py-2 text-right tabular-nums">{Number(l.quantite)}</td>
+                <td className="px-4 py-2 text-right tabular-nums">
+                  {formatterQuantite(Number(l.quantite), l.quantiteSaisie)}
+                </td>
                 <td className="px-4 py-2 text-right tabular-nums">
                   {money(Number(l.prixUnitaire))}
                 </td>
