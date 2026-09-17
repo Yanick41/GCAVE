@@ -122,7 +122,10 @@ model Commande {
   numero         String          @unique // ex: CMD-2025-000123
   clientId       String?
   client         Client?         @relation(fields: [clientId], references: [id])
-  clientNomLibre String? // client occasionnel (F-B01)
+  clientNomLibre String? // client occasionnel, ou vente comptoir (F-B01)
+  // Téléphone d'un client de passage, sans fiche client. Facultatif : une
+  // vente comptoir peut n'avoir ni nom ni numéro.
+  clientTelephoneLibre String?
   utilisateurId  String?
   utilisateur    Utilisateur?    @relation(fields: [utilisateurId], references: [id])
   lignes         LigneCommande[]

@@ -113,6 +113,7 @@ commandesRouter.post(
     const body = req.body as {
       clientId?: string;
       clientNomLibre?: string;
+      clientTelephoneLibre?: string;
       lignes: {
         nomProduit: string;
         quantite: number;
@@ -160,6 +161,8 @@ commandesRouter.post(
         numero,
         clientId: body.clientId ?? null,
         clientNomLibre: body.clientNomLibre ?? null,
+        // Vente comptoir : ni fiche client, ni nom, ni numéro obligatoires.
+        clientTelephoneLibre: body.clientTelephoneLibre ?? null,
         remiseType: body.remiseType,
         remiseValeur: body.remiseValeur,
         sousTotal: calc.sousTotal,

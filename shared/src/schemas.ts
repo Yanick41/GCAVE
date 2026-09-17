@@ -29,20 +29,22 @@ export const ligneSchema = z.object({
   prixUnitaire: z.number().nonnegative(),
 });
 
-export const commandeSchema = z
-  .object({
-    clientId: z.string().optional(),
-    clientNomLibre: z.string().trim().optional(),
-    lignes: z.array(ligneSchema).min(1),
-    remiseType: remiseTypeSchema.default("AUCUNE"),
-    remiseValeur: z.number().nonnegative().default(0),
-    montantPaye: z.number().nonnegative().optional(),
-    statut: statutCommandeSchema.optional(),
-  })
-  .refine((d) => Boolean(d.clientId) || Boolean(d.clientNomLibre), {
-    message: "CLIENT_REQUIRED",
-    path: ["clientId"],
-  });
+/**
+ * Une facture peut n'avoir AUCUN client : vente comptoir, client de passage.
+ * Le nom et le téléphone libres sont alors facultatifs — exiger l'un des deux
+ * empêcherait précisément la vente rapide que ce mode sert.
+ */
+export const commandeSchema = z.object({
+  clientId: z.string().optional(),
+  clientNomLibre: z.string().trim().optional(),
+  /** Téléphone saisi pour un client de passage (facultatif). */
+  clientTelephoneLibre: z.string().trim().optional(),
+  lignes: z.array(ligneSchema).min(1),
+  remiseType: remiseTypeSchema.default("AUCUNE"),
+  remiseValeur: z.number().nonnegative().default(0),
+  montantPaye: z.number().nonnegative().optional(),
+  statut: statutCommandeSchema.optional(),
+});
 
 export const modePaiementSchema = z.enum(["ESPECES", "MOBILE_MONEY", "VIREMENT"]);
 

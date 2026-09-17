@@ -5,7 +5,7 @@ import {
   type CommandeInput,
 } from "@gca/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Plus, Printer, Trash2, User } from "lucide-react";
+import { Download, Plus, Printer, ShoppingCart, Trash2, User } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -78,6 +78,11 @@ export function OrderFormPage() {
   const [montantPaye, setMontantPaye] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
   const [apercu, setApercu] = useState(false);
+  // Vente comptoir : facturer un client de passage, sans fiche client.
+  // Exclusif du sélecteur ci-dessus — on ne peut jamais avoir les deux.
+  const [comptoir, setComptoir] = useState(false);
+  const [comptoirNom, setComptoirNom] = useState("");
+  const [comptoirTel, setComptoirTel] = useState("");
 
   // Registre de focus : client, cases du tableau ("ligne-colonne") et pied
   // ("paye") partagent la même mécanique, ce qui permet à Entrée de parcourir
@@ -218,11 +223,11 @@ export function OrderFormPage() {
     if (!l.nomProduit.trim()) return t("commandes:errProduct");
     const q = analyserQuantite(l.quantite);
     if (!q.valide) {
-    // Message adapté : une division par zéro ne se corrige pas comme une
-    // quantité négative ou une saisie incompréhensible.
-    if (q.motif === "DIVISION_ZERO") return t("commandes:errQtyZero");
-    if (q.motif === "FORMAT") return t("commandes:errQtyFormat");
-    return t("commandes:errQty");
+      // Message adapté : une division par zéro ne se corrige pas comme une
+      // quantité négative ou une saisie incompréhensible.
+      if (q.motif === "DIVISION_ZERO") return t("commandes:errQtyZero");
+      if (q.motif === "FORMAT") return t("commandes:errQtyFormat");
+      return t("commandes:errQty");
     }
     if (num(l.prixUnitaire) < 0) return t("commandes:errPrice");
     return null;
@@ -232,7 +237,9 @@ export function OrderFormPage() {
   // Un client occasionnel (saisie libre) n'a pas de clientId : en édition, sa
   // commande doit rester enregistrable — c'est son nom libre qui l'identifie.
   const clientNomLibre = order?.clientNomLibre ?? null;
-  const clientRenseigne = Boolean(clientId) || Boolean(clientNomLibre);
+  // En vente comptoir, nom et téléphone sont facultatifs : n'exiger aucun
+  // client est précisément ce qui rend la vente rapide possible.
+  const clientRenseigne = Boolean(clientId) || Boolean(clientNomLibre) || comptoir;
   const canSubmit = clientRenseigne && validLines.length > 0 && !hasLineError;
 
   const updateLine = (i: number, patch: Partial<LineDraft>) =>
@@ -260,8 +267,13 @@ export function OrderFormPage() {
       return;
     }
     mutation.mutate({
-      clientId: clientId || undefined,
-      clientNomLibre: clientId ? undefined : (clientNomLibre ?? undefined),
+      clientId: comptoir ? undefined : clientId || undefined,
+      clientNomLibre: comptoir
+        ? comptoirNom.trim() || undefined
+        : clientId
+          ? undefined
+          : (clientNomLibre ?? undefined),
+      clientTelephoneLibre: comptoir ? comptoirTel.trim() || undefined : undefined,
       lignes: validLines.map((l) => ({
         nomProduit: l.nomProduit.trim(),
         quantite: qte(l),
@@ -277,36 +289,39 @@ export function OrderFormPage() {
   };
 
   const selectedClientName = selectedClient?.nom ?? order?.client?.nom;
-  const field = "rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500";
+  const field =
+    "rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500";
 
   // Données de la facture — l'aperçu est le SEUL point de sortie : le choix
   // du format se fait dans le modal, jamais par un PDF ouvert directement.
   const donneesFacture: FactureData = {
-        numero: order?.numero,
-        clientNom: selectedClientName ?? "—",
-        clientTelephone: selectedClient?.telephone,
-        clientAdresse: selectedClient?.adresse,
-        clientCode: clientId,
-        date: new Date(),
-        lignes: calc.lignes
-          .filter((l) => l.nomProduit.trim() && l.quantite > 0)
-          .map((l) => ({
-            nomProduit: l.nomProduit,
-            quantite: l.quantite,
-            prixUnitaire: l.prixUnitaire,
-            totalLigne: l.totalLigne,
-          })),
-        total: sousTotal,
-        // En édition, la facture reprend le détail des règlements déjà
-        // encaissés sur la commande (date + mode + montant).
-        paiements:
-          isEdit && order?.utiliseNouveauSuiviPaiement
-            ? (order.paiements ?? []).map((p) => ({
-                date: p.date,
-                montant: p.montant,
-                mode: t(`paiements:modes.${p.mode}`, { ns: "paiements" }),
-              }))
-            : undefined,
+    numero: order?.numero,
+    clientNom: comptoir
+      ? comptoirNom.trim() || t("commandes:walkInCustomer")
+      : (selectedClientName ?? t("commandes:walkInCustomer")),
+    clientTelephone: comptoir ? comptoirTel.trim() || undefined : selectedClient?.telephone,
+    clientAdresse: selectedClient?.adresse,
+    clientCode: clientId,
+    date: new Date(),
+    lignes: calc.lignes
+      .filter((l) => l.nomProduit.trim() && l.quantite > 0)
+      .map((l) => ({
+        nomProduit: l.nomProduit,
+        quantite: l.quantite,
+        prixUnitaire: l.prixUnitaire,
+        totalLigne: l.totalLigne,
+      })),
+    total: sousTotal,
+    // En édition, la facture reprend le détail des règlements déjà
+    // encaissés sur la commande (date + mode + montant).
+    paiements:
+      isEdit && order?.utiliseNouveauSuiviPaiement
+        ? (order.paiements ?? []).map((p) => ({
+            date: p.date,
+            montant: p.montant,
+            mode: t(`paiements:modes.${p.mode}`, { ns: "paiements" }),
+          }))
+        : undefined,
     paye,
     reste,
   };
@@ -345,6 +360,7 @@ export function OrderFormPage() {
             valeur={clientId}
             onChange={(id) => {
               setClientId(id);
+              if (id) setComptoir(false); // exclusion mutuelle
               setFocusCle("0-0");
             }}
             libelleLibre={t("commandes:selectClient")}
@@ -353,6 +369,99 @@ export function OrderFormPage() {
             champRef={refChamp("client")}
           />
         </div>
+      )}
+
+      {/* Vente comptoir — client de passage, sans fiche ni historique.
+          Trait pointillé et « ou » séparateur : la distinction avec le client
+          enregistré doit sauter aux yeux au moment de la saisie. */}
+      {!clientIdParam && !isEdit && (
+        <>
+          <p className="mb-2 text-center text-xs uppercase tracking-wide text-slate-400">
+            {t("commandes:orSeparator")}
+          </p>
+          <div
+            className={`mb-4 rounded-xl border-2 border-dashed p-4 transition ${
+              comptoir
+                ? "border-blue-500 bg-blue-50/60 dark:bg-blue-950/30"
+                : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900"
+            }`}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="flex items-center gap-2 font-semibold">
+                  <ShoppingCart size={18} /> {t("commandes:walkIn.title")}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  {t("commandes:walkIn.hint")}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const actif = !comptoir;
+                  setComptoir(actif);
+                  // Exclusion mutuelle : activer le comptoir libère le client
+                  // enregistré, et inversement.
+                  if (actif) setClientId("");
+                  else {
+                    setComptoirNom("");
+                    setComptoirTel("");
+                  }
+                }}
+                className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                  comptoir
+                    ? "bg-blue-600 text-white hover:bg-blue-500"
+                    : "border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                }`}
+              >
+                {comptoir ? t("commandes:walkIn.active") : t("commandes:walkIn.enable")}
+              </button>
+            </div>
+
+            {comptoir && (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
+                    {t("commandes:walkIn.name")}{" "}
+                    <span className="text-xs font-normal text-slate-400">
+                      ({t("commandes:optional")})
+                    </span>
+                  </label>
+                  <input
+                    value={comptoirNom}
+                    onChange={(e) => setComptoirNom(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter") return;
+                      e.preventDefault();
+                      setFocusCle("comptoirTel");
+                    }}
+                    placeholder={t("commandes:walkIn.namePlaceholder")}
+                    className={`${field} w-full`}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
+                    {t("commandes:walkIn.phone")}{" "}
+                    <span className="text-xs font-normal text-slate-400">
+                      ({t("commandes:optional")})
+                    </span>
+                  </label>
+                  <input
+                    ref={refChamp("comptoirTel")}
+                    value={comptoirTel}
+                    onChange={(e) => setComptoirTel(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter") return;
+                      e.preventDefault();
+                      setFocusCle("0-0");
+                    }}
+                    className={`${field} w-full`}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* Lignes */}

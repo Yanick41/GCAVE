@@ -63,7 +63,9 @@ export function OrderDetailPage() {
 
   const reglement = reglementDe(c);
   const paiements = c.paiements ?? [];
-  const clientNom = c.client?.nom ?? c.clientNomLibre ?? "—";
+  // Jamais de « — » ni de valeur vide sur une facture : une vente comptoir
+  // sans nom est explicitement désignée comme telle.
+  const clientNom = c.client?.nom ?? c.clientNomLibre ?? t("commandes:walkInCustomer");
   // Commandes antérieures au déploiement : le « payé » reste l'acompte figé,
   // on n'affiche donc pas de détail de règlements qui contredirait les totaux.
   const suiviDetaille = c.utiliseNouveauSuiviPaiement ?? false;
@@ -73,7 +75,8 @@ export function OrderDetailPage() {
   // Données de la facture, partagées par l'aperçu et l'impression directe.
   const donneesFacture: FactureData = {
     clientNom,
-    clientTelephone: c.client?.telephone,
+    // Client de passage : son numéro, s'il a été saisi.
+    clientTelephone: c.client?.telephone ?? c.clientTelephoneLibre,
     clientAdresse: c.client?.adresse,
     clientCode: c.clientId,
     date: new Date(c.date),

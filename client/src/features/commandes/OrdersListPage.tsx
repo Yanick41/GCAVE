@@ -71,7 +71,7 @@ export function OrdersListPage() {
                   className="cursor-pointer border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <td className="px-5 py-3 font-medium">{c.numero}</td>
-                  <td className="px-5 py-3">{c.client?.nom ?? c.clientNomLibre ?? "—"}</td>
+                  <td className="px-5 py-3">{c.client?.nom ?? c.clientNomLibre ?? t("commandes:walkInCustomer")}</td>
                   <td className="px-5 py-3 text-slate-500">{formatDate(c.date, lang)}</td>
                   <td className="px-5 py-3 text-right tabular-nums">
                     {money(Number(c.totalTTC))}

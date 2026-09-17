@@ -28,6 +28,8 @@ export interface Commande {
   numero: string;
   clientId: string | null;
   clientNomLibre: string | null;
+  /** Téléphone d'un client de passage (vente comptoir). */
+  clientTelephoneLibre?: string | null;
   // Le détail renvoie la fiche client complète, la liste seulement id + nom
   client: { id: string; nom: string; telephone?: string | null; adresse?: string | null } | null;
   remiseType: "AUCUNE" | "POURCENTAGE" | "MONTANT";

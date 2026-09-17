@@ -68,5 +68,16 @@
   "netToPay": "NET À PAYER",
   "qtyPlaceholder": "1 ou 1/2",
   "errQtyZero": "Division par zéro impossible.",
-  "errQtyFormat": "Quantité invalide : saisissez un nombre (2) ou une fraction (1/2)."
+  "errQtyFormat": "Quantité invalide : saisissez un nombre (2) ou une fraction (1/2).",
+  "orSeparator": "— ou —",
+  "walkInCustomer": "Client comptant",
+  "walkIn": {
+    "title": "Vente comptoir",
+    "hint": "Client de passage, sans fiche ni historique",
+    "enable": "Activer",
+    "active": "Activée — désactiver",
+    "name": "Nom du client",
+    "namePlaceholder": "Laisser vide si inconnu",
+    "phone": "Téléphone"
+  }
 }
