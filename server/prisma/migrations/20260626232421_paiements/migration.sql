@@ -1,8 +1,15 @@
+-- IDEMPOTENTE depuis le 2026-09-18 : la base de production a perdu son
+-- historique de migrations alors que ces objets existaient déjà. Rejouer
+-- l'historique sur une telle base exige que chaque étape sache ne rien faire
+-- si son travail est déjà fait. Le résultat sur une base neuve est identique.
+
 -- CreateEnum
-CREATE TYPE "ModePaiement" AS ENUM ('ESPECES', 'MOBILE_MONEY', 'VIREMENT');
+DO $$ BEGIN
+  CREATE TYPE "ModePaiement" AS ENUM ('ESPECES', 'MOBILE_MONEY', 'VIREMENT');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- CreateTable
-CREATE TABLE "Paiement" (
+CREATE TABLE IF NOT EXISTS "Paiement" (
     "id" TEXT NOT NULL,
     "clientId" TEXT NOT NULL,
     "montant" DECIMAL(12,2) NOT NULL,
@@ -15,10 +22,12 @@ CREATE TABLE "Paiement" (
 );
 
 -- CreateIndex
-CREATE INDEX "Paiement_clientId_idx" ON "Paiement"("clientId");
+CREATE INDEX IF NOT EXISTS "Paiement_clientId_idx" ON "Paiement"("clientId");
 
 -- CreateIndex
-CREATE INDEX "Paiement_date_idx" ON "Paiement"("date");
+CREATE INDEX IF NOT EXISTS "Paiement_date_idx" ON "Paiement"("date");
 
 -- AddForeignKey
-ALTER TABLE "Paiement" ADD CONSTRAINT "Paiement_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "Client"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Paiement" ADD CONSTRAINT "Paiement_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "Client"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
