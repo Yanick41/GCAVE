@@ -205,6 +205,9 @@ const NOMBRE = String.raw`\d+(?:[.,]\d+)?`;
 // String.raw impératif : dans un gabarit ordinaire, `\s` se réduirait à « s »
 // et le motif exigerait des lettres s autour de la barre de fraction.
 const RE_FRACTION = new RegExp(String.raw`^(${NOMBRE})\s*/\s*(${NOMBRE})$`);
+// Nombre mixte : « 2 1/2 » vaut deux et demi. Éprouvé AVANT la fraction
+// simple, qui ne reconnaîtrait pas la partie entière et rejetterait la saisie.
+const RE_MIXTE = new RegExp(String.raw`^(\d+)\s+(${NOMBRE})\s*/\s*(${NOMBRE})$`);
 const RE_NOMBRE = new RegExp(`^${NOMBRE}$`);
 
 const versNombre = (s: string) => parseFloat(s.replace(",", "."));
@@ -216,6 +219,16 @@ const versNombre = (s: string) => parseFloat(s.replace(",", "."));
 export function analyserQuantite(texte: string): QuantiteAnalysee {
   const t = (texte ?? "").trim().replace(/\s+/g, " ");
   if (t === "") return { valeur: 0, valide: false, motif: "VIDE" };
+
+  const mixte = RE_MIXTE.exec(t);
+  if (mixte) {
+    const entier = versNombre(mixte[1]);
+    const denominateur = versNombre(mixte[3]);
+    if (denominateur === 0) return { valeur: 0, valide: false, motif: "DIVISION_ZERO" };
+    const valeur = Math.round((entier + versNombre(mixte[2]) / denominateur) * 1000) / 1000;
+    if (valeur <= 0) return { valeur: 0, valide: false, motif: "NON_POSITIF" };
+    return { valeur, valide: true };
+  }
 
   const fraction = RE_FRACTION.exec(t);
   if (fraction) {

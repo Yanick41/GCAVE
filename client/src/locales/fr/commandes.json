@@ -66,9 +66,9 @@
   "converting": "Conversion…",
   "paidAdjusts": "La saisie ajuste les règlements rattachés à cette commande.",
   "netToPay": "NET À PAYER",
-  "qtyPlaceholder": "1 ou 1/2",
+  "qtyPlaceholder": "1, 1/2 ou 2 1/2",
   "errQtyZero": "Division par zéro impossible.",
-  "errQtyFormat": "Quantité invalide : saisissez un nombre (2) ou une fraction (1/2).",
+  "errQtyFormat": "Quantité invalide : saisissez un nombre (2), une fraction (1/2) ou un nombre mixte (2 1/2).",
   "orSeparator": "— ou —",
   "walkInCustomer": "Client comptant",
   "walkIn": {
