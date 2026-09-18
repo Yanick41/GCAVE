@@ -1,4 +1,11 @@
-import { clientSchema, paiementSchema, rappelSchema, soldeClient } from "@gca/shared";
+import {
+  clientSchema,
+  clientsImportSchema,
+  paiementSchema,
+  rappelSchema,
+  soldeClient,
+  type ClientInput,
+} from "@gca/shared";
 import { Router } from "express";
 import { ah } from "../../lib/async.js";
 import {
@@ -226,6 +233,52 @@ clientsRouter.post(
       },
     });
     res.status(201).json(client);
+  }),
+);
+
+// Import en masse depuis un fichier (CSV du tableur du commerçant).
+//
+// Le serveur revalide TOUT : le navigateur a préparé et prévisualisé la liste,
+// mais rien de ce qu'il envoie n'est cru sur parole.
+//
+// Les clients déjà en base sont IGNORÉS, jamais écrasés : un import relancé
+// deux fois ne duplique rien et n'efface aucune correction faite entre-temps.
+// La comparaison se fait sur le téléphone réduit à ses chiffres, la même fiche
+// pouvant être écrite « 07 00 00 00 01 » ici et « 0700000001 » là.
+clientsRouter.post(
+  "/import",
+  validate(clientsImportSchema),
+  ah(async (req, res) => {
+    const { clients } = req.body as { clients: ClientInput[] };
+
+    const cle = (t: string) => t.replace(/[^0-9+]/g, "");
+    const existants = new Set(
+      (await prisma.client.findMany({ select: { telephone: true } })).map((c) => cle(c.telephone)),
+    );
+
+    const aCreer: ClientInput[] = [];
+    const ignores: { nom: string; telephone: string }[] = [];
+    for (const c of clients) {
+      if (existants.has(cle(c.telephone))) {
+        ignores.push({ nom: c.nom, telephone: c.telephone });
+        continue;
+      }
+      // Le lot lui-même peut contenir deux fois la même fiche.
+      existants.add(cle(c.telephone));
+      aCreer.push(c);
+    }
+
+    const resultat = await prisma.client.createMany({
+      data: aCreer.map((c) => ({
+        nom: c.nom,
+        telephone: c.telephone,
+        email: c.email || null,
+        adresse: c.adresse || null,
+        soldeInitial: c.soldeInitial ?? 0,
+      })),
+    });
+
+    res.status(201).json({ crees: resultat.count, ignores });
   }),
 );
 

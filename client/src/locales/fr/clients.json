@@ -68,5 +68,24 @@
       "linkHelp": "Choisissez la commande réglée par ce paiement. La facture de cette commande affichera alors le montant payé et le reste à payer.",
       "paysOrder": "Règle la commande {{ref}}"
     }
+  },
+  "import": {
+    "action": "Importer",
+    "title": "Importer des clients depuis un fichier",
+    "hint": "Choisissez un fichier CSV exporté de votre tableur. La première ligne doit contenir les intitulés des colonnes : nom, téléphone, et si vous les avez e-mail, adresse et solde initial.",
+    "choose": "Choisir un fichier CSV…",
+    "missingColumns": "Impossible de trouver les colonnes « nom » et « téléphone » dans ce fichier. Vérifiez que la première ligne contient bien les intitulés.",
+    "ready": "{{count}} fiche(s) prête(s)",
+    "skipped": "{{count}} ligne(s) écartée(s)",
+    "line": "Ligne {{n}}",
+    "submit": "Importer {{count}} fiche(s)",
+    "done": "{{count}} client(s) importé(s).",
+    "alreadyThere": "{{count}} fiche(s) déjà en base, laissée(s) inchangée(s) :",
+    "reason": {
+      "NOM_MANQUANT": "nom manquant",
+      "TELEPHONE_MANQUANT": "téléphone manquant",
+      "DOUBLON_FICHIER": "numéro déjà présent plus haut dans le fichier",
+      "LIGNE_VIDE": "ligne vide"
+    }
   }
 }

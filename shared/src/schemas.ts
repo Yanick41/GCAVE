@@ -21,6 +21,18 @@ export const clientSchema = z.object({
   soldeInitial: z.number().optional(), // solde d'ouverture (créance reprise du papier)
 });
 
+/**
+ * Import en masse de fiches clients depuis un fichier.
+ *
+ * Plafond à 2 000 fiches : au-delà, un envoi unique deviendrait long et
+ * fragile, et il vaut mieux découper le fichier que risquer une requête qui
+ * expire à mi-parcours. Le lot vide est refusé — importer rien est une erreur
+ * de manipulation, pas une intention.
+ */
+export const clientsImportSchema = z.object({
+  clients: z.array(clientSchema).min(1).max(2000),
+});
+
 export const ligneSchema = z.object({
   nomProduit: z.string().trim().min(1),
   quantite: z.number().positive(),

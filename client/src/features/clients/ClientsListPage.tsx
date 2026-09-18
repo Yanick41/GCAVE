@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MapPin, Pencil, Phone, Plus, Receipt, Trash2, Users } from "lucide-react";
+import { MapPin, Pencil, Phone, Plus, Receipt, Trash2, Upload, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useMoney } from "../privacy/mask";
 import { avatarColor, initials } from "../../lib/avatar";
 import { archiveClient, fetchClients, type SortKey } from "./api";
+import { ImportClientsModal } from "./ImportClientsModal";
 
 export function ClientsListPage() {
   const { t } = useTranslation(["clients", "common"]);
@@ -16,6 +17,7 @@ export function ClientsListPage() {
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [sort, setSort] = useState<SortKey>("recent");
+  const [importOuvert, setImport] = useState(false);
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(search), 250);
@@ -57,12 +59,22 @@ export function ClientsListPage() {
             <p className="text-sm text-slate-400">{t("clients:count", { count })}</p>
           </div>
         </div>
-        <Link
-          to="/clients/new"
-          className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-700"
-        >
-          <Plus size={18} /> {t("clients:new")}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {/* Import en masse : ressaisir des centaines de fiches une par une
+              dans le formulaire n’est pas tenable. */}
+          <button
+            onClick={() => setImport(true)}
+            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            <Upload size={18} /> {t("clients:import.action")}
+          </button>
+          <Link
+            to="/clients/new"
+            className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-700"
+          >
+            <Plus size={18} /> {t("clients:new")}
+          </Link>
+        </div>
       </div>
 
       <div className="mb-5 flex flex-wrap items-center gap-3">
@@ -152,6 +164,8 @@ export function ClientsListPage() {
           ))}
         </div>
       )}
+
+      {importOuvert && <ImportClientsModal onClose={() => setImport(false)} />}
     </div>
   );
 }

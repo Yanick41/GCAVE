@@ -108,6 +108,17 @@ export async function fetchClient(id: string): Promise<ClientDetail> {
   return data;
 }
 
+/** Fiches déjà présentes en base, ignorées plutôt qu’écrasées. */
+export interface ImportResultat {
+  crees: number;
+  ignores: { nom: string; telephone: string }[];
+}
+
+export async function importerClients(clients: ClientInput[]): Promise<ImportResultat> {
+  const { data } = await api.post("/api/clients/import", { clients });
+  return data;
+}
+
 export async function createClient(input: ClientInput): Promise<ClientListItem> {
   const { data } = await api.post<ClientListItem>("/api/clients", input);
   return data;

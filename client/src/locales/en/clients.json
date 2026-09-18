@@ -68,5 +68,24 @@
       "linkHelp": "Pick the order this payment settles. That order's invoice will then show the amount paid and the balance due.",
       "paysOrder": "Settles order {{ref}}"
     }
+  },
+  "import": {
+    "action": "Import",
+    "title": "Import clients from a file",
+    "hint": "Choose a CSV file exported from your spreadsheet. The first row must contain the column headings: name, phone, and if you have them e-mail, address and opening balance.",
+    "choose": "Choose a CSV file…",
+    "missingColumns": "Could not find the “name” and “phone” columns in this file. Check that the first row contains the headings.",
+    "ready": "{{count}} record(s) ready",
+    "skipped": "{{count}} row(s) skipped",
+    "line": "Row {{n}}",
+    "submit": "Import {{count}} record(s)",
+    "done": "{{count}} client(s) imported.",
+    "alreadyThere": "{{count}} record(s) already in the database, left unchanged:",
+    "reason": {
+      "NOM_MANQUANT": "missing name",
+      "TELEPHONE_MANQUANT": "missing phone",
+      "DOUBLON_FICHIER": "phone already used earlier in the file",
+      "LIGNE_VIDE": "empty row"
+    }
   }
 }
