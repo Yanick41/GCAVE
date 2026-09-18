@@ -1,13 +1,32 @@
 name: Sauvegarde base de données (Neon)
 
-# Sauvegarde quotidienne automatique de la base PostgreSQL (Neon).
-# - Se déclenche chaque jour à 02:00 UTC + manuellement (bouton "Run workflow").
-# - Fait un pg_dump complet, compressé, stocké en artefact GitHub (30 jours).
+# Sauvegarde quotidienne de la base PostgreSQL (Neon), en DEUX formats, chacun
+# VÉRIFIÉ avant publication.
 #
-# ⚠️ Prérequis : ajouter le secret de dépôt "BACKUP_DATABASE_URL"
-#    (GitHub → Settings → Secrets and variables → Actions → New repository secret)
-#    avec l'URL de connexion NON-poolée de Neon (host SANS "-pooler"),
-#    ex: postgresql://user:pass@ep-xxx.eu-...neon.tech/neondb?sslmode=require
+# Pourquoi deux formats et pourquoi ces vérifications : du 2026-08 au 2026-09-18,
+# cette tâche a affiché « succès » chaque jour en produisant un fichier VIDE.
+# Deux défauts se cumulaient :
+#
+#   1. `pg_dump` 17 refusait de lire un serveur PostgreSQL 18 (Neon a été mis à
+#      jour sans prévenir). Un client pg_dump ne lit jamais un serveur plus
+#      récent que lui : le format binaire est couplé à la version.
+#   2. `pg_dump ... | gzip > fichier` ne remonte que le code de sortie de
+#      `gzip`. Sans `pipefail`, l'échec de `pg_dump` était invisible, le job
+#      passait au vert, et l'artefact de 20 octets n'alertait personne.
+#
+# Quand la base a été perdue le 2026-09-18, aucune des 30 sauvegardes de la
+# fenêtre de rétention n'était exploitable. D'où :
+#
+#   • `set -euo pipefail` partout — un tube qui échoue fait échouer le job ;
+#   • une sauvegarde JSON (`sauvegarde.mjs`) INDÉPENDANTE de la version du
+#     serveur, relisible par `restaurer.mjs` : la prochaine mise à jour de
+#     PostgreSQL ne pourra pas la casser ;
+#   • un contrôle du CONTENU des deux fichiers avant publication. Une sauvegarde
+#     qu'on n'a pas vérifiée n'est pas une sauvegarde.
+#
+# ⚠️ Prérequis : secret de dépôt "BACKUP_DATABASE_URL" (GitHub → Settings →
+#    Secrets and variables → Actions) avec l'URL Neon NON-poolée (hôte SANS
+#    "-pooler"), ex: postgresql://user:pass@ep-xxx.neon.tech/neondb?sslmode=require
 
 on:
   schedule:
@@ -19,25 +38,86 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Dump PostgreSQL (compressé)
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Vérifier le secret
         env:
           DB_URL: ${{ secrets.BACKUP_DATABASE_URL }}
         run: |
+          set -euo pipefail
           if [ -z "$DB_URL" ]; then
             echo "::error::Secret BACKUP_DATABASE_URL manquant. Ajoutez-le dans Settings > Secrets > Actions."
             exit 1
           fi
-          FILE="backup-$(date -u +%Y%m%d-%H%M).sql.gz"
-          # pg_dump via l'image officielle postgres:17 (version client à jour, TLS OK)
-          docker run --rm -e DB_URL="$DB_URL" postgres:17-alpine \
-            sh -c 'pg_dump --no-owner --no-privileges "$DB_URL"' | gzip > "$FILE"
-          echo "Sauvegarde créée : $FILE ($(du -h "$FILE" | cut -f1))"
-          echo "FILE=$FILE" >> "$GITHUB_ENV"
+          case "$DB_URL" in
+            *-pooler.*)
+              echo "::error::BACKUP_DATABASE_URL passe par le pooler. Utilisez l'hôte direct (sans -pooler)."
+              exit 1 ;;
+          esac
 
-      - name: Publier l'artefact
+      - name: Installer les dépendances
+        run: npm ci --ignore-scripts && npm run prisma:generate --workspace @gca/server
+
+      - name: Sauvegarde JSON (indépendante de la version du serveur)
+        env:
+          DIRECT_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          npm run sauvegarde --workspace @gca/server -- "$GITHUB_WORKSPACE/sauvegardes"
+
+      - name: Sauvegarde pg_dump (fidélité complète du schéma)
+        env:
+          DB_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          mkdir -p sauvegardes
+          FICHIER="sauvegardes/pg_dump-$(date -u +%Y%m%d-%H%M).sql.gz"
+          # Image alignée sur la version du serveur Neon. Si Neon passe à une
+          # version majeure supérieure, CE JOB ÉCHOUE — bruyamment, au lieu de
+          # produire un fichier vide en silence.
+          docker run --rm -e DB_URL="$DB_URL" postgres:18-alpine \
+            sh -c 'pg_dump --no-owner --no-privileges "$DB_URL"' | gzip > "$FICHIER"
+          echo "FICHIER=$FICHIER" >> "$GITHUB_ENV"
+
+      - name: Contrôler le contenu des sauvegardes
+        run: |
+          set -euo pipefail
+          JSON=$(ls sauvegardes/sauvegarde-sgc-*.json)
+
+          # Le JSON doit contenir les huit tables de l'application.
+          for TABLE in Utilisateur Client Commande LigneCommande Paiement Rappel BonCommande LigneBon; do
+            grep -q "\"$TABLE\"" "$JSON" || { echo "::error::Table $TABLE absente de $JSON"; exit 1; }
+          done
+          echo "JSON  : $(du -h "$JSON" | cut -f1) — huit tables présentes"
+
+          # Le pg_dump doit décrire un schéma, pas être un fichier vide.
+          TAILLE=$(gunzip -c "$FICHIER" | wc -c)
+          if [ "$TAILLE" -lt 1000 ]; then
+            echo "::error::pg_dump vide ou tronqué ($TAILLE octets décompressés)."
+            exit 1
+          fi
+          gunzip -c "$FICHIER" | grep -q 'CREATE TABLE public."Client"' \
+            || { echo "::error::pg_dump ne contient pas la table Client."; exit 1; }
+          echo "pg_dump : $TAILLE octets décompressés — schéma présent"
+
+          # Le total d'enregistrements est journalisé : une chute brutale d'un
+          # jour à l'autre se voit dans l'historique des exécutions.
+          node -e '
+            const s = require(process.argv[1]);
+            const t = Object.entries(s.totaux);
+            console.log("Enregistrements :", t.map(([k,v]) => k+"="+v).join(", "));
+            console.log("TOTAL :", t.reduce((a,[,v]) => a+v, 0));
+          ' "$PWD/$JSON"
+
+      - name: Publier les sauvegardes
         uses: actions/upload-artifact@v4
         with:
-          name: db-backup-${{ github.run_id }}
-          path: ${{ env.FILE }}
-          retention-days: 30
+          name: sauvegarde-sgc-${{ github.run_id }}
+          path: sauvegardes/
+          retention-days: 90
           if-no-files-found: error

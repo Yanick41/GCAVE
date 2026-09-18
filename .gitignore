@@ -18,6 +18,10 @@ build/
 # Prisma
 server/prisma/*.db
 
+# Sauvegardes de la base : données clients réelles, jamais dans le dépôt.
+sauvegardes/
+*.sql.gz
+
 # Logs
 *.log
 npm-debug.log*

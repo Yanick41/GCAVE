@@ -10,6 +10,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "migrate:deploy": "node scripts/migrate-deploy.mjs",
+    "sauvegarde": "node scripts/sauvegarde.mjs",
+    "restaurer": "node scripts/restaurer.mjs",
     "prisma:studio": "prisma studio",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts"
