@@ -45,7 +45,10 @@ dashboardRouter.get(
     const cmdByClient = new Map(
       cmdGroup.map((g) => [g.clientId as string, Number(g._sum.totalTTC ?? 0)]),
     );
+    // Les encaissements de vente comptoir n'ont pas de client : ils n'ont
+    // pas leur place dans un classement des meilleurs clients payeurs.
     const ranked = payGroup
+      .filter((g): g is typeof g & { clientId: string } => g.clientId !== null)
       .map((g) => ({ clientId: g.clientId, paye: Number(g._sum.montant ?? 0) }))
       .sort((a, b) => b.paye - a.paye)
       .slice(0, 5);

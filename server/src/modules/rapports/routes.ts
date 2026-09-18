@@ -28,7 +28,12 @@ rapportsRouter.get(
       }),
       prisma.paiement.findMany({
         where: { date: { gte: start, lt: end } },
-        include: { client: { select: { nom: true } } },
+        include: {
+          client: { select: { nom: true } },
+          // Vente comptoir : le payeur n'a pas de fiche, son nom (s'il en a
+          // donné un) est porté par la commande réglée.
+          commande: { select: { clientNomLibre: true } },
+        },
         orderBy: { date: "asc" },
       }),
     ]);
@@ -66,7 +71,7 @@ rapportsRouter.get(
       })),
       paiements: paiements.map((p) => ({
         id: p.id,
-        clientNom: p.client?.nom ?? "—",
+        clientNom: p.client?.nom ?? p.commande?.clientNomLibre ?? "Client comptant",
         montant: Number(p.montant),
         mode: p.mode,
         date: p.date,

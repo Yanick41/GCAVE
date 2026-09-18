@@ -66,9 +66,8 @@ commandesRouter.post(
       include: { paiements: true },
     });
     if (!commande) throw new AppError("NOT_FOUND", 404);
-    // Un paiement appartient toujours à un client : impossible sur une
-    // commande de client occasionnel (saisie libre, sans fiche client).
-    if (!commande.clientId) throw new AppError("CLIENT_REQUIRED", 400);
+    // Un encaissement peut n'avoir aucun client (vente comptoir) : seule la
+    // commande le rattache. La contrainte a été levée en base.
     if (commande.statut === "ANNULEE") throw new AppError("COMMANDE_ANNULEE", 400);
     // Commande de l'ancien suivi : son « payé » reste l'acompte figé. Encaisser
     // ici n'aurait aucun effet sur sa facture → on refuse plutôt que d'induire
@@ -152,9 +151,9 @@ commandesRouter.post(
 
     // L'acompte saisi à la validation est créé comme un PAIEMENT RATTACHÉ à la
     // commande (écriture imbriquée : le lien est posé dès la création, sans
-    // transaction séparée). Impossible pour un client occasionnel (pas de fiche
-    // client) : `montantPaye` reste alors le seul enregistrement de l'acompte.
-    const acompte = montantPaye > 0 && body.clientId ? montantPaye : 0;
+    // transaction séparée). Vente comptoir comprise : sans écriture, la recette
+    // n'apparaîtrait ni dans les paiements, ni dans le rapport du jour.
+    const acompte = montantPaye > 0 ? montantPaye : 0;
 
     const commande = await prisma.commande.create({
       data: {
@@ -185,11 +184,11 @@ commandesRouter.post(
             totalLigne: l.totalLigne,
           })),
         },
-        ...(acompte > 0 && body.clientId
+        ...(acompte > 0
           ? {
               paiements: {
                 create: {
-                  clientId: body.clientId,
+                  clientId: body.clientId ?? null,
                   montant: acompte,
                   mode: "ESPECES",
                   observation: `Paiement à la commande ${numero}`,
@@ -247,9 +246,7 @@ commandesRouter.patch(
     // sans écriture de paiement possible — le montant est la seule trace et
     // s'écrit directement sur la commande.
     const viaReglements =
-      montantPayeVise !== undefined &&
-      existing.utiliseNouveauSuiviPaiement &&
-      Boolean(existing.clientId);
+      montantPayeVise !== undefined && existing.utiliseNouveauSuiviPaiement;
 
     // Transaction batch (compatible pooler) : remplace les lignes + met à jour les totaux
     await prisma.$transaction([
@@ -280,7 +277,7 @@ commandesRouter.patch(
     if (viaReglements) {
       await reconcilierPaiements(
         req.params.id,
-        existing.clientId as string,
+        existing.clientId,
         montantPayeVise as number,
         `Règlement saisi sur la commande ${existing.numero}`,
       );

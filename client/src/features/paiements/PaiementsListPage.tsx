@@ -13,7 +13,7 @@ const modeStyle: Record<string, string> = {
 };
 
 export function PaiementsListPage() {
-  const { t, i18n } = useTranslation(["paiements", "common"]);
+  const { t, i18n } = useTranslation(["paiements", "commandes", "common"]);
   const lang = (i18n.resolvedLanguage as Lang) ?? "fr";
   const money = useMoney();
   const navigate = useNavigate();
@@ -62,10 +62,19 @@ export function PaiementsListPage() {
                 <tr
                   key={p.id}
                   onClick={() => p.client && navigate(`/clients/${p.client.id}`)}
-                  className="cursor-pointer border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  className={`border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800 ${
+                    p.client ? "cursor-pointer" : ""
+                  }`}
                 >
                   <td className="px-5 py-3 text-slate-500">{formatDate(p.date, lang)}</td>
-                  <td className="px-5 py-3 font-medium">{p.client?.nom ?? "—"}</td>
+                  {/* Vente comptoir : pas de fiche client. On affiche le nom
+                      donné au comptoir, sinon « Client comptant » — jamais un
+                      tiret, qui ferait croire à un encaissement sans origine. */}
+                  <td className="px-5 py-3 font-medium">
+                    {p.client?.nom ??
+                      p.commande?.clientNomLibre ??
+                      t("commandes:walkInCustomer")}
+                  </td>
                   {/* Commande réglée par ce paiement (vide = solde global) */}
                   <td className="px-5 py-3 text-slate-500">
                     {p.commande ? (

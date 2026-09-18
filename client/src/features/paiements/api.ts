@@ -10,7 +10,7 @@ export interface PaiementListItem {
   client: { id: string; nom: string } | null;
   commandeId: string | null;
   /** Commande réglée par ce paiement (null = paiement sur le solde global). */
-  commande: { id: string; numero: string } | null;
+  commande: { id: string; numero: string; clientNomLibre: string | null } | null;
 }
 
 export async function fetchPaiements(): Promise<PaiementListItem[]> {

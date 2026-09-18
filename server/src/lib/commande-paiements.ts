@@ -138,7 +138,8 @@ export function planifierReconciliation(
  */
 export async function reconcilierPaiements(
   commandeId: string,
-  clientId: string,
+  /** NULL pour une vente comptoir : l'encaissement existe sans fiche client. */
+  clientId: string | null,
   totalVise: number,
   observationAppoint: string,
 ) {

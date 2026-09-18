@@ -105,7 +105,9 @@ export function OrderDetailPage() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <BackButton />
         <div className="flex flex-wrap gap-2">
-          {c.clientId && c.statut !== "ANNULEE" && suiviDetaille && (
+          {/* Vente comptoir comprise : le règlement se rattache à la
+              commande, la fiche client n'est pas nécessaire. */}
+          {c.statut !== "ANNULEE" && suiviDetaille && (
             <button
               onClick={() => setShowPayment(true)}
               className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
@@ -278,7 +280,7 @@ export function OrderDetailPage() {
           onClose={() => setApercu(false)}
         />
       )}
-      {showPayment && c.clientId && (
+      {showPayment && (
         <PaymentModal
           clientId={c.clientId}
           clientName={clientNom}

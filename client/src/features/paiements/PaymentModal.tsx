@@ -27,7 +27,8 @@ export function PaymentModal({
   lockCommande = false,
   onClose,
 }: {
-  clientId: string;
+  /** NULL pour une vente comptoir : le paiement ne tient qu'à la commande. */
+  clientId: string | null;
   clientName: string;
   /** Commandes du client auxquelles le paiement peut être rattaché. */
   commandes?: CommandeOption[];
@@ -69,10 +70,13 @@ export function PaymentModal({
       // Rattaché à une commande → la facture de cette commande affichera le
       // paiement et le reste à payer. Sinon : paiement sur le solde global.
       if (commandeId) await createPaiementCommande(commandeId, input);
-      else await createPaiement(clientId, input);
+      // Sans commande ET sans client, l'encaissement ne se rattacherait à
+      // rien : la vente comptoir impose donc toujours une commande.
+      else if (clientId) await createPaiement(clientId, input);
+      else throw new Error("COMMANDE_REQUISE");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      if (clientId) queryClient.invalidateQueries({ queryKey: ["client", clientId] });
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["paiements"] });
       queryClient.invalidateQueries({ queryKey: ["commandes"] });

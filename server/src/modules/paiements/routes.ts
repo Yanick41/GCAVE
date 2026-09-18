@@ -20,7 +20,9 @@ paiementsRouter.get(
       take: 200,
       include: {
         client: { select: { id: true, nom: true } },
-        commande: { select: { id: true, numero: true } },
+        // clientNomLibre : nom du payeur d'une vente comptoir, qui n'a pas
+        // de fiche client — sans lui la ligne n'aurait aucun libellé.
+        commande: { select: { id: true, numero: true, clientNomLibre: true } },
       },
     });
     res.json(paiements);

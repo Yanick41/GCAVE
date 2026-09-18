@@ -98,8 +98,11 @@ model Rappel {
 
 model Paiement {
   id       String @id @default(cuid())
-  clientId String
-  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  // NULL = encaissement d'une vente comptoir : la facture existe, le client
+  // n'a pas de fiche. Sans cela une vente de passage ne pourrait porter aucun
+  // règlement et n'apparaîtrait ni dans les paiements, ni dans le rapport.
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
   // Commande réglée par ce paiement (une commande peut recevoir plusieurs
   // paiements partiels). NULL = paiement libre sur le solde global du client.
   // SetNull : supprimer une commande ne fait pas disparaître l'encaissement,
