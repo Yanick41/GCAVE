@@ -4,6 +4,7 @@ import {
   LogOut,
   Package,
   Settings,
+  Store,
   Users,
   Wallet,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { MaskToggle } from "./MaskToggle";
 import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
+  { to: "/comptoir", key: "nav.counter", Icon: Store },
   { to: "/bons", key: "nav.purchaseOrders", Icon: ClipboardList },
   { to: "/clients", key: "nav.clients", Icon: Users },
   { to: "/commandes", key: "nav.orders", Icon: Package },

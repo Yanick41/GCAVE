@@ -14,7 +14,8 @@
     "reminders": "Reminders",
     "reports": "Reports",
     "settings": "Settings",
-    "logout": "Log out"
+    "logout": "Log out",
+    "counter": "Counter sale"
   },
   "health": {
     "title": "System status",

@@ -1,0 +1,22 @@
+{
+  "title": "Client comptant",
+  "subtitle": "Ticket de caisse — aucune fiche client à créer",
+  "columns": {
+    "item": "Article",
+    "qty": "Qté",
+    "price": "Prix unitaire",
+    "amount": "Montant"
+  },
+  "addLine": "Ajouter une ligne",
+  "removeLine": "Retirer cette ligne",
+  "total": "Total à payer",
+  "received": "Montant reçu",
+  "change": "Monnaie à rendre",
+  "addIdentity": "Ajouter le nom du client (facultatif)",
+  "customerName": "Nom du client",
+  "customerPhone": "Téléphone",
+  "checkout": "Encaisser et imprimer le ticket",
+  "reprint": "Réimprimer le ticket",
+  "nextSale": "Nouvelle vente",
+  "sold": "Vente enregistrée — {{numero}}"
+}

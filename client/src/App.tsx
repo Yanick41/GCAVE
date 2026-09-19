@@ -9,6 +9,7 @@ import { BonsListPage } from "./features/bons/BonsListPage";
 import { ClientDetailPage } from "./features/clients/ClientDetailPage";
 import { ClientFormPage } from "./features/clients/ClientFormPage";
 import { ClientsListPage } from "./features/clients/ClientsListPage";
+import { ComptoirPage } from "./features/comptoir/ComptoirPage";
 import { OrderDetailPage } from "./features/commandes/OrderDetailPage";
 import { OrderFormPage } from "./features/commandes/OrderFormPage";
 import { OrdersListPage } from "./features/commandes/OrdersListPage";
@@ -36,6 +37,8 @@ export default function App() {
             <Route path="/clients/:id/edit" element={<ClientFormPage />} />
             <Route path="/clients/:id/commandes/new" element={<OrderFormPage />} />
             <Route path="/clients/:id/bons/new" element={<BonFormPage />} />
+
+            <Route path="/comptoir" element={<ComptoirPage />} />
 
             <Route path="/commandes" element={<OrdersListPage />} />
             <Route path="/commandes/new" element={<OrderFormPage />} />

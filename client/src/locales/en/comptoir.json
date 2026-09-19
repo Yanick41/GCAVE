@@ -1,0 +1,22 @@
+{
+  "title": "Counter sale",
+  "subtitle": "Cash receipt — no client record needed",
+  "columns": {
+    "item": "Item",
+    "qty": "Qty",
+    "price": "Unit price",
+    "amount": "Amount"
+  },
+  "addLine": "Add a line",
+  "removeLine": "Remove this line",
+  "total": "Total due",
+  "received": "Amount received",
+  "change": "Change due",
+  "addIdentity": "Add the customer's name (optional)",
+  "customerName": "Customer name",
+  "customerPhone": "Phone",
+  "checkout": "Take payment and print receipt",
+  "reprint": "Reprint receipt",
+  "nextSale": "New sale",
+  "sold": "Sale recorded — {{numero}}"
+}

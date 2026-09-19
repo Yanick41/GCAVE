@@ -14,7 +14,8 @@
     "reminders": "Rappels",
     "reports": "Rapports",
     "settings": "Paramètres",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "counter": "Client comptant"
   },
   "health": {
     "title": "État du système",
