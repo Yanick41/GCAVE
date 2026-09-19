@@ -1,10 +1,11 @@
 import { formatDate, type Lang } from "@gca/shared";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Package } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useMoney } from "../privacy/mask";
-import { fetchCommandes } from "./api";
+import { fetchCommandes, type TypeVente } from "./api";
 import { paiementStatusStyle } from "./OrderDetailPage";
 import { reglementDe } from "./reglement";
 
@@ -20,9 +21,11 @@ export function OrdersListPage() {
   const money = useMoney();
   const navigate = useNavigate();
 
+  const [type, setType] = useState<TypeVente>("tous");
   const { data: commandes, isLoading } = useQuery({
-    queryKey: ["commandes"],
-    queryFn: () => fetchCommandes(),
+    // Le type fait partie de la clé : changer de filtre relance la requête.
+    queryKey: ["commandes", type],
+    queryFn: () => fetchCommandes(undefined, type),
   });
 
   return (
@@ -32,6 +35,24 @@ export function OrdersListPage() {
           <Package size={22} />
         </div>
         <h1 className="text-2xl font-bold">{t("commandes:title")}</h1>
+      </div>
+
+      {/* Ventes comptoir et ventes aux clients enregistrés se consultent
+          séparément : ce sont deux réalités commerciales distinctes. */}
+      <div className="mb-5 inline-flex rounded-lg border bg-white p-1 text-sm dark:border-slate-700 dark:bg-slate-900">
+        {(["tous", "enregistre", "comptoir"] as TypeVente[]).map((v) => (
+          <button
+            key={v}
+            onClick={() => setType(v)}
+            className={`rounded-md px-3 py-1.5 font-medium transition ${
+              type === v
+                ? "bg-slate-800 text-white"
+                : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+            }`}
+          >
+            {t(`commandes:saleType.${v}`)}
+          </button>
+        ))}
       </div>
 
       <div className="overflow-hidden rounded-xl border bg-white dark:bg-slate-900 shadow-sm">

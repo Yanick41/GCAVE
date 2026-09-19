@@ -79,5 +79,10 @@
     "name": "Customer name",
     "namePlaceholder": "Leave empty if unknown",
     "phone": "Phone"
+  },
+  "saleType": {
+    "tous": "All",
+    "enregistre": "Registered clients",
+    "comptoir": "Counter sales"
   }
 }

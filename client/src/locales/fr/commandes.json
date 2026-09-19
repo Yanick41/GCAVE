@@ -79,5 +79,10 @@
     "name": "Nom du client",
     "namePlaceholder": "Laisser vide si inconnu",
     "phone": "Téléphone"
+  },
+  "saleType": {
+    "tous": "Toutes",
+    "enregistre": "Clients enregistrés",
+    "comptoir": "Ventes comptoir"
   }
 }

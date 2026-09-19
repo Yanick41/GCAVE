@@ -22,8 +22,24 @@ commandesRouter.get(
   "/",
   ah(async (req, res) => {
     const clientId = req.query.clientId ? String(req.query.clientId) : undefined;
+    // Type de vente : « comptoir » = client de passage (aucune fiche client),
+    // « enregistre » = client du fichier. Le signal est l'absence de clientId,
+    // pas une colonne dédiée qui pourrait diverger de la réalité.
+    const type = req.query.type === "comptoir" || req.query.type === "enregistre"
+      ? req.query.type
+      : undefined;
     const commandes = await prisma.commande.findMany({
-      where: { ...(clientId ? { clientId } : {}) },
+      where: {
+        // Un clientId explicite l'emporte : demander les commandes d'un client
+        // précis et filtrer sur « comptoir » serait contradictoire.
+        ...(clientId
+          ? { clientId }
+          : type === "comptoir"
+            ? { clientId: null }
+            : type === "enregistre"
+              ? { clientId: { not: null } }
+              : {}),
+      },
       orderBy: { date: "desc" },
       take: 200,
       include: {

@@ -65,9 +65,18 @@ export interface Commande {
   reglement?: EtatPaiement;
 }
 
-export async function fetchCommandes(clientId?: string): Promise<Commande[]> {
+/** Filtre de la liste : toutes les ventes, celles du comptoir, ou celles des clients enregistrés. */
+export type TypeVente = "tous" | "comptoir" | "enregistre";
+
+export async function fetchCommandes(
+  clientId?: string,
+  type: TypeVente = "tous",
+): Promise<Commande[]> {
   const { data } = await api.get<Commande[]>("/api/commandes", {
-    params: clientId ? { clientId } : {},
+    params: {
+      ...(clientId ? { clientId } : {}),
+      ...(type !== "tous" ? { type } : {}),
+    },
   });
   return data;
 }
