@@ -103,46 +103,6 @@ const L = {
 } as const;
 
 /** Date compacte (sans heure) pour les lignes de règlement de la facture. */
-/** Le strict nécessaire pour tracer : permet d'éprouver `tracerFilets` sans jsPDF. */
-export interface Crayon {
-  setDrawColor(gris: number): void;
-  setLineWidth(epaisseur: number): void;
-  line(x1: number, y1: number, x2: number, y2: number): void;
-}
-
-/** Position et taille d'une cellule du tableau, telles que le plugin les fournit. */
-export interface CelluleTracee {
-  section: string;
-  column: { index: number };
-  cell: { x: number; y: number; width: number; height: number };
-}
-
-/**
- * Filets du tableau produits : séparateurs verticaux entre colonnes, et un
- * filet horizontal sous CHAQUE ligne d'article.
- *
- * Sur une facture large, l'œil perd la ligne entre la désignation à gauche et
- * le montant à droite ; le filet horizontal la tient d'un bout à l'autre. Gris
- * clair et hairline : on guide la lecture sans quadriller le document.
- *
- * Le filet horizontal est tracé cellule par cellule — les cellules étant
- * jointives, les segments forment un trait continu sur toute la largeur.
- */
-export function tracerFilets(crayon: Crayon, d: CelluleTracee): void {
-  if (d.section === "head") return;
-  // Gris 180 / 0,2 mm : même poids que le tableau du bon de commande. Un filet
-  // plus fin (0,1 mm en gris 215) existait, et disparaissait à l'écran dès que
-  // l'aperçu était réduit — un trait qu'on ne voit pas ne guide personne.
-  crayon.setDrawColor(180);
-  crayon.setLineWidth(0.2);
-  // Pas de séparateur après la dernière colonne : ce serait un trait dans le
-  // vide, contre la marge droite.
-  if (d.column.index < 3) {
-    crayon.line(d.cell.x + d.cell.width, d.cell.y, d.cell.x + d.cell.width, d.cell.y + d.cell.height);
-  }
-  crayon.line(d.cell.x, d.cell.y + d.cell.height, d.cell.x + d.cell.width, d.cell.y + d.cell.height);
-}
-
 function dateCourte(date: Date | string, lang: Lang): string {
   const d = typeof date === "string" ? new Date(date) : date;
   return new Intl.DateTimeFormat(lang === "en" ? "en-US" : "fr-FR", {
@@ -338,12 +298,11 @@ export function construireFacturePDF(data: FactureData, lang: Lang): jsPDF {
   });
 
   // ── Table produits : Désignation | Quantité | Prix unitaire TTC | Montant TTC ──
-  // (le tracé des filets est confié à `tracerFilets`, éprouvable à part)
   // Police/espacement réduits automatiquement quand la facture est longue,
   // pour faire tenir un maximum de lignes sur la page.
   const n = data.lignes.length;
-  const fs = n > 34 ? 7 : n > 26 ? 7.5 : n > 20 ? 8.5 : n > 14 ? 9.5 : 10.5;
-  const pad = n > 34 ? 1 : n > 26 ? 1.2 : n > 20 ? 1.5 : n > 14 ? 2 : 2.5;
+  const fs = n > 34 ? 6 : n > 26 ? 6.5 : n > 20 ? 7 : n > 14 ? 7.5 : 8.5;
+  const pad = n > 34 ? 0.6 : n > 26 ? 0.7 : n > 20 ? 0.9 : n > 14 ? 1.1 : 1.5;
 
   // @ts-expect-error lastAutoTable ajouté par le plugin
   const metaY = doc.lastAutoTable.finalY + 3;
@@ -366,7 +325,7 @@ export function construireFacturePDF(data: FactureData, lang: Lang): jsPDF {
       nombre(l.totalLigne),
     ]),
     theme: "plain",
-    headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: Math.max(fs, 9) },
+    headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: Math.max(fs, 7) },
     styles: { fontSize: fs, cellPadding: pad, textColor: 20 },
     columnStyles: {
       0: { cellWidth: "auto" },
@@ -374,7 +333,19 @@ export function construireFacturePDF(data: FactureData, lang: Lang): jsPDF {
       2: { halign: "right", cellWidth: 34 },
       3: { halign: "right", cellWidth: 38 },
     },
-    didDrawCell: (d: CellHookData) => tracerFilets(doc, d),
+    // Séparateurs verticaux fins entre colonnes ; AUCUNE ligne horizontale
+    didDrawCell: (d: CellHookData) => {
+      if (d.section !== "head" && d.column.index < 3) {
+        doc.setDrawColor(215);
+        doc.setLineWidth(0.1);
+        doc.line(
+          d.cell.x + d.cell.width,
+          d.cell.y,
+          d.cell.x + d.cell.width,
+          d.cell.y + d.cell.height,
+        );
+      }
+    },
   });
 
   // Cadre extérieur léger autour du tableau produits
