@@ -130,8 +130,11 @@ export interface CelluleTracee {
  */
 export function tracerFilets(crayon: Crayon, d: CelluleTracee): void {
   if (d.section === "head") return;
-  crayon.setDrawColor(215);
-  crayon.setLineWidth(0.1);
+  // Gris 180 / 0,2 mm : même poids que le tableau du bon de commande. Un filet
+  // plus fin (0,1 mm en gris 215) existait, et disparaissait à l'écran dès que
+  // l'aperçu était réduit — un trait qu'on ne voit pas ne guide personne.
+  crayon.setDrawColor(180);
+  crayon.setLineWidth(0.2);
   // Pas de séparateur après la dernière colonne : ce serait un trait dans le
   // vide, contre la marge droite.
   if (d.column.index < 3) {
@@ -339,8 +342,8 @@ export function construireFacturePDF(data: FactureData, lang: Lang): jsPDF {
   // Police/espacement réduits automatiquement quand la facture est longue,
   // pour faire tenir un maximum de lignes sur la page.
   const n = data.lignes.length;
-  const fs = n > 34 ? 6.5 : n > 26 ? 7 : n > 20 ? 7.5 : n > 14 ? 8.5 : 9.5;
-  const pad = n > 34 ? 0.8 : n > 26 ? 1 : n > 20 ? 1.2 : n > 14 ? 1.5 : 2;
+  const fs = n > 34 ? 7 : n > 26 ? 7.5 : n > 20 ? 8.5 : n > 14 ? 9.5 : 10.5;
+  const pad = n > 34 ? 1 : n > 26 ? 1.2 : n > 20 ? 1.5 : n > 14 ? 2 : 2.5;
 
   // @ts-expect-error lastAutoTable ajouté par le plugin
   const metaY = doc.lastAutoTable.finalY + 3;
@@ -363,7 +366,7 @@ export function construireFacturePDF(data: FactureData, lang: Lang): jsPDF {
       nombre(l.totalLigne),
     ]),
     theme: "plain",
-    headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: Math.max(fs, 8) },
+    headStyles: { fillColor: [30, 41, 59], textColor: 255, fontSize: Math.max(fs, 9) },
     styles: { fontSize: fs, cellPadding: pad, textColor: 20 },
     columnStyles: {
       0: { cellWidth: "auto" },
